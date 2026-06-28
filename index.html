@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-quant 量化研究报告</title>
+<style>
+  :root {
+    --bg: #f8f9fa;
+    --text: #222;
+    --text-secondary: #555;
+    --accent: #c0392b;
+    --card-bg: #ffffff;
+    --border: #e0e0e0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "SimSun", "宋体", "Noto Serif CJK SC", serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 22pt;
+    margin: 0 0 8px 0;
+    letter-spacing: 2px;
+  }
+  .header p {
+    color: var(--text-secondary);
+    margin: 0;
+    text-indent: 0;
+  }
+  .report-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .report-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    text-decoration: none;
+    color: var(--text);
+    display: block;
+  }
+  .report-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+  .report-card .card-title {
+    font-size: 13pt;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    text-indent: 0;
+    color: var(--accent);
+  }
+  .report-card .card-meta {
+    font-size: 9pt;
+    color: var(--text-secondary);
+    margin: 0 0 10px 0;
+    text-indent: 0;
+  }
+  .report-card .card-desc {
+    margin: 0;
+    text-align: justify;
+    text-justify: inter-ideograph;
+  }
+  .report-card .card-tags {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .report-card .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 8pt;
+    background: #f0f0f0;
+    color: var(--text-secondary);
+  }
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: #999;
+    font-size: 9pt;
+  }
+  .footer p { text-indent: 0; margin: 2px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>AI-quant 量化研究报告</h1>
+    <p>基于 Tushare Pro + ECharts 的金融数据可视化 · 自动生成自 WorkBuddy</p>
+  </div>
+
+  <div class="report-list">
+    <a class="report-card" href="ST人福_5年K线交易量报告.html">
+      <p class="card-title">人福医药 5年交易数据全景报告</p>
+      <p class="card-meta">生成时间：2026年6月28日 ｜ 数据量：1,209 交易日</p>
+      <p class="card-desc">人福医药（600079.SH）近五年日线K线图与成交量分析报告，涵盖MA5/10/20/60/120均线系统、年度统计汇总、四阶段走势分析及总结展望。格式规范：宋体五号字，1.5倍行距，图表编号标注与解读。</p>
+      <div class="card-tags">
+        <span class="tag">K线分析</span>
+        <span class="tag">成交量</span>
+        <span class="tag">均线系统</span>
+        <span class="tag">年度统计</span>
+      </div>
+    </a>
+
+    <a class="report-card" href="st_renfu_5year_report.html">
+      <p class="card-title">人福医药 近五年财务与管线全景报告</p>
+      <p class="card-meta">生成时间：2026年6月28日 ｜ 数据来源：Tushare + 公开信息披露</p>
+      <p class="card-desc">2021-2025年度人福医药财务全景（营收/利润/毛利率/ROE/资产负债率）、研发管线进化（从仿制药到5款1类新药获批）、战略转型脉络（归核化→创新转型→招商局入主）的综合分析报告。</p>
+      <div class="card-tags">
+        <span class="tag">财务分析</span>
+        <span class="tag">研发管线</span>
+        <span class="tag">战略转型</span>
+        <span class="tag">年度对比</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="footer">
+    <p>数据来源：Tushare Pro API · 报告生成：WorkBuddy · 可视化引擎：ECharts</p>
+    <p>本页面内容仅供研究参考，不构成投资建议。© 2026 AI-quant</p>
+  </div>
+</div>
+</body>
+</html>

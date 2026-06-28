@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST人福(600079) 近5年深度分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: #f5f6fa;
+    color: #1a1a2e;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    color: #fff;
+    padding: 40px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #e74c3c, #f39c12, #3498db, #2ecc71);
+  }
+  .hero h1 { font-size: 30px; font-weight: 700; }
+  .hero .sub { font-size: 14px; color: #8899aa; margin-top: 6px; }
+  .hero .tag-row { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero .tag {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-red { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+  .tag-blue { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+  .tag-gold { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+  .tag-green { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+  .container { max-width: 1360px; margin: 0 auto; padding: 24px; }
+  
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); }
+  .kpi-card .kpi-val { font-size: 26px; font-weight: 700; margin: 4px 0; }
+  .kpi-card .kpi-lbl { font-size: 12px; color: #888; }
+  .kpi-card .kpi-sub { font-size: 11px; margin-top: 2px; }
+  .kpi-up { color: #e74c3c; }
+  .kpi-down { color: #2ecc71; }
+
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-num {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: #1a1a2e;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .section-title { font-size: 16px; font-weight: 600; }
+  .section-body { padding: 20px 24px; }
+  .chart { width: 100%; height: 400px; }
+  .chart-wide { width: 100%; height: 340px; }
+
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, #3498db, #e74c3c, #2ecc71, #f39c12, #9b59b6);
+  }
+  .tl-item { position: relative; margin-bottom: 20px; padding-left: 24px; }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: -21px; top: 6px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid #3498db;
+    background: #fff;
+  }
+  .tl-year {
+    font-size: 12px;
+    font-weight: 700;
+    color: #3498db;
+    margin-bottom: 2px;
+  }
+  .tl-desc { font-size: 13px; color: #555; line-height: 1.7; }
+
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .strategy-card {
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    padding: 18px;
+    transition: all 0.2s;
+  }
+  .strategy-card:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 16px rgba(52,152,219,0.12);
+  }
+  .strategy-card h4 { font-size: 14px; margin-bottom: 8px; color: #1a1a2e; }
+  .strategy-card p { font-size: 13px; color: #666; line-height: 1.6; }
+
+  .pipeline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .pipeline-table th {
+    text-align: left;
+    background: #f8f9fa;
+    padding: 10px 14px;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #e8eaed;
+  }
+  .pipeline-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+  }
+  .pipeline-table tr:hover td { background: #fafbfc; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-red { background: #fde8e8; color: #c0392b; }
+  .badge-blue { background: #dbeafe; color: #1d4ed8; }
+  .badge-green { background: #dcfce7; color: #15803d; }
+  .badge-purple { background: #f3e8ff; color: #7c3aed; }
+
+  .footer {
+    text-align: center;
+    padding: 24px;
+    color: #aaa;
+    font-size: 12px;
+    border-top: 1px solid #e8eaed;
+    margin-top: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .strategy-grid { grid-template-columns: 1fr; }
+    .hero { padding: 24px 20px; }
+    .container { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>ST人福 <span style="font-weight:400;font-size:16px;color:#8899aa;">600079.SH</span></h1>
+  <div class="sub">2021 — 2025 五年深度分析 &nbsp;|&nbsp; 财务·管线·战略 · 全景视图</div>
+  <div class="tag-row">
+    <span class="tag tag-red">麻醉药龙头</span>
+    <span class="tag tag-blue">归核聚焦</span>
+    <span class="tag tag-gold">创新药转型</span>
+    <span class="tag tag-green">招商局入主</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPI Cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-lbl">2025 营收</div>
+      <div class="kpi-val" style="color:#1a1a2e;">239.6<span style="font-size:14px;">亿</span></div>
+      <div class="kpi-sub kpi-down">↓5.79% YoY</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2025 归母净利润</div>
+      <div class="kpi-val kpi-up">18.55<span style="font-size:14px;">亿</span></div>
+      <div class="kpi-sub kpi-up">↑39.53% YoY</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2025 综合毛利率</div>
+      <div class="kpi-val kpi-up">48.21<span style="font-size:14px;">%</span></div>
+      <div class="kpi-sub kpi-up">↑3.69pp</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2025 研发投入</div>
+      <div class="kpi-val" style="color:#1a1a2e;">16.76<span style="font-size:14px;">亿</span></div>
+      <div class="kpi-sub">占营收6.99%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-lbl">2025 资产负债率</div>
+      <div class="kpi-val kpi-down" style="color:#2ecc71;">40.11<span style="font-size:14px;">%</span></div>
+      <div class="kpi-sub kpi-down">↓3.21pp</div>
+    </div>
+  </div>
+
+  <!-- Section 1: 财务全景 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div class="section-title">财务全景 · 营业收入 &amp; 净利润趋势</div>
+    </div>
+    <div class="section-body">
+      <div id="chart-revenue" class="chart"></div>
+    </div>
+  </div>
+
+  <!-- Section 2: 利润率 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div class="section-title">盈利质量 · 毛利率 / 净利率 / ROE</div>
+    </div>
+    <div class="section-body">
+      <div id="chart-profit" class="chart"></div>
+    </div>
+  </div>
+
+  <!-- Section 3: 资产负债 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div class="section-title">资产负债结构 &amp; 研发投入</div>
+    </div>
+    <div class="section-body">
+      <div id="chart-balance" class="chart"></div>
+    </div>
+  </div>
+
+  <!-- Section 4: 管线变化 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div class="section-title">主要管线变化 (2021 — 2025)</div>
+    </div>
+    <div class="section-body">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-year">2021 — 仿制药筑基</div>
+          <div class="tl-desc">核心聚焦麻醉镇痛仿制药（瑞芬太尼、舒芬太尼、氢吗啡酮）；甾体激素类仿制药出口美国；归核化启动，剥离非医药主业资产。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2022 — 创新药萌芽</div>
+          <div class="tl-desc">首个1类创新药进入临床；宜昌人福成为麻醉药核心利润中心；研发投入首次突破10亿；在研项目300+，覆盖中枢神经、甾体激素、维药。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2023 — 管线爆发</div>
+          <div class="tl-desc">研发投入15.41亿（+35.92%），<b>在研项目超500个，1/2类新药超60个</b>；HW231019（化药1类）获批临床；全球布局加速，美国、德国设研发中心。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2024 — 创新扩容</div>
+          <div class="tl-desc">研发投入14.7亿，管线持续扩展至覆盖疼痛管理、实体瘤、炎症性肠病三大领域；<b>钠离子通道阻断剂、FGFR2b单抗等前沿靶点布局</b>；2024H2起筹划招商局入主。</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2025 — 创新收获 &amp; 新纪元</div>
+          <div class="tl-desc"><b>5款1类新药集中获批临床</b>（上半年），覆盖疼痛管理/实体瘤/IBD；<br>★ 全球首个IBD 15-PGDH抑制剂 <b>HW201877胶囊</b> 获批临床<br>★ 国内首个AT2R激动剂 <b>HW241045片</b> 获批临床<br>★ HW231019进入II期临床<br>研发投入16.76亿（+2.84%），研发人员占比提升；布局AI研发提速管线。</div>
+        </div>
+      </div>
+      <table class="pipeline-table" style="margin-top:20px;">
+        <tr><th>重点管线品种</th><th>靶点/机制</th><th>适应症</th><th>阶段(截至2025)</th><th>差异化亮点</th></tr>
+        <tr>
+          <td>HW201877 胶囊</td>
+          <td>15-PGDH 抑制剂</td>
+          <td>炎症性肠病 (IBD)</td>
+          <td><span class="badge badge-purple">临床I期</span></td>
+          <td>全球首个同靶点IBD新药</td>
+        </tr>
+        <tr>
+          <td>HW241045 片</td>
+          <td>AT2R 激动剂</td>
+          <td>疼痛/神经病变</td>
+          <td><span class="badge badge-purple">临床I期</span></td>
+          <td>国内首个AT2R激动剂</td>
+        </tr>
+        <tr>
+          <td>HW231019 片</td>
+          <td>化药1类</td>
+          <td>疼痛管理</td>
+          <td><span class="badge badge-blue">临床II期</span></td>
+          <td>公司核心镇痛管线</td>
+        </tr>
+        <tr>
+          <td>钠离子通道阻断剂</td>
+          <td>Nav1.7/Nav1.8</td>
+          <td>慢性疼痛</td>
+          <td><span class="badge badge-purple">临床前/IND</span></td>
+          <td>非阿片类镇痛，无成瘾性</td>
+        </tr>
+        <tr>
+          <td>FGFR2b 单抗</td>
+          <td>FGFR2b</td>
+          <td>实体瘤</td>
+          <td><span class="badge badge-purple">临床前/IND</span></td>
+          <td>前沿靶点，差异化竞争</td>
+        </tr>
+        <tr>
+          <td>广金钱草总黄酮胶囊</td>
+          <td>创新中药</td>
+          <td>结石/肾病</td>
+          <td><span class="badge badge-green">产业化基地在建</span></td>
+          <td>6-7亿产能基地建设中</td>
+        </tr>
+        <tr>
+          <td>甾体激素管线</td>
+          <td>多靶点</td>
+          <td>抗炎/免疫</td>
+          <td><span class="badge badge-green">葛店二期在建</span></td>
+          <td>葛店人福二期7亿投资</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section 5: 战略变化 -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div class="section-title">公司战略演变 (2021 — 2025)</div>
+    </div>
+    <div class="section-body">
+      <div class="strategy-grid">
+        <div class="strategy-card">
+          <h4>🔹 2021-2022：归核化 1.0</h4>
+          <p>剥离非核心资产，聚焦医药工业。以麻醉镇痛为核心，仿制药出海美国。宜昌人福成为利润中心，资产负债率从60%降至50%。</p>
+        </div>
+        <div class="strategy-card">
+          <h4>🔹 2023：创新转型加速</h4>
+          <p>"做医药细分市场领导者"。研发投入大幅增长（+35.92%），管线从300+扩至500+。中枢神经、甾体激素、维药三线并进。</p>
+        </div>
+        <div class="strategy-card">
+          <h4>🔹 2024：蓄力突破</h4>
+          <p>为招商局入主做准备。持续扩大创新药管线至60+个1/2类新药。麻醉药品国内市占率超60%。归核化进入深水区，资产质量优化。</p>
+        </div>
+        <div class="strategy-card">
+          <h4>🔹 2025：招商局时代</h4>
+          <p>央企招商局入主完成。营收239.6亿，归母净利+39.5%。资产负债率降至40%。综合毛利率升至48.2%，医药工业毛利率72.3%。</p>
+        </div>
+        <div class="strategy-card">
+          <h4>🔹 2026-2030：十五五蓝图</h4>
+          <p>目标：医药工业排名19→前10；研发投入超100亿；30+款"化中生"新药；麻醉药+全疼痛+创新药第一梯队；年化50%麻醉器械增长。</p>
+        </div>
+        <div class="strategy-card">
+          <h4>🔹 关键变化：招商局入主</h4>
+          <p>控股股东先斥资6.5亿增持，再拟35亿定增。引入高端人才超过去5年总和。依托招商局资源拓展东南亚、中东市场，国际化全面提速。</p>
+        </div>
+      </div>
+      <div class="timeline" style="margin-top:20px;">
+        <div class="tl-item">
+          <div class="tl-year">2021<br>归核1.0</div>
+          <div class="tl-desc">剥离非医药主业 · 麻醉药单品突破 · 资产负债率55.8% · 营收204.4亿</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2022<br>利润释放</div>
+          <div class="tl-desc">归母净利24.84亿(峰值) · 毛利率43.5% · ROE 17.6% · 资产负债率50.2%</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2023<br>创新加码</div>
+          <div class="tl-desc">研发15.4亿(+36%) · 营收245亿(高位) · 管线500+ · 毛利率45.8% · 资产负债率44.5%</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2024<br>招商局入场</div>
+          <div class="tl-desc">营收254亿(新高) · 归母净利13.3亿(阶段性调整) · 60+创新药 · 筹备入主</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">2025<br>新纪元</div>
+          <div class="tl-desc">招商局首年 · 5款1类新药 · 毛利率48.2% · 净利+39.5% · 15-PGDH/AT2R全球FIC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  数据来源：Tushare / 腾讯自选股 / 公司年报 / 公开报道 &nbsp;|&nbsp; 生成时间：2026-06-28 &nbsp;|&nbsp; 仅供参考，不构成投资建议
+</div>
+
+<script>
+// ===== 图1：营收 + 净利润 =====
+(function() {
+  var c = echarts.init(document.getElementById('chart-revenue'));
+  c.setOption({
+    color: ['#3498db', '#e74c3c'],
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(20,20,40,0.92)',
+      textStyle: { color: '#eee', fontSize: 12 },
+      formatter: function(p) {
+        var s = '<b>' + p[0].name + '</b>';
+        p.forEach(function(it) {
+          s += '<br/>' + it.marker + ' ' + it.seriesName + '：' + (it.value / (it.seriesName.indexOf('净') > -1 ? 1 : 100000000)).toFixed(it.seriesName.indexOf('净') > -1 ? 2 : 2) + ' 亿';
+        });
+        return s;
+      }
+    },
+    legend: { data: ['营业收入', '归母净利润', '扣非净利润'], top: 8, textStyle: { fontSize: 12, color: '#555' } },
+    grid: { left: 70, right: 70, top: 50, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+      axisLabel: { fontSize: 12, fontWeight: 600, color: '#555' },
+      axisLine: { lineStyle: { color: '#e0e0e0' } }
+    },
+    yAxis: [
+      {
+        type: 'value', name: '营收（亿）', nameTextStyle: { fontSize: 11, color: '#888' },
+        axisLabel: { fontSize: 11, color: '#888', formatter: function(v) { return (v/100000000).toFixed(0); } },
+        splitLine: { lineStyle: { color: '#f5f5f5', type: 'dashed' } }
+      },
+      {
+        type: 'value', name: '净利润（亿）', nameTextStyle: { fontSize: 11, color: '#888' },
+        axisLabel: { fontSize: 11, color: '#888', formatter: function(v) { return (v/100000000).toFixed(1); } },
+        splitLine: { show: false }
+      }
+    ],
+    series: [
+      {
+        name: '营业收入',
+        type: 'bar',
+        data: [21807000000, 20680000000, 20441000000, 22338000000, 24525000000, 25435000000, 23962000000],
+        itemStyle: { borderRadius: [4,4,0,0], color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#85c1e9'},{offset:1,color:'#3498db'}]) },
+        barWidth: 28
+      },
+      {
+        name: '归母净利润',
+        type: 'line',
+        yAxisIndex: 1,
+        data: [843000000, 1006000000, 1390000000, 2484000000, 2134000000, 1329744984, 1855334434],
+        lineStyle: { width: 3, color: '#e74c3c' },
+        itemStyle: { color: '#e74c3c' },
+        symbol: 'circle',
+        symbolSize: 8
+      },
+      {
+        name: '扣非净利润',
+        type: 'line',
+        yAxisIndex: 1,
+        data: [null, null, 1078000000, null, 1822000000, null, 1762000000],
+        lineStyle: { width: 2, color: '#f39c12', type: 'dashed' },
+        itemStyle: { color: '#f39c12' },
+        symbol: 'diamond',
+        symbolSize: 8
+      }
+    ]
+  });
+  window.addEventListener('resize', function() { c.resize(); });
+})();
+
+// ===== 图2：毛利率/净利率/ROE =====
+(function() {
+  var years = ['2019', '2020', '2021', '2022', '2023', '2024', '2025'];
+  var c = echarts.init(document.getElementById('chart-profit'));
+  c.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(20,20,40,0.92)',
+      textStyle: { color: '#eee', fontSize: 12 },
+      formatter: function(p) {
+        var s = '<b>' + p[0].name + '</b>';
+        p.forEach(function(it) { s += '<br/>' + it.marker + ' ' + it.seriesName + '：' + it.value + '%'; });
+        return s;
+      }
+    },
+    legend: { data: ['毛利率', '净利率', 'ROE'], top: 8, textStyle: { fontSize: 12, color: '#555' } },
+    grid: { left: 60, right: 40, top: 50, bottom: 30 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 12, fontWeight: 600, color: '#555' } },
+    yAxis: {
+      type: 'value', name: '%',
+      axisLabel: { fontSize: 11, color: '#888', formatter: function(v) { return v.toFixed(0); } },
+      splitLine: { lineStyle: { color: '#f5f5f5', type: 'dashed' } }
+    },
+    series: [
+      {
+        name: '毛利率', type: 'line',
+        data: [39.52, 42.41, 42.75, 43.53, 45.81, null, 48.21],
+        lineStyle: { width: 3, color: '#3498db' }, itemStyle: { color: '#3498db' },
+        symbol: 'circle', symbolSize: 8,
+        markLine: { silent: true, data: [{ yAxis: 48.21, label: { formatter: '48.21%', fontSize: 10 } }], lineStyle: { color: '#3498db', type: 'dotted' } }
+      },
+      {
+        name: '净利率', type: 'line',
+        data: [6.20, 8.46, 8.85, 13.75, 11.48, null, 7.74],
+        lineStyle: { width: 2.5, color: '#2ecc71' }, itemStyle: { color: '#2ecc71' },
+        symbol: 'triangle', symbolSize: 9
+      },
+      {
+        name: 'ROE', type: 'line',
+        data: [8.43, 11.31, 10.90, 17.63, 13.32, null, null],
+        lineStyle: { width: 2.5, color: '#f39c12' }, itemStyle: { color: '#f39c12' },
+        symbol: 'diamond', symbolSize: 8
+      }
+    ]
+  });
+  window.addEventListener('resize', function() { c.resize(); });
+})();
+
+// ===== 图3：资产负债率 + 研发投入 =====
+(function() {
+  var c = echarts.init(document.getElementById('chart-balance'));
+  c.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(20,20,40,0.92)',
+      textStyle: { color: '#eee', fontSize: 12 }
+    },
+    legend: { data: ['资产负债率', '研发投入', '研发占比'], top: 8, textStyle: { fontSize: 12, color: '#555' } },
+    grid: { left: 60, right: 60, top: 50, bottom: 30 },
+    xAxis: { type: 'category', data: ['2019','2020','2021','2022','2023','2024','2025'], axisLabel: { fontSize: 12, fontWeight: 600, color: '#555' } },
+    yAxis: [
+      {
+        type: 'value', name: '% / 亿',
+        axisLabel: { fontSize: 11, color: '#888', formatter: function(v) { return v.toFixed(0); } },
+        splitLine: { lineStyle: { color: '#f5f5f5', type: 'dashed' } }
+      }
+    ],
+    series: [
+      {
+        name: '资产负债率', type: 'line',
+        data: [60.02, 59.10, 55.79, 50.19, 44.49, 43.32, 40.11],
+        lineStyle: { width: 3, color: '#2ecc71' }, itemStyle: { color: '#2ecc71' },
+        symbol: 'triangle', symbolSize: 9,
+        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(46,204,113,0.15)'},{offset:1,color:'rgba(46,204,113,0.0)'}]) },
+        markLine: { silent: true, symbol: 'none', data: [{ yAxis: 40, label: { formatter: '40%', fontSize: 10 }, lineStyle: { color: '#999', type: 'dashed' } }] }
+      },
+      {
+        name: '研发投入', type: 'bar',
+        data: [null, null, null, null, 15.41, 14.70, 16.76],
+        itemStyle: { borderRadius: [4,4,0,0], color: '#e67e22' },
+        barWidth: 20
+      },
+      {
+        name: '研发占比', type: 'line',
+        data: [null, null, null, null, 6.28, null, 6.99],
+        lineStyle: { width: 2, color: '#9b59b6', type: 'dashed' }, itemStyle: { color: '#9b59b6' },
+        symbol: 'diamond', symbolSize: 8
+      }
+    ]
+  });
+  window.addEventListener('resize', function() { c.resize(); });
+})();
+</script>
+</body>
+</html>

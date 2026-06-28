@@ -1,0 +1,23 @@
+# WorkBuddy workspace data
+.workbuddy/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Data files (large/binary)
+*.json
+
+# Scripts (source, not deliverable)
+fetch_st_renfu.py
+fetch_finance.py
+gen_report.py
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
