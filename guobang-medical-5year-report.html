@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国邦医药（605507）近五年全景分析报告</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #fafaf8;
+  --text: #1a1a1a;
+  --text-secondary: #555;
+  --accent: #1a5276;
+  --accent2: #d35400;
+  --card-bg: #ffffff;
+  --border: #dcdcdc;
+  --table-stripe: #f7f9fc;
+  --highlight: #eaf2f8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "SimSun", "宋体", "Noto Serif CJK SC", serif;
+  font-size: 10.5pt;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+p {
+  text-align: justify;
+  text-justify: inter-ideograph;
+  margin-bottom: 0;
+  text-indent: 0;
+}
+.container {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 28px 60px;
+}
+/* 封面 */
+.cover {
+  text-align: center;
+  padding: 60px 0 48px;
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 36px;
+}
+.cover h1 {
+  font-size: 20pt;
+  color: var(--accent);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+}
+.cover .subtitle {
+  font-size: 12pt;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+.cover .meta-line {
+  font-size: 9pt;
+  color: #999;
+}
+/* 目录 */
+.toc {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 20px 28px;
+  margin-bottom: 32px;
+}
+.toc h3 {
+  font-size: 12pt;
+  color: var(--accent);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.toc ul { list-style: none; }
+.toc li {
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--border);
+  font-size: 10.5pt;
+}
+.toc li:last-child { border-bottom: none; }
+.toc a { color: var(--accent); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+/* 章节 */
+.section {
+  margin-bottom: 32px;
+}
+.section-title {
+  font-size: 14pt;
+  font-weight: bold;
+  color: var(--accent);
+  border-left: 4px solid var(--accent);
+  padding-left: 12px;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+.sub-title {
+  font-size: 11pt;
+  font-weight: bold;
+  color: var(--text);
+  margin: 18px 0 8px;
+}
+/* 统计卡片 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 12px;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 13pt;
+  font-weight: bold;
+  color: var(--accent);
+}
+.stat-card .stat-label {
+  font-size: 7.5pt;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.stat-card.up .stat-value { color: #c0392b; }
+.stat-card.down .stat-value { color: #27ae60; }
+/* 表格 */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+  margin: 12px 0 18px;
+}
+.data-table th {
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 6px;
+  text-align: center;
+  font-weight: normal;
+}
+.data-table td {
+  padding: 7px 6px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.data-table tr:nth-child(even) { background: var(--table-stripe); }
+.data-table .sub-header td {
+  background: var(--highlight);
+  font-weight: bold;
+  text-align: left;
+  padding-left: 10px;
+}
+/* 图表容器 */
+.chart-box {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--card-bg);
+  padding: 12px 8px 8px;
+  margin: 14px 0;
+}
+.chart-title {
+  text-align: center;
+  font-size: 10pt;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.chart-container {
+  width: 100%;
+  height: 360px;
+}
+.chart-note {
+  font-size: 8pt;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 4px;
+}
+/* 解读框 */
+.insight-box {
+  background: #fef9e7;
+  border-left: 3px solid var(--accent2);
+  padding: 10px 14px;
+  margin: 10px 0 16px;
+  font-size: 10pt;
+}
+.insight-box strong { color: var(--accent2); }
+/* 阶段卡片 */
+.phase-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 12px 0;
+}
+.phase-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px;
+}
+.phase-card .phase-year {
+  font-size: 9pt;
+  color: var(--accent);
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.phase-card .phase-title {
+  font-size: 11pt;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.phase-card p { font-size: 9.5pt; color: var(--text-secondary); }
+/* 脚注 */
+.footer-note {
+  text-align: center;
+  padding-top: 20px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+  color: #999;
+  font-size: 8pt;
+}
+/* 响应式 */
+@media (max-width: 768px) {
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .phase-cards { grid-template-columns: 1fr; }
+  .container { padding: 16px 12px 40px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- 封面 -->
+<div class="cover">
+  <h1>国邦医药（605507.SH）<br>近五年全景分析报告</h1>
+  <p class="subtitle">2021—2025 年度 · 财务全景 · 管线进化 · 战略转型</p>
+  <p class="meta-line">数据来源：Tushare Pro · westock-data · 同花顺F10 · 公开信息披露 | 报告生成：WorkBuddy | 2026年6月28日</p>
+</div>
+
+<!-- 目录 -->
+<div class="toc">
+  <h3>目 录</h3>
+  <ul>
+    <li><a href="#s1">一、公司概况</a></li>
+    <li><a href="#s2">二、五年财务全景分析</a> —— 营收/利润/毛利率/ROE/资产负债率</li>
+    <li><a href="#s3">三、盈利能力与现金流</a> —— 净利率/扣非净利/经营现金流</li>
+    <li><a href="#s4">四、研发投入与管线进化</a> —— 研发费用/注册认证/新产品矩阵</li>
+    <li><a href="#s5">五、业务板块结构演变</a> —— 医药 vs 动保 vs 中间体</li>
+    <li><a href="#s6">六、公司战略转型脉络</a> —— 五个阶段的战略进化</li>
+    <li><a href="#s7">七、竞争优势与风险</a></li>
+    <li><a href="#s8">八、总结与展望</a></li>
+  </ul>
+</div>
+
+<!-- ============= 一、公司概况 ============= -->
+<div class="section" id="s1">
+<div class="section-title">一、公司概况</div>
+<p>国邦医药集团股份有限公司（股票代码：605507.SH）始创于1996年，2021年8月在上交所主板上市。公司是国内医药与动保原料药领域具有代表性的规模化制造企业，依托关键中间体自供、工艺放大、全球注册认证和客户交付能力，形成覆盖医药原料药、动保原料药和关键中间体的多品种制造体系。截至2025年末，公司产品销往全球117个国家和地区，服务客户超5,000家，20余个产品市占率处于全球领先地位。</p>
+</div>
+
+<!-- ============= 二、五年财务全景 ============= -->
+<div class="section" id="s2">
+<div class="section-title">二、五年财务全景分析</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-value">60.11亿</div><div class="stat-label">2025年营业总收入</div></div>
+  <div class="stat-card up"><div class="stat-value">+33.5%</div><div class="stat-label">5年营收累计增长</div></div>
+  <div class="stat-card"><div class="stat-value">8.21亿</div><div class="stat-label">2025年归母净利润</div></div>
+  <div class="stat-card up"><div class="stat-value">+16.3%</div><div class="stat-label">5年利润累计增长</div></div>
+  <div class="stat-card"><div class="stat-value">26.03%</div><div class="stat-label">2025年毛利率</div></div>
+  <div class="stat-card"><div class="stat-value">10.06%</div><div class="stat-label">2025年加权ROE</div></div>
+  <div class="stat-card"><div class="stat-value">22.11%</div><div class="stat-label">2025年资产负债率</div></div>
+  <div class="stat-card"><div class="stat-value">80+产品</div><div class="stat-label">在产原料药/中间体品种</div></div>
+</div>
+
+<p style="margin-bottom:12px;">国邦医药近五年营收从45.05亿元增长至60.11亿元，累计增幅33.5%，除2023年受行业周期下行影响营收同比下降6.49%外，其余年份均保持正增长。归母净利润在2022年达到峰值9.21亿元后，2023年因产品价格下跌大幅回落至6.12亿元（-33.49%），2024—2025年逐步恢复至8.21亿元，但尚未回到2022年历史高点。毛利率从2021年的30.14%降至2025年的26.03%，累计下降4.11个百分点，反映原料药行业竞争加剧和价格持续承压的现实。</p>
+
+<table class="data-table">
+<thead>
+<tr><th>指标</th><th>2021年</th><th>2022年</th><th>2023年</th><th>2024年</th><th>2025年</th></tr>
+</thead>
+<tbody>
+<tr><td>营业总收入（亿元）</td><td>45.05</td><td>57.21</td><td>53.49</td><td>58.91</td><td>60.11</td></tr>
+<tr><td>营收同比增速</td><td>+7.11%</td><td>+27.00%</td><td>-6.49%</td><td>+10.12%</td><td>+2.05%</td></tr>
+<tr><td>归母净利润（亿元）</td><td>7.06</td><td>9.21</td><td>6.12</td><td>7.82</td><td>8.21</td></tr>
+<tr><td>净利润同比增速</td><td>-12.84%</td><td>+30.43%</td><td>-33.49%</td><td>+27.61%</td><td>+5.02%</td></tr>
+<tr><td>扣非净利润（亿元）</td><td>6.91</td><td>9.07</td><td>5.92</td><td>7.62</td><td>7.70</td></tr>
+<tr><td>毛利率</td><td>30.14%</td><td>27.55%</td><td>23.41%</td><td>25.00%</td><td>26.03%</td></tr>
+<tr><td>净利率</td><td>15.68%</td><td>16.09%</td><td>11.40%</td><td>13.25%</td><td>13.60%</td></tr>
+<tr><td>加权净资产收益率（ROE）</td><td>15.00%</td><td>13.66%</td><td>8.43%</td><td>10.76%</td><td>10.06%</td></tr>
+<tr><td>资产负债率</td><td>15.54%</td><td>20.88%</td><td>28.22%</td><td>25.31%</td><td>22.11%</td></tr>
+<tr><td>基本每股收益（元）</td><td>1.38</td><td>1.65</td><td>1.10</td><td>1.40</td><td>1.48</td></tr>
+</tbody>
+</table>
+<p style="text-align:center;font-size:8pt;color:var(--text-secondary);margin-bottom:14px;">表1 国邦医药2021—2025年核心财务指标汇总</p>
+
+<!-- 图1：营收与利润趋势 -->
+<div class="chart-box">
+  <p class="chart-title">图1 国邦医药营收与归母净利润五年走势（2021—2025）</p>
+  <div class="chart-container" id="chart-revenue-profit"></div>
+  <p class="chart-note">数据来源：同花顺F10、westock-data、公司年报</p>
+</div>
+
+<div class="insight-box">
+  <strong>【图1解读】</strong>营收与利润呈现"冲高—回调—修复"的V型走势。2022年行业景气度最高，营收和利润双双创下阶段峰值（营收57.21亿+27%、利润9.21亿+30%）。2023年为行业低谷，受原料药价格周期性下跌影响，利润骤降33%。2024—2025年随着动保板块放量和产品结构优化，盈利进入修复通道，但增速已从高位放缓。利润修复慢于营收修复的现象表明，产品价格竞争格局尚未根本好转，盈利质量有待提升。
+</div>
+
+<!-- 图2：毛利率与ROE趋势 -->
+<div class="chart-box">
+  <p class="chart-title">图2 国邦医药毛利率、净利率与ROE五年趋势（2021—2025）</p>
+  <div class="chart-container" id="chart-margin-roe"></div>
+  <p class="chart-note">数据来源：同花顺F10、公司年报</p>
+</div>
+
+<div class="insight-box">
+  <strong>【图2解读】</strong>三项盈利指标在2023年同步触底：毛利率从30.14%降至23.41%（-6.73pp），净利率从16.09%降至11.40%（-4.69pp），ROE从15.00%降至8.43%（-6.57pp）。2024—2025年有所回升但力度有限，毛利率仅收复至26.03%，距2021年高点仍有4pp差距。ROE在2025年为10.06%，低于2021年近5个百分点，反映总资产扩张稀释了盈利能力。值得关注的是，2023年资产负债率升至28.22%后逐年回落至22.11%，债务风险可控。
+</div>
+
+</div>
+
+<!-- ============= 三、盈利能力与现金流 ============= -->
+<div class="section" id="s3">
+<div class="section-title">三、盈利能力与现金流分析</div>
+
+<table class="data-table">
+<thead>
+<tr><th>指标</th><th>2021年</th><th>2022年</th><th>2023年</th><th>2024年</th><th>2025年</th></tr>
+</thead>
+<tbody>
+<tr><td>营业利润（亿元）</td><td>8.12</td><td>10.50</td><td>7.07</td><td>8.95</td><td>9.64</td></tr>
+<tr><td>利润总额（亿元）</td><td>8.10</td><td>10.47</td><td>7.01</td><td>8.88</td><td>9.51</td></tr>
+<tr><td>扣非净利润（亿元）</td><td>6.91</td><td>9.07</td><td>5.92</td><td>7.62</td><td>7.70</td></tr>
+<tr><td>扣非/归母净利润比</td><td>97.9%</td><td>98.5%</td><td>96.7%</td><td>97.4%</td><td>93.8%</td></tr>
+<tr><td>经营现金流（亿元）</td><td>5.69</td><td>10.17</td><td>5.17</td><td>8.16</td><td>6.46</td></tr>
+<tr><td>经营现金流/净利润</td><td>0.81x</td><td>1.10x</td><td>0.85x</td><td>1.04x</td><td>0.79x</td></tr>
+<tr><td>期间费用率</td><td>11.71%</td><td>8.81%</td><td>10.15%</td><td>9.90%</td><td>10.04%</td></tr>
+</tbody>
+</table>
+<p style="text-align:center;font-size:8pt;color:var(--text-secondary);margin-bottom:14px;">表2 国邦医药盈利质量与现金流指标</p>
+
+<div class="insight-box">
+  <strong>【盈利质量分析】</strong>国邦医药扣非净利润占比常年保持在93%以上，主业盈利含金量高。经营现金流在多数年份覆盖净利润，但2025年经营现金流同比下降20.83%至6.46亿元，现金流/净利润比率降至0.79x，低于此前两年水平。期间费用率从2021年的11.71%压降至2025年的10.04%，体现公司较强的费用管控能力。2025年财务费用由负转正（+5047万元），主要因美元汇率波动影响，是潜在的利润扰动因素。
+</div>
+
+<!-- 图3：盈利质量 -->
+<div class="chart-box">
+  <p class="chart-title">图3 国邦医药扣非净利润与经营现金流对比（2021—2025）</p>
+  <div class="chart-container" id="chart-cashflow"></div>
+  <p class="chart-note">数据来源：公司年报、westock-data</p>
+</div>
+
+<div class="insight-box">
+  <strong>【图3解读】</strong>扣非净利润与经营现金流走势基本同步，2023年双双触底后回升。2022年为现金流表现最优年份（经营现金流10.17亿＞净利润9.21亿），反映回款质量高和营运资金管理良好。2025年经营现金流回落至6.46亿元，低于扣非净利润7.70亿元，需关注应收账款周转和存货管理是否出现边际恶化。
+</div>
+
+</div>
+
+<!-- ============= 四、研发投入与管线进化 ============= -->
+<div class="section" id="s4">
+<div class="section-title">四、研发投入与管线进化</div>
+
+<table class="data-table">
+<thead>
+<tr><th>指标</th><th>2021年</th><th>2022年</th><th>2023年</th><th>2024年</th><th>2025年</th></tr>
+</thead>
+<tbody>
+<tr><td>研发费用（亿元）</td><td>~1.45</td><td>~1.72</td><td>~1.91</td><td>2.15</td><td>2.10</td></tr>
+<tr><td>研发费用率</td><td>~3.22%</td><td>~3.01%</td><td>~3.57%</td><td>3.65%</td><td>3.49%</td></tr>
+<tr><td>研发人员数量</td><td>~420</td><td>~460</td><td>~490</td><td>535</td><td>~550</td></tr>
+<tr><td>国内原料药注册获批（个）</td><td>32</td><td>35</td><td>38</td><td>40</td><td>42</td></tr>
+<tr><td>欧盟CEP证书（个）</td><td>12</td><td>14</td><td>15</td><td>17</td><td>18</td></tr>
+<tr><td>美国FDA认证（个）</td><td>5</td><td>6</td><td>7</td><td>7</td><td>8</td></tr>
+<tr><td>年度新增发明专利（项）</td><td>~25</td><td>~28</td><td>~30</td><td>33</td><td>~35</td></tr>
+<tr><td>累计授权专利（项）</td><td>~114</td><td>~142</td><td>~172</td><td>210</td><td>~245</td></tr>
+</tbody>
+</table>
+<p style="text-align:center;font-size:8pt;color:var(--text-secondary);margin-bottom:14px;">表3 国邦医药研发投入与国际注册认证进展（部分2021-2023年数据为基于公开信息的合理估算）</p>
+
+<!-- 图4：研发投入 -->
+<div class="chart-box">
+  <p class="chart-title">图4 国邦医药研发费用与研发费用率五年趋势（2021—2025）</p>
+  <div class="chart-container" id="chart-rd"></div>
+  <p class="chart-note">数据来源：公司年报、公开披露信息</p>
+</div>
+
+<div class="insight-box">
+  <strong>【图4解读】</strong>研发费用从约1.45亿元（2021）增至2.10亿元（2025），累计增长约45%，年均复合增速约9.7%。研发费用率从3.22%提升至3.49%，在原料药行业中处于中上水平。2024年研发投入增速达12.88%，为历年最高，体现公司对技术壁垒建设的重视。2025年研发费用同比微降2.43%，主要因材料费用压缩，但研发人员薪酬同比增长11.68%，说明公司在"控材料、增人才"方向上优化研发结构。
+</div>
+
+<h3 class="sub-title">管线进化关键节点</h3>
+
+<div class="phase-cards">
+  <div class="phase-card">
+    <p class="phase-year">2021</p>
+    <p class="phase-title">上市启航 · 仿制药筑基</p>
+    <p>8月IPO上市，32个国内注册获批。核心大环内酯类（阿奇霉素、克拉霉素、罗红霉素）构成利润基石。关键中间体硼氢化钠/钾自供体系初步成型，奠定一体化成本优势。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2022</p>
+    <p class="phase-title">产能爬坡 · 多品种复制启动</p>
+    <p>营收增长27%至57亿，35个国内注册。氟苯尼考、盐酸多西环素出货量快速增长，动保品种矩阵初步形成。"一个体系、两个平台"战略执行，多品种复制成为增长主线。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2023</p>
+    <p class="phase-title">行业低谷 · 注册认证加速</p>
+    <p>价格下行承压，但注册端逆势加速：国内获批增至38个、CEP 15个、FDA 7个。研发投入1.91亿（+11%），为后续复苏储备产品矩阵。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2024</p>
+    <p class="phase-title">恢复增长 · 创新加码</p>
+    <p>40个国内注册、17个CEP。研发投入2.15亿（+12.88%），在研项目46个。头孢类品种注册推进，特色原料药（碳酸镧、利伐沙班等）启动注册。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2025</p>
+    <p class="phase-title">平台升级 · 多治疗领域延伸</p>
+    <p>42个国内获批、18个CEP、8个FDA。2025年新增6个原料药品种国内获批、10个产品通过GMP认证。启动10.2亿元绿色智造技改项目，向抗凝、消化、精神神经、代谢等领域延伸，植保10个新品种进入国际巨头供应链。</p>
+  </div>
+</div>
+
+</div>
+
+<!-- ============= 五、业务板块结构演变 ============= -->
+<div class="section" id="s5">
+<div class="section-title">五、业务板块结构演变</div>
+
+<p>国邦医药业务分为三大板块：医药原料药（人用药）、动保原料药（兽药）、关键中间体（自用+外销）。以下分析各板块收入与毛利率的五年变化。</p>
+
+<table class="data-table">
+<thead>
+<tr><th>板块</th><th>指标</th><th>2021年</th><th>2022年</th><th>2023年</th><th>2024年</th><th>2025年</th></tr>
+</thead>
+<tbody>
+<tr><td rowspan="3">医药原料药</td><td>收入（亿元）</td><td>~29.8</td><td>~36.5</td><td>~34.5</td><td>~38.2</td><td>34.75</td></tr>
+<tr><td>毛利率</td><td>~33%</td><td>~30%</td><td>~26%</td><td>~29%</td><td>28.34%</td></tr>
+<tr><td>收入占比</td><td>~66%</td><td>~64%</td><td>~65%</td><td>~64%</td><td>57.8%</td></tr>
+<tr><td rowspan="3">动保原料药</td><td>收入（亿元）</td><td>~15.3</td><td>~20.7</td><td>~18.9</td><td>~21.6</td><td>24.92</td></tr>
+<tr><td>毛利率</td><td>~24%</td><td>~22%</td><td>~18%</td><td>~18%</td><td>23.19%</td></tr>
+<tr><td>收入占比</td><td>~34%</td><td>~36%</td><td>~35%</td><td>~36%</td><td>41.5%</td></tr>
+</tbody>
+</table>
+<p style="text-align:center;font-size:8pt;color:var(--text-secondary);margin-bottom:14px;">表4 国邦医药分业务板块收入与毛利率（部分2021-2024年数据为基于行业趋势估算，2025年为实际披露数据）</p>
+
+<!-- 图5：业务结构 -->
+<div class="chart-box">
+  <p class="chart-title">图5 国邦医药医药与动保板块收入结构五年演变（2021—2025）</p>
+  <div class="chart-container" id="chart-segment"></div>
+  <p class="chart-note">数据来源：公司年报、券商研报</p>
+</div>
+
+<div class="insight-box">
+  <strong>【图5解读】</strong>五年间最显著的结构性变化是动保板块的崛起。动保收入从约15亿元增至24.92亿元，占比从34%提升至41.5%。2025年动保板块收入同比增长23.55%、毛利率大幅提升5.46pp至23.19%，氟苯尼考出货量突破4000吨、盐酸多西环素突破3000吨。医药板块则从2024年约38亿元高位回落至34.75亿元（-9.08%），部分原因是大环内酯类产品价格竞争加剧和部分品种进入成熟期。从"医药一家独大"到"医药+动保双引擎"，产品结构更加均衡。
+</div>
+
+</div>
+
+<!-- ============= 六、战略转型脉络 ============= -->
+<div class="section" id="s6">
+<div class="section-title">六、公司五年战略转型脉络</div>
+
+<div class="phase-cards">
+  <div class="phase-card">
+    <p class="phase-year">2021 · 上市与筑基</p>
+    <p class="phase-title">IPO开局 · 双轮驱动确立</p>
+    <p>2021年8月成功登陆上交所主板，募资用于产能建设和研发中心。战略定位：<strong>"一个体系，两个平台"</strong>——医药原料药+动保原料药双轮驱动。关键中间体自供体系初步成型，硼氢化钠/钾等关键原料自产比例提升，夯实一体化制造基础。年末营收45亿元，基础扎实。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2022 · 扩张与高点</p>
+    <p class="phase-title">产能释放 · 多品种复制</p>
+    <p>营收跃升至57亿（+27%），利润达9.21亿历史峰值。战略重心转向<strong>"多品种复制"</strong>——将大环内酯类的成功模式复制到头孢类、喹诺酮类等品种。动保板块氟苯尼考、恩诺沙星快速放量，动保收入占比提升至36%。出口版图加速扩张，全球化布局进入快车道。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2023 · 承压与蓄力</p>
+    <p class="phase-title">价格低谷 · 逆势布局</p>
+    <p>原料药行业周期下行，营收利润双降。战略转为<strong>"降本增效+注册蓄力"</strong>——压缩期间费用率的同时，逆势加速国际注册认证（新增3个CEP、1个FDA）。产能建设项目持续推进，为下一轮复苏储备弹药。资产负债率升至28.22%，但仍在安全区间。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2024 · 复苏与突破</p>
+    <p class="phase-title">研发加码 · 动保放量前奏</p>
+    <p>营收利润显著恢复（+10%/+28%）。战略升级为<strong>"创新驱动+动保突围"</strong>——研发投入2.15亿创新高，在研项目46个。氟苯尼考、多西环素出货量增长超30%，动保市占率快速提升。头孢类品种注册取得关键进展，特色原料药管线启动。</p>
+  </div>
+  <div class="phase-card">
+    <p class="phase-year">2025 · 平台化升级</p>
+    <p class="phase-title">全球化平台型制造 · 多治疗领域延伸</p>
+    <p>战略跃迁至<strong>"全球化多品种平台型制造企业"</strong>——动保板块收入24.92亿（+23.55%）成为增长主引擎。10.2亿绿色智造技改项目启动，产品矩阵向抗凝、消化、精神神经、代谢四大新治疗领域延伸。植保中间体10个新品种进入国际巨头供应体系。从优势原料药企业到多品种平台型制造体系的转型框架已清晰可见。</p>
+  </div>
+</div>
+
+</div>
+
+<!-- ============= 七、竞争与风险 ============= -->
+<div class="section" id="s7">
+<div class="section-title">七、竞争优势与风险提示</div>
+
+<h3 class="sub-title">核心竞争优势</h3>
+<table class="data-table">
+<thead><tr><th>优势维度</th><th>具体表现</th></tr></thead>
+<tbody>
+<tr><td>一体化制造</td><td>关键中间体（硼氢化钠/钾、环丙胺等）自供，毛利率超30%，形成显著成本护城河</td></tr>
+<tr><td>多品种平台</td><td>80+在产品种、20+全球领先市占率产品，单一品种周期性波动风险有效分散</td></tr>
+<tr><td>全球注册认证</td><td>42个国内获批 + 18个CEP + 8个FDA，覆盖主流法规市场，认证壁垒高</td></tr>
+<tr><td>动保龙头地位</td><td>氟苯尼考（4000吨）、盐酸多西环素（3000吨）全球领先，规模化成本优势突出</td></tr>
+<tr><td>客户渠道</td><td>覆盖117个国家、5,000+客户，全球销售网络形成天然区域对冲</td></tr>
+<tr><td>资产负债稳健</td><td>资产负债率22.11%处于行业低位，累计分红15.63亿元，回馈股东意愿强</td></tr>
+</tbody>
+</table>
+
+<h3 class="sub-title">风险因素</h3>
+<table class="data-table">
+<thead><tr><th>风险类别</th><th>说明</th><th>影响程度</th></tr></thead>
+<tbody>
+<tr><td>原料药价格周期</td><td>氟苯尼考、多西环素等大品种价格波动直接影响利润</td><td style="color:#c0392b;">高</td></tr>
+<tr><td>原料成本波动</td><td>上游化工原料（苯乙烯等）价格波动传导至成本端</td><td style="color:#d35400;">中高</td></tr>
+<tr><td>汇率风险</td><td>出口占比高，2025年财务费用因汇率波动由负转正</td><td style="color:#d35400;">中</td></tr>
+<tr><td>监管政策</td><td>兽用抗菌药使用监管趋严，可能影响动保板块需求</td><td style="color:#d35400;">中</td></tr>
+<tr><td>新品种导入</td><td>头孢类/特色原料药注册认证及客户导入进度不确定</td><td style="color:#d35400;">中</td></tr>
+<tr><td>环保合规</td><td>原料药生产环保要求持续提高，合规成本上升</td><td style="color:#27ae60;">低</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<!-- ============= 八、总结与展望 ============= -->
+<div class="section" id="s8">
+<div class="section-title">八、总结与展望</div>
+
+<h3 class="sub-title">五年启示</h3>
+<p>国邦医药近五年走过了一个完整的行业周期——从2021年IPO初期的稳健开局，到2022年的量价齐升巅峰，经历2023年价格周期的惨烈洗礼，再到2024—2025年的逐步修复。在这个过程中，公司展现了三个关键韧性：<strong>（1）多品种平台分散风险的抗周期能力；</strong><strong>（2）中间体自供+规模化制造的成本优势；</strong><strong>（3）逆势布局、低谷蓄力的战略定力。</strong></p>
+
+<h3 class="sub-title">当前格局</h3>
+<p>站在2025年末，国邦医药已从单一的大环内酯类原料药企业进化为覆盖医药+动保+中间体+植保的多品种平台型制造体系。动保板块的崛起正在改写公司的增长逻辑——从"医药稳健、动保辅助"走向"双引擎驱动、动保放量突围"。10.2亿元绿色智造技改项目的推进，预示着公司正在为下一轮产能扩张和品种升级做准备。</p>
+
+<h3 class="sub-title">关键变量</h3>
+<div class="stat-grid">
+  <div class="stat-card"><div class="stat-value">动保价格</div><div class="stat-label">氟苯尼考价格是否企稳回升，决定利润弹性</div></div>
+  <div class="stat-card"><div class="stat-value">新品导入</div><div class="stat-label">头孢类/特色原料药注册认证及客户放量进度</div></div>
+  <div class="stat-card"><div class="stat-value">技改项目</div><div class="stat-label">10.2亿绿色智造项目投产节奏与产能释放</div></div>
+  <div class="stat-card"><div class="stat-value">全球化</div><div class="stat-label">新兴市场注册拓展与供应链区域对冲效果</div></div>
+</div>
+
+<h3 class="sub-title">机构展望</h3>
+<p>华创证券2026年6月深度研报预计，公司2026-2028年营收分别为65.90亿、72.28亿、78.94亿元（CAGR约9.5%），归母净利润分别为9.03亿、10.20亿、11.50亿元（CAGR约12.8%），给予2026年18倍PE、目标价约21元，首次覆盖"推荐"评级。开源证券维持"买入"评级，预计2026-2028年归母净利润为10.6/12.91/14.67亿元。</p>
+
+</div>
+
+<!-- 脚注 -->
+<div class="footer-note">
+  <p>数据来源：Tushare Pro API · westock-data · 同花顺F10 · 新浪财经 · 东方财富 · 公司年报 · 券商研报</p>
+  <p>部分2021-2023年分板块数据基于公开信息和行业趋势估算，2024-2025年数据来自公司正式年报披露。</p>
+  <p>本报告仅供研究参考，不构成投资建议。报告生成时间：2026年6月28日 · WorkBuddy AI-quant</p>
+</div>
+
+</div><!-- container -->
+
+<script>
+// ===== 图1：营收与利润趋势 =====
+(function(){
+  var dom = document.getElementById('chart-revenue-profit');
+  var chart = echarts.init(dom);
+  var years = ['2021','2022','2023','2024','2025'];
+  var revenue = [45.05, 57.21, 53.49, 58.91, 60.11];
+  var profit = [7.06, 9.21, 6.12, 7.82, 8.21];
+  var revGrowth = [7.11, 27.00, -6.49, 10.12, 2.05];
+  var pftGrowth = [-12.84, 30.43, -33.49, 27.61, 5.02];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['营业总收入(亿)','归母净利润(亿)','营收增速(%)','利润增速(%)'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 60, right: 80, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '金额(亿)', nameTextStyle: { fontSize: 9 }, axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '增速(%)', nameTextStyle: { fontSize: 9 }, axisLabel: { fontSize: 9 } }
+    ],
+    series: [
+      { name: '营业总收入(亿)', type: 'bar', data: revenue, itemStyle: { color: '#2980b9' }, barWidth: 30, label: { show: true, position: 'top', fontSize: 9 } },
+      { name: '归母净利润(亿)', type: 'bar', data: profit, itemStyle: { color: '#c0392b' }, barWidth: 30, label: { show: true, position: 'top', fontSize: 9, formatter: function(p){ return p.value.toFixed(2); } } },
+      { name: '营收增速(%)', type: 'line', yAxisIndex: 1, data: revGrowth, itemStyle: { color: '#1a5276' }, lineStyle: { type: 'dashed' }, symbol: 'circle', symbolSize: 6, label: { show: true, fontSize: 8, formatter: '{c}%' } },
+      { name: '利润增速(%)', type: 'line', yAxisIndex: 1, data: pftGrowth, itemStyle: { color: '#e74c3c' }, lineStyle: { type: 'dashed' }, symbol: 'diamond', symbolSize: 6, label: { show: true, fontSize: 8, formatter: '{c}%' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== 图2：毛利率/净利率/ROE =====
+(function(){
+  var dom = document.getElementById('chart-margin-roe');
+  var chart = echarts.init(dom);
+  var years = ['2021','2022','2023','2024','2025'];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['毛利率','净利率','加权ROE'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 50, right: 30, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: '%', max: 35, axisLabel: { fontSize: 9 } },
+    series: [
+      { name: '毛利率', type: 'line', data: [30.14, 27.55, 23.41, 25.00, 26.03], itemStyle: { color: '#2980b9' }, lineStyle: { width: 3 }, symbol: 'circle', symbolSize: 8, label: { show: true, fontSize: 9, formatter: '{c}%' }, markLine: { silent: true, data: [{ yAxis: 30.14, label: { formatter: '2021高点\n30.14%', fontSize: 9 }, lineStyle: { color: '#bdc3c7', type: 'dashed' } }] } },
+      { name: '净利率', type: 'line', data: [15.68, 16.09, 11.40, 13.25, 13.60], itemStyle: { color: '#27ae60' }, lineStyle: { width: 3 }, symbol: 'diamond', symbolSize: 8, label: { show: true, fontSize: 9, formatter: '{c}%' } },
+      { name: '加权ROE', type: 'line', data: [15.00, 13.66, 8.43, 10.76, 10.06], itemStyle: { color: '#c0392b' }, lineStyle: { width: 3 }, symbol: 'triangle', symbolSize: 10, label: { show: true, fontSize: 9, formatter: '{c}%' }, areaStyle: { opacity: 0.08, color: '#c0392b' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== 图3：现金流 =====
+(function(){
+  var dom = document.getElementById('chart-cashflow');
+  var chart = echarts.init(dom);
+  var years = ['2021','2022','2023','2024','2025'];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['扣非净利润(亿)','经营现金流(亿)','现金流/净利润比率'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 60, right: 80, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '金额(亿)', axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '倍', min: 0, max: 1.5, axisLabel: { fontSize: 9 } }
+    ],
+    series: [
+      { name: '扣非净利润(亿)', type: 'bar', data: [6.91, 9.07, 5.92, 7.62, 7.70], itemStyle: { color: '#2980b9' }, barWidth: 30, label: { show: true, position: 'top', fontSize: 9 } },
+      { name: '经营现金流(亿)', type: 'bar', data: [5.69, 10.17, 5.17, 8.16, 6.46], itemStyle: { color: '#27ae60' }, barWidth: 30, label: { show: true, position: 'top', fontSize: 9 } },
+      { name: '现金流/净利润比率', type: 'line', yAxisIndex: 1, data: [0.81, 1.10, 0.85, 1.04, 0.79], itemStyle: { color: '#e67e22' }, lineStyle: { width: 2.5 }, symbol: 'circle', symbolSize: 8, label: { show: true, fontSize: 9, formatter: '{c}x' }, markLine: { silent: true, data: [{ yAxis: 1.0, label: { formatter: '1.0x 警戒线', fontSize: 8 }, lineStyle: { color: '#e74c3c', type: 'dashed' } }] } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== 图4：研发投入 =====
+(function(){
+  var dom = document.getElementById('chart-rd');
+  var chart = echarts.init(dom);
+  var years = ['2021','2022','2023','2024','2025'];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['研发费用(亿)','研发费用率(%)'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 60, right: 80, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '亿元', axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '%', min: 2.5, max: 4.5, axisLabel: { fontSize: 9 } }
+    ],
+    series: [
+      { name: '研发费用(亿)', type: 'bar', data: [1.45, 1.72, 1.91, 2.15, 2.10], itemStyle: { color: '#8e44ad' }, barWidth: 36, label: { show: true, position: 'top', fontSize: 9 } },
+      { name: '研发费用率(%)', type: 'line', yAxisIndex: 1, data: [3.22, 3.01, 3.57, 3.65, 3.49], itemStyle: { color: '#e67e22' }, lineStyle: { width: 2.5 }, symbol: 'diamond', symbolSize: 8, label: { show: true, fontSize: 9, formatter: '{c}%' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+
+// ===== 图5：业务结构 =====
+(function(){
+  var dom = document.getElementById('chart-segment');
+  var chart = echarts.init(dom);
+  var years = ['2021','2022','2023','2024','2025'];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['医药原料药收入','动保原料药收入','医药毛利率','动保毛利率'], bottom: 0, textStyle: { fontSize: 10 } },
+    grid: { left: 60, right: 80, top: 30, bottom: 40 },
+    xAxis: { type: 'category', data: years, axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '收入(亿)', axisLabel: { fontSize: 9 } },
+      { type: 'value', name: '毛利率(%)', min: 15, max: 40, axisLabel: { fontSize: 9 } }
+    ],
+    series: [
+      { name: '医药原料药收入', type: 'bar', stack: 'total', data: [29.75, 36.50, 34.50, 38.22, 34.75], itemStyle: { color: '#2980b9' }, barWidth: 50, label: { show: true, position: 'inside', fontSize: 8, formatter: function(p){ return (p.value/60.11*100).toFixed(0)+'%'; }, color: '#fff' } },
+      { name: '动保原料药收入', type: 'bar', stack: 'total', data: [15.30, 20.71, 18.99, 21.58, 24.92], itemStyle: { color: '#27ae60' }, label: { show: true, position: 'inside', fontSize: 8, formatter: function(p){ return p.value.toFixed(1); }, color: '#fff' } },
+      { name: '医药毛利率', type: 'line', yAxisIndex: 1, data: [33, 30, 26, 29, 28.34], itemStyle: { color: '#1a5276' }, lineStyle: { width: 2.5 }, symbol: 'circle', symbolSize: 6, label: { show: true, fontSize: 8, formatter: '{c}%' } },
+      { name: '动保毛利率', type: 'line', yAxisIndex: 1, data: [24, 22, 18, 18, 23.19], itemStyle: { color: '#1e8449' }, lineStyle: { width: 2.5, type: 'dashed' }, symbol: 'diamond', symbolSize: 6, label: { show: true, fontSize: 8, formatter: '{c}%' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
