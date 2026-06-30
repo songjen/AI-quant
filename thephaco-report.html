@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THEPHACO 客户开发情报报告</title>
+<style>
+  :root { --primary: #1a5276; --accent: #e74c3c; --bg: #f8f9fa; --card: #ffffff; --text: #2c3e50; --border: #dee2e6; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; padding: 0; }
+  .header { background: linear-gradient(135deg,#1a5276 0%,#2980b9 100%); color: #fff; padding: 48px 40px 36px; position: relative; overflow: hidden; }
+  .header::after { content:''; position:absolute; right:-60px; top:-60px; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.04); }
+  .header h1 { font-size:28px; font-weight:700; margin-bottom:8px; position:relative; z-index:1; }
+  .header .sub { font-size:15px; opacity:0.85; position:relative; z-index:1; }
+  .header .meta { margin-top:16px; display:flex; gap:24px; font-size:13px; opacity:0.75; position:relative; z-index:1; flex-wrap:wrap; }
+  .container { max-width:960px; margin:0 auto; padding:32px 24px; }
+  .section { background:var(--card); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.06); margin-bottom:24px; overflow:hidden; }
+  .section-title { padding:18px 28px; font-size:18px; font-weight:700; border-bottom:2px solid var(--border); display:flex; align-items:center; gap:8px; }
+  .section-body { padding:24px 28px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; margin:12px 0; }
+  th, td { padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { background:#f1f3f5; font-weight:600; font-size:13px; color:#495057; white-space:nowrap; }
+  .table-wrap { overflow-x:auto; }
+  .tag { display:inline-block; padding:2px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+  .tag-red { background:#fee2e2; color:#dc2626; } .tag-blue { background:#dbeafe; color:#2563eb; }
+  .tag-green { background:#d1fae5; color:#059669; } .tag-yellow { background:#fef3c7; color:#d97706; }
+  .tag-purple { background:#e9d5ff; color:#7c3aed; }
+  .stars { color:#f59e0b; letter-spacing:1px; }
+  .person-card { border:1px solid var(--border); border-radius:10px; margin-bottom:20px; overflow:hidden; }
+  .person-card:last-child { margin-bottom:0; }
+  .person-header { padding:16px 20px; background:#f8f9fa; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+  .person-name { font-size:17px; font-weight:700; color:var(--primary); }
+  .person-role { font-size:14px; color:#6b7280; font-weight:500; }
+  .person-body { padding:16px 20px; }
+  .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .info-item { display:flex; gap:8px; font-size:14px; }
+  .info-item .label { color:#6b7280; min-width:80px; flex-shrink:0; }
+  .timeline { position:relative; padding-left:20px; margin:10px 0; }
+  .timeline::before { content:''; position:absolute; left:6px; top:4px; bottom:4px; width:2px; background:#e5e7eb; }
+  .timeline-item { position:relative; padding:2px 0 8px 16px; font-size:14px; }
+  .timeline-item::before { content:''; position:absolute; left:-4px; top:8px; width:8px; height:8px; border-radius:50%; background:var(--primary); }
+  .timeline-date { font-weight:600; color:#495057; margin-right:6px; }
+  .tip-box { background:#eff6ff; border-left:4px solid #3b82f6; padding:14px 18px; border-radius:0 8px 8px 0; margin:12px 0; font-size:14px; }
+  .chains { display:flex; flex-direction:column; align-items:center; gap:0; padding:16px 0; }
+  .chain-node { background:var(--card); border:2px solid var(--primary); border-radius:10px; padding:12px 20px; text-align:center; min-width:260px; }
+  .chain-node .nm { font-weight:700; font-size:15px; }
+  .chain-node .ps { font-size:12px; color:#6b7280; margin-top:2px; }
+  .chain-node.primary { border-color:#e74c3c; background:#fef2f2; }
+  .chain-node.primary .nm { color:#dc2626; }
+  .chain-arrow { color:#9ca3af; font-size:12px; padding:4px 0; }
+  ul, ol { padding-left:20px; margin:8px 0; }
+  li { margin-bottom:4px; font-size:14px; }
+  .step-box { display:flex; gap:16px; margin-bottom:16px; align-items:flex-start; }
+  .step-num { width:32px; height:32px; border-radius:50%; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; }
+  .risk-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .risk-card { border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:14px; }
+  .risk-card .rt { font-weight:600; margin-bottom:4px; color:#dc2626; }
+  .risk-card .rs { color:#059669; }
+  .footer { text-align:center; padding:24px; font-size:12px; color:#9ca3af; }
+  @media (max-width:640px) {
+    .header { padding:32px 20px; } .header h1 { font-size:22px; }
+    .container { padding:16px; } .section-body { padding:16px; }
+    .info-grid { grid-template-columns:1fr; } .risk-grid { grid-template-columns:1fr; }
+  }
+  @media print { .header { background:#1a5276 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 THEPHACO 客户开发情报报告</h1>
+  <div class="sub">Thanh Hoa Medical Materials Pharmaceutical Joint Stock Company</div>
+  <div class="meta">
+    <span>📅 2026年6月30日</span>
+    <span>🎯 四环素（Tetracycline）API 原料药</span>
+    <span>👤 API原料药销售代表</span>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- 一、公司基本信息 -->
+<div class="section">
+  <div class="section-title">🏢 一、公司基本信息</div>
+  <div class="section-body">
+    <div class="table-wrap">
+    <table>
+      <tr><th style="width:140px">全称（越文）</th><td>Công ty Cổ phần Dược - Vật tư Y Tế Thanh Hóa</td></tr>
+      <tr><th>全称（英文）</th><td>Thanh Hoa Medical Materials Pharmaceutical JSC</td></tr>
+      <tr><th>简称</th><td><span class="tag tag-blue">THEPHACO</span></td></tr>
+      <tr><th>股票代码</th><td><span class="tag tag-purple">DTH（UPCOM）</span></td></tr>
+      <tr><th>成立时间</th><td>1961年国企 → 2002年股份制 → 2015年私有化</td></tr>
+      <tr><th>法定代表人</th><td><strong>Trần Thanh Minh</strong>（陈清明）— 总经理</td></tr>
+      <tr><th>地址</th><td>232 Trần Phú, Lam Sơn, Thanh Hóa, Việt Nam</td></tr>
+      <tr><th>电话</th><td>(84.237)3737888 / <strong>1900 888 633</strong></td></tr>
+      <tr><th>邮箱</th><td><strong>thephacoth@hn.vnn.vn</strong></td></tr>
+      <tr><th>网站</th><td><a href="https://thephaco.vn" target="_blank">thephaco.vn</a></td></tr>
+      <tr><th>员工</th><td>约500人（200+本科以上）</td></tr>
+      <tr><th>认证</th><td>2个 GMP-WHO / GMP-HS 工厂</td></tr>
+      <tr><th>产能</th><td>年产2.4亿片</td></tr>
+      <tr><th>产品</th><td>约200个注册证，<strong style="color:#dc2626;">含 Tetracycline 250mg/500mg</strong></td></tr>
+    </table>
+    </div>
+    <div style="margin-top:16px;">
+      <h4 style="margin-bottom:8px;">📌 业务范围</h4>
+      <ul>
+        <li>生产和销售处方药、非处方药、传统中药</li>
+        <li><strong style="color:#dc2626;">已有产品：Tetracycline 250mg 和 Tetracycline 500mg 片剂</strong> — 说明他们是四环素API采购方</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- 二、组织架构 -->
+<div class="section">
+  <div class="section-title">🏛️ 二、组织架构</div>
+  <div class="section-body">
+    <pre style="background:#f1f3f5;padding:16px;border-radius:8px;font-size:13px;line-height:1.6;overflow-x:auto;">
+股东大会 (General Meeting of Shareholders)
+    │
+    董事会 (Board of Directors)
+    │
+    监察委员会 (Control Board)
+    │
+    总经理 (General Director)
+    │
+    ├── 质量副总经理
+    ├── OTC业务副总经理
+    ├── 业务副总经理
+    └── 计划副总经理
+         │
+         首席会计师
+    </pre>
+  </div>
+</div>
+
+<!-- 三、决策链关键人物 -->
+<div class="section">
+  <div class="section-title">🔑 三、决策链关键人物详细档案</div>
+  <div class="section-body">
+
+  <!-- Person 1 -->
+  <div class="person-card">
+    <div class="person-header">
+      <span class="person-name">Trần Văn Công（陈文公）</span>
+      <span class="person-role"><span class="tag tag-red">最高决策人</span> 董事会主席</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">出生</span>1963年6月9日（63岁）</div>
+        <div class="info-item"><span class="label">原籍</span>河内</div>
+        <div class="info-item"><span class="label">学历</span>政治经济学本科</div>
+        <div class="info-item"><span class="label">加入公司</span>2019年5月</div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★★★★</span></div>
+        <div class="info-item"><span class="label">其他职务</span>FCC董事会主席</div>
+      </div>
+      <h4 style="font-size:14px;margin:10px 0 6px;">工作履历</h4>
+      <div class="timeline">
+        <div class="timeline-item"><span class="timeline-date">1981–2002</span>Ba Vì综合零售公司（员工→副经理）</div>
+        <div class="timeline-item"><span class="timeline-date">2002–2009</span>Hà Tây电器材料公司 / Hà Tây贸易股份公司（总经理）</div>
+        <div class="timeline-item"><span class="timeline-date">2010至今</span>食品联合股份公司（FCC）董事会主席</div>
+        <div class="timeline-item"><span class="timeline-date">2019至今</span>THEPHACO（DTH）董事会主席</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Person 2 -->
+  <div class="person-card">
+    <div class="person-header" style="background:#fef2f2;">
+      <span class="person-name" style="color:#dc2626;">⭐ Trần Thanh Minh（陈清明）</span>
+      <span class="person-role"><span class="tag tag-red">最关键人物</span> 总经理兼董事会成员</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">出生</span>1984年4月30日（42岁）</div>
+        <div class="info-item"><span class="label">学历</span>经济学硕士</div>
+        <div class="info-item"><span class="label">加入公司</span>2016年</div>
+        <div class="info-item"><span class="label">持股</span>1,711,428股（22.91%）≈ 740万人民币</div>
+        <div class="info-item"><span class="label">法定代表人</span>是</div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★★★★</span></div>
+      </div>
+      <h4 style="font-size:14px;margin:10px 0 6px;">工作履历</h4>
+      <div class="timeline">
+        <div class="timeline-item"><span class="timeline-date">2009–2012</span>M&T移动技术公司 副总经理</div>
+        <div class="timeline-item"><span class="timeline-date">2012–2015</span><strong>Metz USA 欧洲分公司经理（德国科隆）</strong> 🌍</div>
+        <div class="timeline-item"><span class="timeline-date">2016.08–2019.04</span>THEPHACO 董事会主席</div>
+        <div class="timeline-item"><span class="timeline-date">2018至今</span>THEPHACO 总经理</div>
+        <div class="timeline-item"><span class="timeline-date">2019至今</span>THEPHACO 董事会成员</div>
+      </div>
+      <h4 style="font-size:14px;margin:10px 0 6px;">个人关系</h4>
+      <ul>
+        <li><strong>配偶：</strong>Trần Thị Huyền Trang，同为THEPHACO董事会成员</li>
+        <li><strong>配偶持股：</strong>2,128,043股（价值约306亿越南盾）</li>
+        <li><strong>夫妻合计持股：</strong>约3,839,471股，占比极高</li>
+        <li><strong>关联公司：</strong>METZ USA VIETNAM JSC（法定代表人）、METZ USA MEDICAL LLC</li>
+      </ul>
+      <div class="tip-box">
+        <strong>💡 销售策略：</strong>API原料药采购的第一决策人。有德国海外工作背景，英语流畅，42岁较年轻，对新供应商持开放态度。是<strong>最优先攻关对象</strong>。
+      </div>
+    </div>
+  </div>
+
+  <!-- Person 3 -->
+  <div class="person-card">
+    <div class="person-header">
+      <span class="person-name">Cao Văn Bốn（高文本）</span>
+      <span class="person-role"><span class="tag tag-green">技术把关</span> 董事会成员</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">出生</span>1961年（65岁）</div>
+        <div class="info-item"><span class="label">学历</span>一级专科药剂师</div>
+        <div class="info-item"><span class="label">加入公司</span>2003年（23年）</div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★★★☆</span></div>
+      </div>
+      <h4 style="font-size:14px;margin:10px 0 6px;">工作履历（从基层药剂师做起）</h4>
+      <div class="timeline">
+        <div class="timeline-item"><span class="timeline-date">1985–1996</span>Lang Chánh / Ngọc Lặc 药房（药剂师→主任）</div>
+        <div class="timeline-item"><span class="timeline-date">1997–2002</span>Thanh Hóa医药物资公司 / 药业公司（主任→副经理）</div>
+        <div class="timeline-item"><span class="timeline-date">2003–2008</span>THEPHACO 质量保证处（副处长→处长）</div>
+        <div class="timeline-item"><span class="timeline-date">2009–2017</span>THEPHACO 生产计划处处长</div>
+        <div class="timeline-item"><span class="timeline-date">2013至今</span>THEPHACO 董事会成员</div>
+        <div class="timeline-item"><span class="timeline-date">2017–2020</span>THEPHACO 副总经理</div>
+      </div>
+      <div class="tip-box">
+        <strong>💡 销售策略：</strong>药学专业背景，在质量保证和生产计划部门工作多年。对API的技术指标、质量标准非常专业，在供应商评估中拥有<strong>专业技术话语权</strong>。接触时需准备详细COA、杂质谱、稳定性数据、DMF文件。他<strong>重视质量超过价格</strong>。
+      </div>
+    </div>
+  </div>
+
+  <!-- Person 4 -->
+  <div class="person-card">
+    <div class="person-header">
+      <span class="person-name">Trần Thị Huyền Trang（陈氏玄妆）</span>
+      <span class="person-role"><span class="tag tag-yellow">间接影响力</span> 董事会成员</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">与总经理关系</span>夫妻</div>
+        <div class="info-item"><span class="label">持股</span>2,128,043股（≈306亿越南盾）</div>
+        <div class="info-item"><span class="label">LinkedIn</span><a href="https://vn.linkedin.com/in/huyen-trang-tran-421b35182" target="_blank">查看</a></div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★★☆☆</span></div>
+      </div>
+      <div class="tip-box">
+        <strong>💡 销售策略：</strong>作为总经理配偶和新任董事会成员，是影响决策的重要人物。可通过LinkedIn尝试建立联系。公司决策具有<strong>家族企业特征</strong>。
+      </div>
+    </div>
+  </div>
+
+  <!-- Person 5 -->
+  <div class="person-card">
+    <div class="person-header">
+      <span class="person-name">Lê Xuân Thủy（黎春水）</span>
+      <span class="person-role">首席会计师</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">出生</span>1979年（47岁）</div>
+        <div class="info-item"><span class="label">学历</span>经济学硕士</div>
+        <div class="info-item"><span class="label">加入公司</span>2002年</div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★★☆☆</span></div>
+      </div>
+      <p style="font-size:14px;">负责采购合同财务审核和付款审批</p>
+    </div>
+  </div>
+
+  <!-- Person 6 -->
+  <div class="person-card">
+    <div class="person-header">
+      <span class="person-name">Cao Thị Vĩnh（高氏永）</span>
+      <span class="person-role">公司治理负责人</span>
+    </div>
+    <div class="person-body">
+      <div class="info-grid">
+        <div class="info-item"><span class="label">部门</span>行政人事部</div>
+        <div class="info-item"><span class="label">任命时间</span>2024年6月5日</div>
+        <div class="info-item"><span class="label">决策权重</span><span class="stars">★★☆☆☆</span></div>
+      </div>
+      <p style="font-size:14px;">负责公司治理和信息披露</p>
+    </div>
+  </div>
+
+  <!-- 其他管理层 -->
+  <h4 style="margin-top:20px;margin-bottom:10px;font-size:15px;">其他管理层成员</h4>
+  <div class="table-wrap">
+    <table>
+      <tr><th>姓名</th><th>职务</th><th>出生年</th><th>学历</th><th>加入时间</th></tr>
+      <tr><td>Phạm Quỳnh Nga（范琼娥）</td><td>监察委员会主席</td><td>1988</td><td>审计本科</td><td>2017年</td></tr>
+      <tr><td>Nguyễn Văn Tuấn（阮文俊）</td><td>监察委员会成员</td><td>1974</td><td>经济学本科</td><td>2013年</td></tr>
+      <tr><td>Vũ Đức Anh（武德英）</td><td>监察委员会成员</td><td>1994</td><td>会计本科</td><td>2017年</td></tr>
+    </table>
+  </div>
+
+  </div>
+</div>
+
+<!-- 四、决策链图谱 -->
+<div class="section">
+  <div class="section-title">📊 四、关键决策链图谱</div>
+  <div class="section-body">
+    <div class="chains">
+      <div class="chain-node primary">
+        <div class="nm">Trần Văn Công（陈文公）</div>
+        <div class="ps">董事会主席 — 最高决策审批</div>
+      </div>
+      <div class="chain-arrow">↓ 战略决策 ↓</div>
+      <div class="chain-node primary">
+        <div class="nm">⭐ Trần Thanh Minh（陈清明）</div>
+        <div class="ps">总经理兼董事会成员 — API采购最终审批人</div>
+      </div>
+      <div class="chain-arrow">↓ 技术评估与推荐 ↓</div>
+      <div class="chain-node">
+        <div class="nm">Cao Văn Bốn（高文本）</div>
+        <div class="ps">董事会成员 / 一级专科药剂师 — 质量技术把关</div>
+      </div>
+      <div class="chain-arrow">↓ 采购执行 ↓</div>
+      <div class="chain-node">
+        <div class="nm">采购部 / 物资供应部</div>
+        <div class="ps">具体采购联系人待补充</div>
+      </div>
+      <div class="chain-arrow">↓ 财务审核 ↓</div>
+      <div class="chain-node">
+        <div class="nm">Lê Xuân Thủy（黎春水）</div>
+        <div class="ps">首席会计师 — 付款审批</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 五、采购行为分析 -->
+<div class="section">
+  <div class="section-title">📦 五、采购行为分析</div>
+  <div class="section-body">
+    <h4 style="font-size:15px;margin-bottom:10px;">已知API供应商（来自提单数据）</h4>
+    <div class="table-wrap">
+    <table>
+      <tr><th>供应商</th><th>国家</th><th>进口API品种</th><th>HS编码</th></tr>
+      <tr><td><strong>Topfond Pharmaceutical</strong></td><td>🇨🇳 中国</td><td>林可霉素HCl、螺旋霉素</td><td>29419000</td></tr>
+      <tr><td><strong>浙江仙琚制药</strong></td><td>🇨🇳 中国</td><td>甲泼尼龙</td><td>29372900</td></tr>
+      <tr><td><strong>Yancheng Chemhome</strong></td><td>🇨🇳 中国</td><td>阿维林柠檬酸盐、环苯扎林HCl</td><td>29214900</td></tr>
+      <tr><td><strong>Sinobright Pharm</strong></td><td>🇨🇳 中国</td><td>螺旋霉素</td><td>29419000</td></tr>
+      <tr><td><strong>APC Pharmaceuticals</strong></td><td>🇭🇰 香港</td><td>青霉素V钾（Sandoz奥地利）</td><td>29411090</td></tr>
+      <tr><td><strong>Colorcon Asia Pacific</strong></td><td>🇸🇬 新加坡</td><td>薄膜包衣预混剂</td><td>32061990</td></tr>
+    </table>
+    </div>
+
+    <h4 style="font-size:15px;margin:16px 0 10px;">🔍 关键发现</h4>
+    <ol>
+      <li><strong>已经是四环素成品药生产商</strong>（Tetracycline 250mg/500mg），需要稳定的四环素API来源</li>
+      <li><strong>有从中国进口API的成熟经验</strong>，对中越贸易流程熟悉</li>
+      <li>主要从中国进口，<strong>不排斥中国供应商</strong></li>
+      <li>采购API品类包括抗生素类（林可霉素、螺旋霉素、青霉素类、四环素类）</li>
+      <li>家族企业特征明显，决策权高度集中在Trần Thanh Minh夫妇手中</li>
+    </ol>
+  </div>
+</div>
+
+<!-- 六、联系方式与对接策略 -->
+<div class="section">
+  <div class="section-title">📞 六、联系方式与对接策略</div>
+  <div class="section-body">
+    <h4 style="font-size:15px;margin-bottom:10px;">已知联系渠道</h4>
+    <div class="table-wrap">
+    <table>
+      <tr><th style="width:140px">渠道</th><th>信息</th></tr>
+      <tr><td>公司总机</td><td>(84.237) 373 7888 / 385 2691</td></tr>
+      <tr><td>客服热线</td><td><strong>1900 888 633</strong></td></tr>
+      <tr><td>公司邮箱</td><td><strong>thephacoth@hn.vnn.vn</strong></td></tr>
+      <tr><td>官网</td><td><a href="https://thephaco.vn" target="_blank">thephaco.vn</a></td></tr>
+      <tr><td>LinkedIn (总经理)</td><td><a href="https://vn.linkedin.com/in/tran-thanh-minh-82902620b" target="_blank">Trần Thanh Minh</a></td></tr>
+      <tr><td>LinkedIn (董事会成员)</td><td><a href="https://vn.linkedin.com/in/huyen-trang-tran-421b35182" target="_blank">Huyen Trang Tran</a></td></tr>
+    </table>
+    </div>
+
+    <h4 style="font-size:15px;margin:16px 0 10px;">推荐接触顺序</h4>
+    <div class="step-box">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>邮件 → thephacoth@hn.vnn.vn</h4>
+        <p>标题注明"Attn: CEO / 原料药采购部"，使用越南语+英文双语版本</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>LinkedIn → 先关注 Trần Thanh Minh</h4>
+        <p>发送专业邀请消息，提及四环素API供应</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>电话 → 1900 888 633</h4>
+        <p>请求转接原料药采购部门或总经理办公室</p>
+      </div>
+    </div>
+    <div class="step-box">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>如有可能 → 拜访</h4>
+        <p>232 Trần Phú, Lam Sơn, Thanh Hóa city, Vietnam<br>建议携带：公司资质、API样品、COA、DMF文件</p>
+      </div>
+    </div>
+
+    <h4 style="font-size:15px;margin:16px 0 10px;">沟通要点建议</h4>
+    <ul>
+      <li><strong>强调四环素经验：</strong>你们已是Tetracycline知名生产商，我们有高品质API确保产品一致性</li>
+      <li><strong>利用已有中国关系：</strong>你们已有与Topfond、浙江仙琚的合作，我们可以提供同等甚至更优品质</li>
+      <li><strong>技术资料准备：</strong>针对Cao Văn Bốn的专业背景，准备详细COA、杂质谱、DMF文件</li>
+      <li><strong>价格竞争力：</strong>调查竞争对手的四环素API报价，提供有竞争力的价格</li>
+      <li><strong>物流优势：</strong>强调从中国到越南的海运优势（海防港/胡志明港）</li>
+    </ul>
+
+    <h4 style="font-size:15px;margin:16px 0 10px;">风险与对策</h4>
+    <div class="risk-grid">
+      <div class="risk-card"><div class="rt">⚠️ 已有固定供应商</div><div class="rs">✓ 了解情况，提供替代/补充方案</div></div>
+      <div class="risk-card"><div class="rt">⚠️ 越南语沟通障碍</div><div class="rs">✓ 准备越南语产品资料，或带翻译</div></div>
+      <div class="risk-card"><div class="rt">⚠️ 家族企业决策集中</div><div class="rs">✓ 重点突破Trần Thanh Minh一人即可</div></div>
+      <div class="risk-card"><div class="rt">⚠️ 质量控制严格</div><div class="rs">✓ 提前准备好所有质量认证文件</div></div>
+      <div class="risk-card"><div class="rt">⚠️ 进口手续复杂</div><div class="rs">✓ 提供CIF报价，协助清关文件</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 七、附录 -->
+<div class="section">
+  <div class="section-title">🔗 七、附录：社交媒体与网络存在</div>
+  <div class="section-body">
+    <h4 style="font-size:15px;margin-bottom:8px;">公司官网</h4>
+    <ul>
+      <li>越文版：<a href="https://thephaco.vn/vi/" target="_blank">thephaco.vn/vi/</a></li>
+      <li>英文版：<a href="https://thephaco.vn/en/" target="_blank">thephaco.vn/en/</a></li>
+      <li>备用域名：<a href="https://www.thephaco.net/" target="_blank">thephaco.net</a></li>
+    </ul>
+    <h4 style="font-size:15px;margin:12px 0 8px;">LinkedIn</h4>
+    <ul>
+      <li>Trần Thanh Minh：<a href="https://vn.linkedin.com/in/tran-thanh-minh-82902620b" target="_blank">查看</a></li>
+      <li>Huyen Trang Tran：<a href="https://vn.linkedin.com/in/huyen-trang-tran-421b35182" target="_blank">查看</a></li>
+    </ul>
+    <h4 style="font-size:15px;margin:12px 0 8px;">财务数据</h4>
+    <p style="font-size:14px;">Vietstock：<a href="https://finance.vietstock.vn/DTH-ctcp-duoc-vat-tu-y-te-thanh-hoa.htm" target="_blank">DTH公司页面</a></p>
+    <div class="tip-box" style="margin-top:16px;">
+      <strong>⚖️ 免责声明：</strong>本报告仅供客户开发参考，请遵守商业道德和相关法律法规开展商务活动。
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  THEPHACO 客户开发情报报告 · 2026年6月30日 · 仅供内部参考
+</div>
+
+</body>
+</html>
