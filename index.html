@@ -3,168 +3,641 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI-quant 量化研究报告</title>
+<title>AI量化指标分析面板 | Ichimoku · RSI · MACD · Bollinger · ATR</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
-  :root {
-    --bg: #f8f9fa;
-    --text: #222;
-    --text-secondary: #555;
-    --accent: #c0392b;
-    --card-bg: #ffffff;
-    --border: #e0e0e0;
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: "SimSun", "宋体", "Noto Serif CJK SC", serif;
-    font-size: 10.5pt;
-    line-height: 1.5;
-    color: var(--text);
-    background: var(--bg);
-    margin: 0;
-    padding: 0;
-  }
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 48px 24px;
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 48px;
-  }
-  .header h1 {
-    font-size: 22pt;
-    margin: 0 0 8px 0;
-    letter-spacing: 2px;
-  }
-  .header p {
-    color: var(--text-secondary);
-    margin: 0;
-    text-indent: 0;
-  }
-  .report-list {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  .report-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px 28px;
-    transition: box-shadow 0.2s, transform 0.2s;
-    text-decoration: none;
-    color: var(--text);
-    display: block;
-  }
-  .report-card:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    transform: translateY(-2px);
-  }
-  .report-card .card-title {
-    font-size: 13pt;
-    font-weight: bold;
-    margin: 0 0 8px 0;
-    text-indent: 0;
-    color: var(--accent);
-  }
-  .report-card .card-meta {
-    font-size: 9pt;
-    color: var(--text-secondary);
-    margin: 0 0 10px 0;
-    text-indent: 0;
-  }
-  .report-card .card-desc {
-    margin: 0;
-    text-align: justify;
-    text-justify: inter-ideograph;
-  }
-  .report-card .card-tags {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .report-card .tag {
-    display: inline-block;
-    padding: 2px 10px;
-    border-radius: 12px;
-    font-size: 8pt;
-    background: #f0f0f0;
-    color: var(--text-secondary);
-  }
-  .footer {
-    text-align: center;
-    margin-top: 60px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-    color: #999;
-    font-size: 9pt;
-  }
-  .footer p { text-indent: 0; margin: 2px 0; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f5f6fa;color:#2c3e50}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:20px;font-weight:600}
+.header h1 span{color:#4fc3f7}
+.header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.stock-selector{display:flex;gap:8px;flex-wrap:wrap}
+.stock-btn{padding:6px 14px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;transition:all .2s}
+.stock-btn:hover{background:rgba(255,255,255,0.1)}
+.stock-btn.active{background:#4fc3f7;color:#1a1a2e;border-color:#4fc3f7;font-weight:600}
+.controls{background:#fff;padding:12px 24px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-group label{font-size:12px;color:#666;font-weight:600;white-space:nowrap}
+.ctrl-group input{width:42px;padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:12px;text-align:center}
+.ctrl-group input:focus{outline:none;border-color:#4fc3f7}
+.ctrl-group .sep{color:#ccc;margin:0 2px}
+.apply-btn{padding:5px 16px;background:#4fc3f7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;transition:background .2s}
+.apply-btn:hover{background:#29b6f6}
+.reset-btn{padding:5px 12px;background:#eee;color:#666;border:none;border-radius:4px;cursor:pointer;font-size:13px}
+.reset-btn:hover{background:#ddd}
+.chart-container{padding:12px 16px;display:grid;grid-template-rows:1fr;gap:8px}
+#mainChart{width:100%;height:480px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+#macdChart,#rsiChart,#atrChart{width:100%;height:180px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.signal-panel{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 16px 12px}
+.signal-card{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);text-align:center}
+.signal-card .ind-name{font-size:11px;color:#999;margin-bottom:4px}
+.signal-card .ind-value{font-size:20px;font-weight:700;margin-bottom:4px}
+.signal-card .ind-signal{font-size:11px;padding:2px 8px;border-radius:10px;display:inline-block}
+.sig-bullish{background:#e8f5e9;color:#2e7d32}
+.sig-bearish{background:#fbe9e7;color:#c62828}
+.sig-neutral{background:#f5f5f5;color:#666}
+.info-section{padding:16px 24px;background:#fff;margin:8px 16px 16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.info-section h2{font-size:16px;color:#1a1a2e;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #4fc3f7}
+.info-section h3{font-size:14px;color:#333;margin:16px 0 8px}
+.info-section table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+.info-section th{background:#1a1a2e;color:#fff;padding:8px 12px;text-align:left}
+.info-section td{padding:8px 12px;border-bottom:1px solid #eee}
+.info-section td:first-child{font-weight:600;color:#333}
+.info-section p{font-size:13px;line-height:1.8;color:#555;margin:8px 0}
+.formula{background:#f8f9fa;border-left:3px solid #4fc3f7;padding:10px 14px;margin:8px 0;font-family:'Courier New',monospace;font-size:12px;border-radius:0 4px 4px 0}
+.loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px 50px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;text-align:center}
+.loading .spinner{border:3px solid #e0e0e0;border-top:3px solid #4fc3f7;border-radius:50%;width:36px;height:36px;animation:spin 1s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:768px){.signal-panel{grid-template-columns:repeat(2,1fr)}.controls{gap:10px}}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>AI-quant 量化研究报告</h1>
-    <p>基于 Tushare Pro + ECharts 的金融数据可视化 · 自动生成自 WorkBuddy</p>
-  </div>
 
-  <div class="report-list">
-    <a class="report-card" href="renfu-5year-kline.html">
-      <p class="card-title">人福医药 5年交易数据全景报告</p>
-      <p class="card-meta">生成时间：2026年6月28日 ｜ 数据量：1,209 交易日</p>
-      <p class="card-desc">人福医药（600079.SH）近五年日线K线图与成交量分析报告，涵盖MA5/10/20/60/120均线系统、年度统计汇总、四阶段走势分析及总结展望。格式规范：宋体五号字，1.5倍行距，图表编号标注与解读。</p>
-      <div class="card-tags">
-        <span class="tag">K线分析</span>
-        <span class="tag">成交量</span>
-        <span class="tag">均线系统</span>
-        <span class="tag">年度统计</span>
-      </div>
-    </a>
-
-    <a class="report-card" href="renfu-5year-finance.html">
-      <p class="card-title">人福医药 近五年财务与管线全景报告</p>
-      <p class="card-meta">生成时间：2026年6月28日 ｜ 数据来源：Tushare + 公开信息披露</p>
-      <p class="card-desc">2021-2025年度人福医药财务全景（营收/利润/毛利率/ROE/资产负债率）、研发管线进化（从仿制药到5款1类新药获批）、战略转型脉络（归核化→创新转型→招商局入主）的综合分析报告。</p>
-      <div class="card-tags">
-        <span class="tag">财务分析</span>
-        <span class="tag">研发管线</span>
-        <span class="tag">战略转型</span>
-        <span class="tag">年度对比</span>
-      </div>
-    </a>
-
-    <a class="report-card" href="cspc-5year.html">
-      <p class="card-title">石药集团 五年全景分析报告</p>
-      <p class="card-meta">生成时间：2026年6月29日 ｜ 数据来源：公司年报 + 公开信息披露</p>
-      <p class="card-desc">石药集团（01093.HK）2021-2025年全景分析：财务收入、利润与毛利率趋势、大宗原料药（维生素C/咖啡因/维生素B12）深度解析、研发管线从仿制药到八大技术平台的进化、战略转型（集采冲击→BD出海→管理层代际交接）全脉络梳理。含5张ECharts交互图表。</p>
-      <div class="card-tags">
-        <span class="tag">石药集团</span>
-        <span class="tag">维生素C</span>
-        <span class="tag">咖啡因</span>
-        <span class="tag">BD出海</span>
-      </div>
-    </a>
-
-    <a class="report-card" href="guobang-medical-5year-report.html">
-      <p class="card-title">国邦医药 近五年全景分析报告</p>
-      <p class="card-meta">生成时间：2026年6月28日 ｜ 数据来源：公司年报 + 公开信息披露</p>
-      <p class="card-desc">国邦医药（605507.SH）2021-2025年全景分析：财务收入/利润/毛利率趋势、医药原料药与动保双引擎业务结构、全球注册认证管线变化、平台型制造升级战略。</p>
-      <div class="card-tags">
-        <span class="tag">国邦医药</span>
-        <span class="tag">原料药</span>
-        <span class="tag">动保</span>
-        <span class="tag">战略转型</span>
-      </div>
-    </a>
-  </div>
-
-  <div class="footer">
-    <p>数据来源：Tushare Pro API · 报告生成：WorkBuddy · 可视化引擎：ECharts</p>
-    <p>本页面内容仅供研究参考，不构成投资建议。© 2026 AI-quant</p>
-  </div>
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<div>正在加载股票数据...</div>
 </div>
+
+<div class="header">
+<h1>AI量化指标分析面板 <span>| Ichimoku · RSI · MACD · Bollinger · ATR</span></h1>
+<div class="header-right">
+<div class="stock-selector" id="stockSelector"></div>
+</div>
+</div>
+
+<div class="controls">
+<div class="ctrl-group">
+<label>RSI周期</label>
+<input type="number" id="rsiPeriod" value="14" min="2" max="50">
+</div>
+<div class="ctrl-group">
+<label>MACD</label>
+<input type="number" id="macdFast" value="12" min="2" max="30">
+<span class="sep">/</span>
+<input type="number" id="macdSlow" value="26" min="5" max="60">
+<span class="sep">/</span>
+<input type="number" id="macdSignal" value="9" min="2" max="30">
+</div>
+<div class="ctrl-group">
+<label>布林带</label>
+<input type="number" id="bbPeriod" value="20" min="5" max="50">
+<span class="sep">σ=</span>
+<input type="number" id="bbStd" value="2" min="1" max="4" step="0.5">
+</div>
+<div class="ctrl-group">
+<label>ATR周期</label>
+<input type="number" id="atrPeriod" value="14" min="2" max="50">
+</div>
+<div class="ctrl-group">
+<label>Ichimoku</label>
+<input type="number" id="ichiTenkan" value="9" min="2" max="30" title="转换线">
+<span class="sep">/</span>
+<input type="number" id="ichiKijun" value="26" min="5" max="60" title="基准线">
+<span class="sep">/</span>
+<input type="number" id="ichiSenkouB" value="52" min="10" max="120" title="先行B">
+<span class="sep">/</span>
+<input type="number" id="ichiDisplace" value="26" min="5" max="60" title="位移">
+</div>
+<button class="apply-btn" onclick="recalculate()">应用参数</button>
+<button class="reset-btn" onclick="resetParams()">重置</button>
+</div>
+
+<div class="chart-container">
+<div id="mainChart"></div>
+<div id="macdChart"></div>
+<div id="rsiChart"></div>
+<div id="atrChart"></div>
+</div>
+
+<div class="signal-panel" id="signalPanel"></div>
+
+<div class="info-section">
+<h2>Ichimoku Kinko Hyo（一目均衡表）指标详解</h2>
+
+<h3>一、计算方法</h3>
+<table>
+<tr><th>线条</th><th>名称</th><th>计算公式</th><th>默认周期</th></tr>
+<tr><td>Tenkan-sen</td><td>转换线</td><td>(N日内最高价 + N日内最低价) / 2</td><td>9日</td></tr>
+<tr><td>Kijun-sen</td><td>基准线</td><td>(N日内最高价 + N日内最低价) / 2</td><td>26日</td></tr>
+<tr><td>Senkou Span A</td><td>先行线A</td><td>(转换线 + 基准线) / 2，向前位移26日</td><td>26日位移</td></tr>
+<tr><td>Senkou Span B</td><td>先行线B</td><td>(N日内最高价 + N日内最低价) / 2，向前位移26日</td><td>52日+26日位移</td></tr>
+<tr><td>Chikou Span</td><td>滞后线</td><td>收盘价，向后位移26日</td><td>-26日位移</td></tr>
+</table>
+
+<h3>二、Kumo云带（Senkou Span A与B之间的区域）</h3>
+<p><strong>绿色云（Bullish）</strong>：Span A > Span B，代表多头力量主导，云带构成支撑区。</p>
+<p><strong>红色云（Bearish）</strong>：Span A < Span B，代表空头力量主导，云带构成阻力区。</p>
+<p><strong>云带翻转</strong>：Span A与Span B交叉时，趋势可能发生转折。云带越厚（A与B距离越大），支撑/阻力越强。</p>
+
+<h3>三、五大核心信号</h3>
+<table>
+<tr><th>信号</th><th>条件</th><th>含义</th></tr>
+<tr><td>价格 vs 云带</td><td>价格在云上方 / 下方 / 云中</td><td>多头趋势 / 空头趋势 / 震荡</td></tr>
+<tr><td>TK金叉</td><td>转换线上穿基准线</td><td>短期动能转多，买入信号</td></tr>
+<tr><td>TK死叉</td><td>转换线下穿基准线</td><td>短期动能转空，卖出信号</td></tr>
+<tr><td>云带翻转</td><td>Span A上穿/下穿Span B</td><td>中期趋势转折确认</td></tr>
+<tr><td>Chikou确认</td><td>滞后线在价格上方/下方</td><td>趋势得到滞后确认</td></tr>
+</table>
+
+<h3>四、三重确认交易系统</h3>
+<div class="formula">
+强势多头 = 价格 > 云带 AND Tenkan > Kijun AND 云带为绿色<br>
+强势空头 = 价格 < 云带 AND Tenkan < Kijun AND 云带为红色<br>
+中性/震荡 = 上述条件不满足时
+</div>
+
+<h3>五、与其他指标的配合逻辑</h3>
+<table>
+<tr><th>指标</th><th>角色</th><th>与Ichimoku配合方式</th></tr>
+<tr><td>RSI</td><td>超买超卖</td><td>Ichimoku给出趋势方向，RSI寻找入场时机（回调至30-40买入）</td></tr>
+<tr><td>MACD</td><td>动能确认</td><td>Ichimoku金叉 + MACD柱状图扩张 = 多头动能共振</td></tr>
+<tr><td>布林带</td><td>波动通道</td><td>布林带触及下轨 + Ichimoku云带支撑 = 高概率反弹</td></tr>
+<tr><td>ATR</td><td>波动率</td><td>ATR升高 + Ichimoku云带翻转 = 趋势加速确认</td></tr>
+</table>
+</div>
+
+<script>
+// ============================================================
+// Global state
+// ============================================================
+let allStockData = {};
+let currentStockCode = '000756';
+let charts = { main:null, macd:null, rsi:null, atr:null };
+let currentParams = {
+  rsi:14, macdFast:12, macdSlow:26, macdSignal:9,
+  bbPeriod:20, bbStd:2, atrPeriod:14,
+  ichiTenkan:9, ichiKijun:26, ichiSenkouB:52, ichiDisplace:26
+};
+
+// ============================================================
+// Data loading
+// ============================================================
+async function loadData(){
+  try{
+    const resp = await fetch('data/all_stocks.json');
+    allStockData = await resp.json();
+    document.getElementById('loading').style.display='none';
+    initStockSelector();
+    initCharts();
+    recalculate();
+  }catch(e){
+    document.getElementById('loading').innerHTML='数据加载失败: '+e.message+'<br>请确保通过HTTP服务器访问';
+  }
+}
+
+function initStockSelector(){
+  const container=document.getElementById('stockSelector');
+  container.innerHTML='';
+  for(const code in allStockData){
+    const s=allStockData[code];
+    const btn=document.createElement('button');
+    btn.className='stock-btn'+(code===currentStockCode?' active':'');
+    btn.textContent=s.name+'('+s.market+')';
+    btn.onclick=function(){currentStockCode=code;document.querySelectorAll('.stock-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');recalculate();};
+    container.appendChild(btn);
+  }
+}
+
+// ============================================================
+// Indicator calculations (client-side)
+// ============================================================
+function ema(values,period){
+  const k=2/(period+1);
+  const result=new Array(values.length).fill(null);
+  let emaPrev=null;
+  for(let i=0;i<values.length;i++){
+    if(values[i]===null)continue;
+    if(emaPrev===null){emaPrev=values[i];}
+    else{emaPrev=values[i]*k+emaPrev*(1-k);}
+    result[i]=emaPrev;
+  }
+  return result;
+}
+
+function sma(values,period){
+  const result=new Array(values.length).fill(null);
+  let sum=0,count=0;
+  for(let i=0;i<values.length;i++){
+    if(values[i]===null)continue;
+    sum+=values[i];count++;
+    if(count>period){sum-=values[i-period];count=period;}
+    if(count===period)result[i]=sum/period;
+  }
+  return result;
+}
+
+function calcRSI(closes,period){
+  const rsi=new Array(closes.length).fill(null);
+  if(closes.length<period+1)return rsi;
+  let avgGain=0,avgLoss=0;
+  for(let i=1;i<=period;i++){
+    const ch=closes[i]-closes[i-1];
+    if(ch>0)avgGain+=ch;else avgLoss+=Math.abs(ch);
+  }
+  avgGain/=period;avgLoss/=period;
+  rsi[period]=avgLoss===0?100:100-100/(1+avgGain/avgLoss);
+  for(let i=period+1;i<closes.length;i++){
+    const ch=closes[i]-closes[i-1];
+    const gain=ch>0?ch:0;
+    const loss=ch<0?Math.abs(ch):0;
+    avgGain=(avgGain*(period-1)+gain)/period;
+    avgLoss=(avgLoss*(period-1)+loss)/period;
+    rsi[i]=avgLoss===0?100:100-100/(1+avgGain/avgLoss);
+  }
+  return rsi;
+}
+
+function calcMACD(closes,fast,slow,signal){
+  const emaFast=ema(closes,fast);
+  const emaSlow=ema(closes,slow);
+  const dif=closes.map((_,i)=>emaFast[i]!==null&&emaSlow[i]!==null?emaFast[i]-emaSlow[i]:null);
+  const difClean=dif.map(v=>v===null?0:v);
+  const dea=ema(difClean,signal);
+  const histogram=dif.map((v,i)=>v!==null&&dea[i]!==null?(v-dea[i])*2:null);
+  return{dif,dea,histogram};
+}
+
+function calcBollinger(closes,period,stdDev){
+  const mid=sma(closes,period);
+  const upper=new Array(closes.length).fill(null);
+  const lower=new Array(closes.length).fill(null);
+  const pctB=new Array(closes.length).fill(null);
+  const bandwidth=new Array(closes.length).fill(null);
+  for(let i=period-1;i<closes.length;i++){
+    let sum=0;
+    for(let j=i-period+1;j<=i;j++)sum+=closes[j];
+    const mean=sum/period;
+    let variance=0;
+    for(let j=i-period+1;j<=i;j++)variance+=(closes[j]-mean)**2;
+    variance/=(period-1);
+    const sd=Math.sqrt(variance);
+    upper[i]=mean+stdDev*sd;
+    lower[i]=mean-stdDev*sd;
+    mid[i]=mean;
+    if(upper[i]!==lower[i])pctB[i]=(closes[i]-lower[i])/(upper[i]-lower[i]);
+    if(mid[i]>0)bandwidth[i]=(upper[i]-lower[i])/mid[i];
+  }
+  return{mid,upper,lower,pctB,bandwidth};
+}
+
+function calcATR(highs,lows,closes,period){
+  const tr=new Array(closes.length).fill(null);
+  tr[0]=highs[0]-lows[0];
+  for(let i=1;i<closes.length;i++){
+    tr[i]=Math.max(highs[i]-lows[i],Math.abs(highs[i]-closes[i-1]),Math.abs(lows[i]-closes[i-1]));
+  }
+  const atr=new Array(closes.length).fill(null);
+  if(closes.length<period+1)return{tr,atr};
+  let sum=0;
+  for(let i=1;i<=period;i++)sum+=tr[i];
+  atr[period]=sum/period;
+  for(let i=period+1;i<closes.length;i++){
+    atr[i]=(atr[i-1]*(period-1)+tr[i])/period;
+  }
+  return{tr,atr};
+}
+
+function calcIchimoku(highs,lows,closes,tenkanP,kijunP,senkouBP,displace){
+  const n=closes.length;
+  const tenkan=new Array(n).fill(null);
+  const kijun=new Array(n).fill(null);
+  const senkouA=new Array(n).fill(null);
+  const senkouB=new Array(n).fill(null);
+  const chikou=new Array(n).fill(null);
+
+  for(let i=tenkanP-1;i<n;i++){
+    let hh=-Infinity,ll=Infinity;
+    for(let j=i-tenkanP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
+    tenkan[i]=(hh+ll)/2;
+  }
+  for(let i=kijunP-1;i<n;i++){
+    let hh=-Infinity,ll=Infinity;
+    for(let j=i-kijunP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
+    kijun[i]=(hh+ll)/2;
+  }
+  for(let i=0;i<n;i++){
+    if(tenkan[i]!==null&&kijun[i]!==null){
+      const val=(tenkan[i]+kijun[i])/2;
+      if(i+displace<n)senkouA[i+displace]=val;
+    }
+  }
+  for(let i=senkouBP-1;i<n;i++){
+    let hh=-Infinity,ll=Infinity;
+    for(let j=i-senkouBP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
+    const val=(hh+ll)/2;
+    if(i+displace<n)senkouB[i+displace]=val;
+  }
+  for(let i=0;i<n-displace;i++){
+    chikou[i]=closes[i+displace];
+  }
+  return{tenkan,kijun,senkouA,senkouB,chikou};
+}
+
+// ============================================================
+// Chart initialization
+// ============================================================
+function initCharts(){
+  charts.main=echarts.init(document.getElementById('mainChart'));
+  charts.macd=echarts.init(document.getElementById('macdChart'));
+  charts.rsi=echarts.init(document.getElementById('rsiChart'));
+  charts.atr=echarts.init(document.getElementById('atrChart'));
+  window.addEventListener('resize',()=>{
+    Object.values(charts).forEach(c=>c&&c.resize());
+  });
+}
+
+// ============================================================
+// Main recalculate function
+// ============================================================
+function recalculate(){
+  const stock=allStockData[currentStockCode];
+  if(!stock)return;
+  const dates=stock.dates;
+  const ohlcv=stock.ohlcv;
+  const opens=ohlcv.map(d=>d[0]);
+  const closes=ohlcv.map(d=>d[1]);
+  const lows=ohlcv.map(d=>d[2]);
+  const highs=ohlcv.map(d=>d[3]);
+  const volumes=ohlcv.map(d=>d[4]);
+
+  // Read params
+  currentParams.rsi=parseInt(document.getElementById('rsiPeriod').value)||14;
+  currentParams.macdFast=parseInt(document.getElementById('macdFast').value)||12;
+  currentParams.macdSlow=parseInt(document.getElementById('macdSlow').value)||26;
+  currentParams.macdSignal=parseInt(document.getElementById('macdSignal').value)||9;
+  currentParams.bbPeriod=parseInt(document.getElementById('bbPeriod').value)||20;
+  currentParams.bbStd=parseFloat(document.getElementById('bbStd').value)||2;
+  currentParams.atrPeriod=parseInt(document.getElementById('atrPeriod').value)||14;
+  currentParams.ichiTenkan=parseInt(document.getElementById('ichiTenkan').value)||9;
+  currentParams.ichiKijun=parseInt(document.getElementById('ichiKijun').value)||26;
+  currentParams.ichiSenkouB=parseInt(document.getElementById('ichiSenkouB').value)||52;
+  currentParams.ichiDisplace=parseInt(document.getElementById('ichiDisplace').value)||26;
+
+  // Calculate indicators
+  const rsi=calcRSI(closes,currentParams.rsi);
+  const macd=calcMACD(closes,currentParams.macdFast,currentParams.macdSlow,currentParams.macdSignal);
+  const bb=calcBollinger(closes,currentParams.bbPeriod,currentParams.bbStd);
+  const atrData=calcATR(highs,lows,closes,currentParams.atrPeriod);
+  const ichi=calcIchimoku(highs,lows,closes,currentParams.ichiTenkan,currentParams.ichiKijun,currentParams.ichiSenkouB,currentParams.ichiDisplace);
+
+  // Show last 250 days
+  const showCount=Math.min(250,dates.length);
+  const startIdx=Math.max(0,dates.length-showCount);
+  const visDates=dates.slice(startIdx);
+  const visCandle=ohlcv.slice(startIdx).map(d=>[d[0],d[1],d[2],d[3]]);
+  const visVol=volumes.slice(startIdx);
+
+  // Slice indicator arrays
+  const sliceArr=arr=>arr.slice(startIdx);
+  const visRSI=sliceArr(rsi);
+  const visDIF=sliceArr(macd.dif);
+  const visDEA=sliceArr(macd.dea);
+  const visHist=sliceArr(macd.histogram);
+  const visBBUpper=sliceArr(bb.upper);
+  const visBBMid=sliceArr(bb.mid);
+  const visBBLower=sliceArr(bb.lower);
+  const visATR=sliceArr(atrData.atr);
+  const visTenkan=sliceArr(ichi.tenkan);
+  const visKijun=sliceArr(ichi.kijun);
+  const visSenkouA=sliceArr(ichi.senkouA);
+  const visSenkouB=sliceArr(ichi.senkouB);
+  const visChikou=sliceArr(ichi.chikou);
+
+  // Build cloud data for custom series
+  const cloudData=[];
+  for(let i=0;i<visDates.length;i++){
+    if(visSenkouA[i]!==null&&visSenkouB[i]!==null){
+      cloudData.push([i,visSenkouA[i],visSenkouB[i]]);
+    }
+  }
+
+  // === Main Chart ===
+  charts.main.setOption({
+    title:{text:stock.name+' ('+stock.code+') '+stock.market+' — K线 + Ichimoku云 + 布林带',left:'center',top:8,textStyle:{fontSize:14,fontWeight:600}},
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
+      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
+      params.forEach(p=>{
+        if(p.value!==null&&p.value!==undefined&&p.seriesName!=='Cloud'){
+          let val=Array.isArray(p.value)?p.value[1]:p.value;
+          if(val!==null&&val!==undefined)html+='<br/><span style="color:'+p.color+'">●</span> '+p.seriesName+': '+Number(val).toFixed(2);
+        }
+      });
+      return html+'</div>';
+    }},
+    legend:{top:32,left:'center',data:['K线','Tenkan','Kijun','Span A','Span B','Chikou','BB Upper','BB Lower'],textStyle:{fontSize:11}},
+    grid:{left:60,right:20,top:70,bottom:50},
+    xAxis:{type:'category',data:visDates,axisLabel:{fontSize:10}},
+    yAxis:{scale:true,axisLabel:{fontSize:10}},
+    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100},{type:'slider',xAxisIndex:0,start:0,end:100,bottom:5,height:20}],
+    series:[
+      // Cloud custom series
+      {name:'Cloud',type:'custom',renderItem:function(params,api){
+        const idx=api.value(0);
+        const a=api.value(1);
+        const b=api.value(2);
+        const pointA=api.coord([idx,a]);
+        const pointB=api.coord([idx,b]);
+        const isBullish=a>=b;
+        const nextIdx=idx+1;
+        let width=4;
+        if(nextIdx<visDates.length){
+          const nextPoint=api.coord([nextIdx,0]);
+          width=nextPoint[0]-pointA[0]-1;
+        }
+        return{type:'rect',shape:{x:pointA[0]-1,y:Math.min(pointA[1],pointB[1]),width:Math.max(width,2),height:Math.max(Math.abs(pointA[1]-pointB[1]),1)},style:{fill:isBullish?'rgba(151,196,89,0.25)':'rgba(226,75,74,0.18)'}};
+      },data:cloudData,z:1,silent:true},
+      // Candlestick
+      {name:'K线',type:'candlestick',data:visCandle,itemStyle:{color:'#e24b4a',color0:'#3cb371',borderColor:'#e24b4a',borderColor0:'#3cb371'},z:5},
+      // Ichimoku lines
+      {name:'Tenkan',type:'line',data:visTenkan,smooth:true,symbol:'none',lineStyle:{width:1.2,color:'#185fa5'},z:4},
+      {name:'Kijun',type:'line',data:visKijun,smooth:true,symbol:'none',lineStyle:{width:1.2,color:'#a32d2d'},z:4},
+      {name:'Span A',type:'line',data:visSenkouA,symbol:'none',lineStyle:{width:1,color:'#639922',type:'solid'},z:3},
+      {name:'Span B',type:'line',data:visSenkouB,symbol:'none',lineStyle:{width:1,color:'#791f1f',type:'solid'},z:3},
+      {name:'Chikou',type:'line',data:visChikou,symbol:'none',lineStyle:{width:1,color:'#888780',type:'dashed'},z:3},
+      // Bollinger Bands
+      {name:'BB Upper',type:'line',data:visBBUpper,symbol:'none',lineStyle:{width:1,color:'#993556',type:'dotted'},z:2},
+      {name:'BB Lower',type:'line',data:visBBLower,symbol:'none',lineStyle:{width:1,color:'#993556',type:'dotted'},z:2}
+    ]
+  },true);
+
+  // === MACD Chart ===
+  charts.macd.setOption({
+    title:{text:'MACD ('+currentParams.macdFast+','+currentParams.macdSlow+','+currentParams.macdSignal+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
+      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
+      params.forEach(p=>{
+        if(p.value!==null&&p.value!==undefined)html+='<br/><span style="color:'+p.color+'">●</span> '+p.seriesName+': '+Number(p.value).toFixed(4);
+      });
+      return html+'</div>';
+    }},
+    grid:{left:60,right:20,top:32,bottom:24},
+    xAxis:{type:'category',data:visDates,axisLabel:{show:false}},
+    yAxis:{scale:true,axisLabel:{fontSize:10}},
+    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
+    series:[
+      {name:'Histogram',type:'bar',data:visHist.map((v,i)=>({value:v,itemStyle:{color:v>=0?'rgba(226,75,74,0.6)':'rgba(60,179,113,0.6)'}}))},
+      {name:'DIF',type:'line',data:visDIF,symbol:'none',lineStyle:{width:1.2,color:'#185fa5'}},
+      {name:'DEA',type:'line',data:visDEA,symbol:'none',lineStyle:{width:1.2,color:'#a32d2d'}}
+    ]
+  },true);
+
+  // === RSI Chart ===
+  charts.rsi.setOption({
+    title:{text:'RSI ('+currentParams.rsi+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
+      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
+      params.forEach(p=>{
+        if(p.value!==null&&p.value!==undefined&&p.seriesName==='RSI')html+='<br/><span style="color:'+p.color+'">●</span> RSI: '+Number(p.value).toFixed(2);
+      });
+      return html+'</div>';
+    }},
+    grid:{left:60,right:20,top:32,bottom:24},
+    xAxis:{type:'category',data:visDates,axisLabel:{show:false}},
+    yAxis:{min:0,max:100,axisLabel:{fontSize:10}},
+    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
+    series:[
+      {name:'Overbought',type:'line',data:visDates.map(()=>70),symbol:'none',lineStyle:{width:1,color:'#e24b4a',type:'dashed'},silent:true},
+      {name:'Oversold',type:'line',data:visDates.map(()=>30),symbol:'none',lineStyle:{width:1,color:'#3cb371',type:'dashed'},silent:true},
+      {name:'RSI',type:'line',data:visRSI,symbol:'none',lineStyle:{width:1.5,color:'#7f77dd'},areaStyle:{color:'rgba(127,119,221,0.08)'}}
+    ]
+  },true);
+
+  // === ATR Chart ===
+  charts.atr.setOption({
+    title:{text:'ATR ('+currentParams.atrPeriod+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
+    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
+      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
+      params.forEach(p=>{
+        if(p.value!==null&&p.value!==undefined&&p.seriesName==='ATR')html+='<br/><span style="color:'+p.color+'">●</span> ATR: '+Number(p.value).toFixed(3);
+      });
+      return html+'</div>';
+    }},
+    grid:{left:60,right:20,top:32,bottom:24},
+    xAxis:{type:'category',data:visDates,axisLabel:{fontSize:10}},
+    yAxis:{scale:true,axisLabel:{fontSize:10}},
+    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
+    series:[
+      {name:'ATR',type:'line',data:visATR,symbol:'none',lineStyle:{width:1.5,color:'#ba7517'},areaStyle:{color:'rgba(186,117,23,0.1)'}}
+    ]
+  },true);
+
+  // Sync data zoom across all charts
+  syncZoom();
+
+  // Update signal panel
+  updateSignalPanel(closes,rsi,macd,bb,atrData,ichi,stock);
+}
+
+// ============================================================
+// Sync zoom across charts
+// ============================================================
+function syncZoom(){
+  Object.values(charts).forEach(chart=>{
+    if(!chart)return;
+    chart.off('dataZoom');
+    chart.on('dataZoom',function(){
+      const start=chart.getOption().dataZoom[0].start;
+      const end=chart.getOption().dataZoom[0].end;
+      Object.values(charts).forEach(c=>{
+        if(c&&c!==chart){
+          c.setOption({dataZoom:[{start:start,end:end}]});
+        }
+      });
+    });
+  });
+}
+
+// ============================================================
+// Signal panel
+// ============================================================
+function updateSignalPanel(closes,rsi,macd,bb,atrData,ichi,stock){
+  const last=closes.length-1;
+  const lastRSI=rsi[last];
+  const lastDIF=macd.dif[last];
+  const lastDEA=macd.dea[last];
+  const lastHist=macd.histogram[last];
+  const lastBBUpper=bb.upper[last];
+  const lastBBLower=bb.lower[last];
+  const lastBBMid=bb.mid[last];
+  const lastPctB=bb.pctB[last];
+  const lastATR=atrData.atr[last];
+  const lastClose=closes[last];
+  const lastATRPct=lastATR?(lastATR/lastClose*100):0;
+  const lastTenkan=ichi.tenkan[last];
+  const lastKijun=ichi.kijun[last];
+  const lastSpanA=ichi.senkouA[last];
+  const lastSpanB=ichi.senkouB[last];
+
+  // Signal logic
+  let rsiSignal,rsiClass;
+  if(lastRSI>70){rsiSignal='超买';rsiClass='sig-bearish';}
+  else if(lastRSI<30){rsiSignal='超卖';rsiClass='sig-bullish';}
+  else{rsiSignal='中性';rsiClass='sig-neutral';}
+
+  let macdSignal,macdClass;
+  if(lastDIF>lastDEA&&lastHist>0){macdSignal='金叉(多)';macdClass='sig-bullish';}
+  else if(lastDIF<lastDEA&&lastHist<0){macdSignal='死叉(空)';macdClass='sig-bearish';}
+  else{macdSignal='中性';macdClass='sig-neutral';}
+
+  let bbSignal,bbClass;
+  if(lastPctB>1){bbSignal='破上轨';bbClass='sig-bearish';}
+  else if(lastPctB<0){bbSignal='破下轨';bbClass='sig-bullish';}
+  else if(lastPctB>0.7){bbSignal='偏强';bbClass='sig-neutral';}
+  else if(lastPctB<0.3){bbSignal='偏弱';bbClass='sig-neutral';}
+  else{bbSignal='中性';bbClass='sig-neutral';}
+
+  let atrSignal,atrClass;
+  if(lastATRPct>4){atrSignal='高波动';atrClass='sig-bearish';}
+  else if(lastATRPct<2){atrSignal='低波动';atrClass='sig-bullish';}
+  else{atrSignal='正常';atrClass='sig-neutral';}
+
+  let ichiSignal,ichiClass;
+  let ichiScore=0;
+  if(lastClose>Math.max(lastSpanA,lastSpanB))ichiScore++;
+  else if(lastClose<Math.min(lastSpanA,lastSpanB))ichiScore--;
+  if(lastTenkan>lastKijun)ichiScore++;
+  else if(lastTenkan<lastKijun)ichiScore--;
+  if(lastSpanA>lastSpanB)ichiScore++;
+  else if(lastSpanA<lastSpanB)ichiScore--;
+  if(ichiScore>=2){ichiSignal='强多头';ichiClass='sig-bullish';}
+  else if(ichiScore===1){ichiSignal='偏多';ichiClass='sig-bullish';}
+  else if(ichiScore===0){ichiSignal='中性';ichiClass='sig-neutral';}
+  else if(ichiScore===-1){ichiSignal='偏空';ichiClass='sig-bearish';}
+  else{ichiSignal='强空头';ichiClass='sig-bearish';}
+
+  const panel=document.getElementById('signalPanel');
+  panel.innerHTML=`
+    <div class="signal-card"><div class="ind-name">RSI(${currentParams.rsi})</div><div class="ind-value" style="color:${lastRSI>70?'#c62828':lastRSI<30?'#2e7d32':'#666'}">${lastRSI?lastRSI.toFixed(1):'--'}</div><div class="ind-signal ${rsiClass}">${rsiSignal}</div></div>
+    <div class="signal-card"><div class="ind-name">MACD</div><div class="ind-value" style="color:${lastDIF>lastDEA?'#2e7d32':'#c62828'}">${lastHist?lastHist.toFixed(3):'--'}</div><div class="ind-signal ${macdClass}">${macdSignal}</div></div>
+    <div class="signal-card"><div class="ind-name">Bollinger %B</div><div class="ind-value" style="color:${lastPctB>1?'#c62828':lastPctB<0?'#2e7d32':'#666'}">${lastPctB?lastPctB.toFixed(2):'--'}</div><div class="ind-signal ${bbClass}">${bbSignal}</div></div>
+    <div class="signal-card"><div class="ind-name">ATR/Price</div><div class="ind-value" style="color:${lastATRPct>4?'#c62828':lastATRPct<2?'#2e7d32':'#666'}">${lastATRPct?lastATRPct.toFixed(2)+'%':'--'}</div><div class="ind-signal ${atrClass}">${atrSignal}</div></div>
+    <div class="signal-card"><div class="ind-name">Ichimoku</div><div class="ind-value" style="color:${ichiScore>0?'#2e7d32':ichiScore<0?'#c62828':'#666'}">${ichiScore>0?'+':''}${ichiScore}</div><div class="ind-signal ${ichiClass}">${ichiSignal}</div></div>
+  `;
+}
+
+// ============================================================
+// Reset parameters
+// ============================================================
+function resetParams(){
+  document.getElementById('rsiPeriod').value=14;
+  document.getElementById('macdFast').value=12;
+  document.getElementById('macdSlow').value=26;
+  document.getElementById('macdSignal').value=9;
+  document.getElementById('bbPeriod').value=20;
+  document.getElementById('bbStd').value=2;
+  document.getElementById('atrPeriod').value=14;
+  document.getElementById('ichiTenkan').value=9;
+  document.getElementById('ichiKijun').value=26;
+  document.getElementById('ichiSenkouB').value=52;
+  document.getElementById('ichiDisplace').value=26;
+  recalculate();
+}
+
+// ============================================================
+// Init
+// ============================================================
+loadData();
+</script>
 </body>
 </html>
