@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#2c3e50}
+body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f0f2f5;color:#2c3e50;min-height:100vh}
 .header{background:linear-gradient(135deg,#1a237e,#283593);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .header h1{font-size:18px;font-weight:700}
 .header h1 span{color:#82b1ff;font-size:14px;font-weight:400;margin-left:8px}
@@ -42,20 +42,22 @@ body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f0f2f5;colo
 .trades-table tr:hover td{background:#f5f7ff}
 .trade-profit{color:#e53935;font-weight:600}
 .trade-loss{color:#2e7d32;font-weight:600}
-.loading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.25);z-index:9999;display:flex;align-items:center;justify-content:center}
-.loading-box{background:#fff;padding:32px 48px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);text-align:center}
+#loading{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.3);z-index:9999;display:flex;align-items:center;justify-content:center}
+#loading .box{background:#fff;padding:40px 60px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.2);text-align:center}
 .spinner{border:3px solid #e0e0e0;border-top:3px solid #3f51b5;border-radius:50%;width:36px;height:36px;animation:spin 1s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
+#errorMsg{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#ffebee;color:#c62828;padding:12px 24px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);z-index:10000;font-size:14px}
 @media(max-width:768px){.metrics-row{flex-wrap:wrap}.metric-card{min-width:45%}.params-panel{gap:10px}}
 </style>
 </head>
 <body>
 
-<div class="loading" id="loading"><div class="loading-box"><div class="spinner"></div><div>正在加载数据...</div></div></div>
+<div id="loading"><div class="box"><div class="spinner"></div><div>正在加载股票数据...</div></div></div>
+<div id="errorMsg"></div>
 
 <div class="header">
   <h1>📈 双均线策略回测模拟器 <span id="stockTitle">| 新华制药A (000756)</span></h1>
-  <div class="stock-selector" id="stockSelector">
+  <div class="stock-selector">
     <button class="stock-btn active" onclick="switchStock('000756',this)">新华制药A</button>
     <button class="stock-btn" onclick="switchStock('00719',this)">新华制药H</button>
     <button class="stock-btn" onclick="switchStock('605507',this)">国邦医药</button>
@@ -89,7 +91,7 @@ body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f0f2f5;colo
   <span style="font-size:12px;color:#888" id="lastRunTime"></span>
 </div>
 
-<div class="metrics-row" id="metricsRow">
+<div class="metrics-row">
   <div class="metric-card"><div class="metric-label">累计收益率</div><div class="metric-value neu" id="mReturn">—</div><div class="metric-sub" id="mReturnVs">vs B&H —</div></div>
   <div class="metric-card"><div class="metric-label">年化收益率</div><div class="metric-value neu" id="mAnnual">—</div></div>
   <div class="metric-card"><div class="metric-label">最大回撤</div><div class="metric-value neu" id="mDD">—</div></div>
@@ -106,11 +108,11 @@ body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f0f2f5;colo
 </div>
 
 <div class="trades-panel">
-  <h3>📋 交易记录（买入持有基准：{{(sd.close[n-1]/sd.close[0]-1)*100).toFixed(2)}}%）</h3>
+  <h3 id="tradesTitle">📋 交易记录</h3>
   <div style="overflow-x:auto;max-height:320px;overflow-y:auto">
-  <table class="trades-table" id="tradesTable">
+  <table class="trades-table">
     <thead><tr><th>#</th><th>买入日期</th><th>买入价</th><th>卖出日期</th><th>卖出价</th><th>持仓天数</th><th>盈亏(元)</th><th>收益率</th></tr></thead>
-    <tbody id="tradesBody"><tr><td colspan="8" style="color:#aaa;padding:20px">请点击「运行回测」</td></tr></tbody>
+    <tbody id="tradesBody"><tr><td colspan="8" style="color:#aaa;padding:20px">正在加载数据...</td></tr></tbody>
   </table>
   </div>
 </div>
@@ -129,15 +131,26 @@ const STOCKS = {
   '600079': {name:'ST人福',    code:'600079'}
 };
 let currentStock = '000756';
-let stockData = {};  // {code: {dates, open, high, low, close, volume}}
-let allStockDataLoaded = false;
+let stockData = {};
+let charts = [];
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  setTimeout(()=>{el.style.display='none';}, 5000);
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
 
 // ===== 数据加载 =====
-async function loadAllStockData() {
-  const codes = Object.keys(STOCKS);
-  await Promise.all(codes.map(async code => {
-    if (stockData[code]) return;
+async function loadStockData(code) {
+  if (stockData[code]) return stockData[code];
+  try {
     const resp = await fetch(`data/${code}.json`);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const d = await resp.json();
     const out = {dates:[], open:[], high:[], low:[], close:[], volume:[]};
     for (let i = 0; i < d.count; i++) {
@@ -149,17 +162,21 @@ async function loadAllStockData() {
       out.volume.push(d.ohlcv[i][4]);
     }
     stockData[code] = out;
-  }));
-  allStockDataLoaded = true;
+    return out;
+  } catch(e) {
+    showError(`加载 ${code}.json 失败: ${e.message}`);
+    return null;
+  }
 }
 
 async function switchStock(code, btnEl) {
   currentStock = code;
   document.querySelectorAll('.stock-btn').forEach(b => b.classList.remove('active'));
-  btnEl.classList.add('active');
+  if (btnEl) btnEl.classList.add('active');
   document.getElementById('stockTitle').textContent = `| ${STOCKS[code].name} (${code})`;
-  if (!stockData[code]) await loadAllStockData();
-  runBacktest();
+  let sd = stockData[code];
+  if (!sd) sd = await loadStockData(code);
+  if (sd) runBacktest();
 }
 
 // ===== 指标计算 =====
@@ -178,8 +195,12 @@ function calcATR(high, low, close, period) {
   const atr = new Array(high.length).fill(null);
   let sum = 0;
   for (let i = 0; i < high.length; i++) {
-    const tr = (i === 0) ? (high[i] - low[i]) :
-      Math.max(high[i]-low[i], Math.abs(high[i]-close[i-1]), Math.abs(low[i]-close[i-1]));
+    let tr;
+    if (i === 0) {
+      tr = high[i] - low[i];
+    } else {
+      tr = Math.max(high[i]-low[i], Math.abs(high[i]-close[i-1]), Math.abs(low[i]-close[i-1]));
+    }
     sum += tr;
     if (i === period-1) atr[i] = sum / period;
     else if (i > period-1) atr[i] = (atr[i-1] * (period-1) + tr) / period;
@@ -190,7 +211,10 @@ function calcATR(high, low, close, period) {
 // ===== 回测引擎 =====
 function runBacktest() {
   const sd = stockData[currentStock];
-  if (!sd || !sd.close.length) return;
+  if (!sd || !sd.close.length) {
+    showError('股票数据未加载，请稍后再试');
+    return;
+  }
 
   const shortN  = Math.max(2, parseInt(document.getElementById('shortMA').value)  || 5);
   const longN   = Math.max(shortN+1, parseInt(document.getElementById('longMA').value)  || 20);
@@ -205,9 +229,9 @@ function runBacktest() {
   const atr14   = calcATR(sd.high, sd.low, sd.close, 14);
   const volMa20 = calcSMA(sd.volume, 20);
 
-  // ATR 60日SMA（用于过滤）
-  const atrMa60 = calcSMA(atr14.map(x => x === null ? NaN : x).filter((_, i) => atr14[i] !== null), 60);
-  // 对齐回原数组长度
+  // ATR 60日均线
+  const atrNotNull = atr14.filter(x => x !== null);
+  const atrMa60 = calcSMA(atrNotNull, 60);
   const atrMa60Full = new Array(sd.close.length).fill(null);
   let ai = 0;
   for (let i = 0; i < sd.close.length; i++) {
@@ -218,8 +242,8 @@ function runBacktest() {
   }
 
   const n = sd.close.length;
-  const buyIdx = [];   // 买入K线索引
-  const sellIdx = [];  // 卖出K线索引
+  const buyMarkers = [];
+  const sellMarkers = [];
 
   // 生成信号
   for (let i = 1; i < n; i++) {
@@ -232,61 +256,49 @@ function runBacktest() {
       let pass = true;
       if (useVol && sd.volume[i] <= volMa20[i] * volMult) pass = false;
       if (useATR && atr14[i] !== null && atrMa60Full[i] !== null && atr14[i] <= atrMa60Full[i]) pass = false;
-      if (pass) buyIdx.push(i);
+      if (pass) buyMarkers.push(i);
     }
-    if (death) sellIdx.push(i);
+    if (death) sellMarkers.push(i);
   }
 
-  // 模拟交易（简化：每次全仓买入，下一交易日开盘价成交）
+  // 模拟交易
   const trades = [];
-  let pos = null;  // {idx, date, price}
+  let pos = null;
   const INIT_CASH = 100000;
   let cash = INIT_CASH;
-  const eqCurve = new Array(n).fill(null);  // 每日净值（归一化到1）
-  let lastEquity = 1;
-
-  // 合并买卖信号，按顺序处理
-  let sigPtr = 0;
-  const signals = [];
-  buyIdx.forEach(i => signals.push({i, type:'buy'}));
-  sellIdx.forEach(i => signals.push({i, type:'sell'}));
-  signals.sort((a,b) => a.i - b.i);
-
-  // 更简单的方法：扫描每日，检查是否有买入/卖出信号
-  const buySet = new Set(buyIdx);
-  const sellSet = new Set(sellIdx);
+  const eqCurve = new Array(n).fill(null);
 
   for (let i = 0; i < n; i++) {
-    if (!pos && buySet.has(i) && i+1 < n) {
-      // 买入：下一交易日开盘价
+    // 买入：金叉信号出现后，下一交易日开盘买入
+    if (!pos && buyMarkers.includes(i) && i+1 < n) {
       const execIdx = i+1;
       const execPrice = sd.open[execIdx];
       const shares = Math.floor(cash * 0.98 / (execPrice * 100)) * 100;
       if (shares >= 100) {
-        cash -= shares * execPrice * 1.0003; // 含佣金
+        cash -= shares * execPrice * 1.0003;
         pos = {idx: execIdx, date: sd.dates[execIdx], price: execPrice, shares};
       }
     }
 
+    // 出场检查
     if (pos) {
-      // 止损检查（当日收盘价）
       const stopPrice = pos.price * (1 - stopPct);
-      let shouldSell = false, sellIdx_ = i, sellPrice = sd.close[i], reason = '';
+      let shouldSell = false, sellIdx = i, sellPrice = sd.close[i], reason = '';
 
       if (sd.close[i] <= stopPrice) {
         shouldSell = true; sellPrice = sd.close[i]; reason = '止损';
-      } else if (sellSet.has(i) && i+1 < n) {
-        shouldSell = true; sellIdx_ = i+1; sellPrice = sd.open[i+1]; reason = '死叉';
+      } else if (sellMarkers.includes(i) && i+1 < n) {
+        shouldSell = true; sellIdx = i+1; sellPrice = sd.open[i+1]; reason = '死叉';
       }
 
-      if (shouldSell && sellIdx_ >= pos.idx) {
-        cash += pos.shares * sellPrice * (1 - 0.0008); // 佣金+印花税
+      if (shouldSell && sellIdx >= pos.idx) {
+        cash += pos.shares * sellPrice * (1 - 0.0008);
         const cost = pos.shares * pos.price * 1.0003;
         const proceeds = pos.shares * sellPrice * (1 - 0.0008);
         trades.push({
           buyDate: pos.date, buyPrice: pos.price,
-          sellDate: sd.dates[sellIdx_], sellPrice,
-          holdDays: Math.max(1, sellIdx_ - pos.idx),
+          sellDate: sd.dates[sellIdx], sellPrice,
+          holdDays: Math.max(1, sellIdx - pos.idx),
           pnl: proceeds - cost,
           ret: (sellPrice / pos.price) * 0.9992 / 1.0003 - 1
         });
@@ -294,13 +306,10 @@ function runBacktest() {
       }
     }
 
-    // 记录当日净值
-    if (pos) {
-      lastEquity = (cash + pos.shares * sd.close[i]) / INIT_CASH;
-    } else {
-      lastEquity = cash / INIT_CASH;
-    }
-    eqCurve[i] = lastEquity;
+    // 记录净值
+    let posVal = 0;
+    if (pos) posVal = pos.shares * sd.close[i];
+    eqCurve[i] = (cash + posVal) / INIT_CASH;
   }
 
   // 强制平仓
@@ -321,14 +330,14 @@ function runBacktest() {
   // 买入持有基准
   const bhRet = sd.close[n-1] / sd.close[0] - 1;
 
-  // 绩效计算
-  const finalEq = eqCurve[n-1];
+  // 绩效
+  const finalEq = eqCurve[n-1] || 1;
   const totalRet = finalEq - 1;
   const years = n / 252;
   const annRet = Math.pow(1 + totalRet, 1/years) - 1;
 
   // 最大回撤
-  let peak = eqCurve[0], maxDD = 0;
+  let peak = eqCurve[0] || 1, maxDD = 0;
   const ddCurve = [];
   for (let i = 0; i < n; i++) {
     if (eqCurve[i] !== null) {
@@ -341,18 +350,18 @@ function runBacktest() {
     }
   }
 
-  // 夏普比率
+  // 夏普
   const dayRets = [];
   for (let i = 1; i < n; i++) {
     if (eqCurve[i] && eqCurve[i-1] && eqCurve[i-1] > 0) {
       dayRets.push(eqCurve[i]/eqCurve[i-1] - 1);
     }
   }
-  const avgRet = dayRets.reduce((a,b)=>a+b,0) / (dayRets.length||1);
-  const stdRet = Math.sqrt(dayRets.reduce((a,b)=>a+(b-avgRet)**2,0) / (dayRets.length||1));
+  const avgRet = dayRets.length > 0 ? dayRets.reduce((a,b)=>a+b,0)/dayRets.length : 0;
+  const stdRet = dayRets.length > 0 ? Math.sqrt(dayRets.reduce((a,b)=>a+(b-avgRet)**2,0)/dayRets.length) : 0;
   const sharpe = stdRet > 0 ? (annRet - 0.025) / (stdRet * Math.sqrt(252)) : 0;
 
-  // 胜率 & 盈亏比
+  // 胜率
   const winN = trades.filter(t=>t.pnl>0).length;
   const winRate = trades.length > 0 ? winN / trades.length : 0;
   const avgWin = winN > 0 ? trades.filter(t=>t.pnl>0).reduce((a,t)=>a+t.ret,0)/winN : 0;
@@ -361,37 +370,25 @@ function runBacktest() {
   const plRatio = avgLoss > 0 ? avgWin / avgLoss : (avgWin > 0 ? 99 : 0);
 
   // 保存结果
-  window.btResult = {
-    shortN, longN, stopPct, volMult,
-    trades, totalRet, annRet, maxDD: maxDD, sharpe,
-    winRate, plRatio, bhRet,
-    eqCurve, ddCurve, buyIdx, sellIdx,
-    maShort, maLong, n, sd
-  };
+  window._btResult = {shortN, longN, stopPct, volMult, trades, totalRet, annRet, maxDD, sharpe, winRate, plRatio, bhRet, eqCurve, ddCurve, buyMarkers, sellMarkers, maShort, maLong, n, sd};
 
   renderAll();
   document.getElementById('lastRunTime').textContent = `最后运行：${new Date().toLocaleTimeString('zh-CN')}`;
 }
 
 // ===== 渲染 =====
-function setMetric(id, text, val, higherBetter) {
-  const el = document.getElementById(id);
-  el.textContent = text;
-  if (higherBetter === undefined) {
-    el.className = 'metric-value ' + (val>0?'pos':val<0?'neg':'neu');
-  } else {
-    el.className = 'metric-value ' + (val>0?'pos':val<0?'neg':'neu');
-  }
-}
-
 function renderAll() {
-  const r = window.btResult;
+  const r = window._btResult;
   if (!r) return;
 
   // 指标卡片
+  const setMetric = (id, text, val) => {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'metric-value ' + (val>0?'pos':val<0?'neg':'neu');
+  };
   setMetric('mReturn',  (r.totalRet*100).toFixed(2)+'%', r.totalRet);
-  document.getElementById('mReturnVs').textContent =
-    `vs B&H ${(r.bhRet*100).toFixed(2)}%  ${r.totalRet>r.bhRet?'✅':'❌'}`;
+  document.getElementById('mReturnVs').textContent = `vs B&H ${(r.bhRet*100).toFixed(2)}%  ${r.totalRet>r.bhRet?'✅':'❌'}`;
   setMetric('mAnnual',  (r.annRet*100).toFixed(2)+'%', r.annRet);
   setMetric('mDD',      (-r.maxDD*100).toFixed(2)+'%', -r.maxDD);
   setMetric('mSharpe',  r.sharpe.toFixed(3), r.sharpe);
@@ -399,17 +396,25 @@ function renderAll() {
   document.getElementById('mTrades').textContent = r.trades.length;
   setMetric('mPLRatio', r.plRatio.toFixed(2), r.plRatio);
 
+  // 更新交易记录标题
+  document.getElementById('tradesTitle').textContent = `📋 交易记录（买入持有基准：${(r.bhRet*100).toFixed(2)}%）`;
+
   renderCharts();
   renderTradesTable();
 }
 
 function renderCharts() {
-  const r = window.btResult;
+  const r = window._btResult;
   const sd = r.sd;
   const dates = sd.dates;
 
+  // 销毁旧图表
+  charts.forEach(c => { try { c.dispose(); } catch(e){} });
+  charts = [];
+
   // 1. 净值曲线
   const ec = echarts.init(document.getElementById('equityChart'));
+  charts.push(ec);
   const eqData = dates.map((d,i)=>[d, r.eqCurve[i]!==null?+(r.eqCurve[i]*100).toFixed(2):null]);
   const bhData = dates.map((d,i)=>[d, +((sd.close[i]/sd.close[0])*100).toFixed(2)]);
 
@@ -420,7 +425,7 @@ function renderCharts() {
     grid:{left:'55',right:'25',top:58,bottom:28},
     xAxis:{type:'time',axisLabel:{fontSize:10},splitLine:{show:false}},
     yAxis:{type:'value',axisLabel:{formatter:'{value}%',fontSize:10}},
-    dataZoom:[{type:'inside',start:Math.max(0,100-r.n*100/n),end:100}],
+    dataZoom:[{type:'inside',start:Math.max(0,50),end:100}],
     series:[
       {name:'策略净值',type:'line',data:eqData,lineStyle:{width:2,color:'#3f51b5'},symbol:'none',
        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(63,81,181,0.18)'},{offset:1,color:'rgba(63,81,181,0)'}])}},
@@ -430,6 +435,7 @@ function renderCharts() {
 
   // 2. 回撤
   const dc = echarts.init(document.getElementById('drawdownChart'));
+  charts.push(dc);
   const ddData = dates.map((d,i)=>[d, r.ddCurve[i]!==null?+(-r.ddCurve[i]*100).toFixed(2):null]);
   dc.setOption({
     title:{text:'回撤曲线',left:'center',top:6,textStyle:{fontSize:13,color:'#333'}},
@@ -437,20 +443,19 @@ function renderCharts() {
     grid:{left:'55',right:'25',top:26,bottom:20},
     xAxis:{type:'time',axisLabel:{fontSize:10},splitLine:{show:false}},
     yAxis:{type:'value',axisLabel:{formatter:'{value}%',fontSize:10},inverse:true},
-    dataZoom:[{type:'inside',start:Math.max(0,100-r.n*100/n),end:100}],
+    dataZoom:[{type:'inside',start:Math.max(0,50),end:100}],
     series:[{type:'line',data:ddData,lineStyle:{width:1.5,color:'#e53935'},symbol:'none',
              areaStyle:{color:'rgba(229,57,53,0.10)'}}]
   });
 
-  // 3. K线 + 均线 + 信号
+  // 3. K线
   const kc = echarts.init(document.getElementById('klineChart'));
-  // K线数据格式：[[date, open, close, low, high]] — ECharts candlestick 用 [open, close, low, high]
+  charts.push(kc);
   const kData = dates.map((d,i)=>[d, sd.open[i], sd.close[i], sd.low[i], sd.high[i]]);
   const maSData = r.maShort.map((v,i)=>v!==null?[dates[i],+v.toFixed(2)]:null).filter(Boolean);
   const maLData = r.maLong.map((v,i)=>v!==null?[dates[i],+v.toFixed(2)]:null).filter(Boolean);
-  // 买入信号：在K线最低价下方显示绿色箭头
-  const buyData = r.buyIdx.map(i=>({value:[dates[i], +(sd.low[i]*0.97).toFixed(2)], itemStyle:{color:'#4caf50'}}));
-  const sellData = r.sellIdx.map(i=>({value:[dates[i], +(sd.high[i]*1.03).toFixed(2)], itemStyle:{color:'#f44336'}}));
+  const buyData = r.buyMarkers.map(i=>({value:[dates[i], +(sd.low[i]*0.97).toFixed(2)], itemStyle:{color:'#4caf50'}}));
+  const sellData = r.sellMarkers.map(i=>({value:[dates[i], +(sd.high[i]*1.03).toFixed(2)], itemStyle:{color:'#f44336'}}));
 
   kc.setOption({
     title:{text:`K线 + MA${r.shortN}/MA${r.longN} + 买卖信号`,left:'center',top:8,textStyle:{fontSize:14,color:'#333'}},
@@ -464,7 +469,7 @@ function renderCharts() {
     grid:{left:'55',right:'25',top:58,bottom:40},
     xAxis:{type:'time',axisLabel:{fontSize:10},splitLine:{show:false}},
     yAxis:{type:'value',axisLabel:{fontSize:10},scale:true},
-    dataZoom:[{type:'inside',start:Math.max(0,100-r.n*100/n),end:100},{type:'slider',start:Math.max(0,100-r.n*100/n),end:100,bottom:4,height:18}],
+    dataZoom:[{type:'inside',start:Math.max(0,50),end:100},{type:'slider',start:Math.max(0,50),end:100,bottom:4,height:18}],
     series:[
       {name:'K线',type:'candlestick',data:kData,
        itemStyle:{color:'#e53935',color0:'#2e7d32',borderColor:'#e53935',borderColor0:'#2e7d32'}},
@@ -475,14 +480,18 @@ function renderCharts() {
     ]
   });
 
-  window.addEventListener('resize', ()=>{ec.resize();dc.resize();kc.resize()});
-  window._charts = [ec, dc, kc];
+  window.addEventListener('resize', ()=>{ charts.forEach(c=>{try{c.resize();}catch(e){}}); });
 }
 
 function renderTradesTable() {
-  const r = window.btResult;
+  const r = window._btResult;
   const tb = document.getElementById('tradesBody');
-  if (!r.trades.length) { tb.innerHTML='<tr><td colspan="8" style="color:#aaa;padding:20px">无交易记录（可能参数过严，尝试放宽过滤条件）</td></tr>'; return; }
+  if (!r || !r.trades.length) {
+    tb.innerHTML = '<tr><td colspan="8" style="color:#aaa;padding:20px">' +
+      (!r ? '请点击「运行回测」' : '无交易记录（尝试放宽过滤条件）') +
+      '</td></tr>';
+    return;
+  }
   tb.innerHTML = r.trades.map((t,i)=>
     `<tr>
       <td>${i+1}</td>
@@ -499,9 +508,15 @@ function renderTradesTable() {
 
 // ===== 初始化 =====
 (async function(){
-  await loadAllStockData();
-  document.getElementById('loading').style.display='none';
-  runBacktest();
+  try {
+    // 只加载当前股票的数据（加快首屏速度）
+    await loadStockData(currentStock);
+    hideLoading();
+    runBacktest();
+  } catch(e) {
+    showError('初始化失败: ' + e.message);
+    hideLoading();
+  }
 })();
 </script>
 </body>
