@@ -1,0 +1,87 @@
+{
+  "strategy": "双均线交叉(MA5/MA20) + 成交量/ATR过滤 + 10%固定止损",
+  "params": {
+    "n_short": 5,
+    "n_long": 20,
+    "vol_filter": 1.2,
+    "atr_filter": 1.0,
+    "stop_loss_pct": 0.1
+  },
+  "performance": {
+    "新华制药A": {
+      "total_return": 2.06,
+      "annual_return": 0.17,
+      "max_drawdown": -7.8,
+      "sharpe_ratio": 0.11,
+      "win_rate": 25.0,
+      "pnl_ratio": 4.04,
+      "total_trades": 12,
+      "win_trades": 3,
+      "loss_trades": 9,
+      "avg_hold_days": 15.3,
+      "final_net_value": 102057.98
+    },
+    "新华制药H": {
+      "total_return": 12.24,
+      "annual_return": 0.94,
+      "max_drawdown": -13.96,
+      "sharpe_ratio": 0.278,
+      "win_rate": 42.86,
+      "pnl_ratio": 6.16,
+      "total_trades": 7,
+      "win_trades": 3,
+      "loss_trades": 4,
+      "avg_hold_days": 26.9,
+      "final_net_value": 112241.17
+    },
+    "国邦医药A": {
+      "total_return": -0.84,
+      "annual_return": -0.12,
+      "max_drawdown": -3.2,
+      "sharpe_ratio": -0.129,
+      "win_rate": 28.57,
+      "pnl_ratio": 1.0,
+      "total_trades": 7,
+      "win_trades": 2,
+      "loss_trades": 5,
+      "avg_hold_days": 16.0,
+      "final_net_value": 99156.26
+    },
+    "ST人福A": {
+      "total_return": 14.54,
+      "annual_return": 1.11,
+      "max_drawdown": -6.68,
+      "sharpe_ratio": 0.441,
+      "win_rate": 53.33,
+      "pnl_ratio": 2.61,
+      "total_trades": 15,
+      "win_trades": 8,
+      "loss_trades": 7,
+      "avg_hold_days": 28.1,
+      "final_net_value": 114535.56
+    }
+  },
+  "buy_and_hold": {
+    "新华制药A": {
+      "total_return": 53.9,
+      "annual_return": 3.56,
+      "final_value": 153899.93
+    },
+    "新华制药H": {
+      "total_return": -29.05,
+      "annual_return": -2.75,
+      "final_value": 70949.26
+    },
+    "国邦医药A": {
+      "total_return": -48.92,
+      "annual_return": -8.99,
+      "final_value": 51082.59
+    },
+    "ST人福A": {
+      "total_return": 6.32,
+      "annual_return": 0.5,
+      "final_value": 106315.63
+    }
+  },
+  "generated_at": "2026-07-05 21:27:17"
+}
