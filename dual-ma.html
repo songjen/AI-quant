@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双均线策略回测报告 — AI Quant</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background:#f5f7fa; color:#333; }
+  .header { background: linear-gradient(135deg, #1a237e 0%, #283593 100%); color:white; padding: 32px 0; text-align:center; }
+  .header h1 { font-size:26px; font-weight:600; }
+  .header p { font-size:14px; opacity:0.85; margin-top:6px; }
+  .container { max-width:1100px; margin:0 auto; padding:24px 20px; }
+  .card { background:white; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.08); padding:28px; margin-bottom:24px; }
+  .card h2 { font-size:18px; color:#1a237e; border-left:4px solid #3949ab; padding-left:12px; margin-bottom:18px; }
+  .card h3 { font-size:15px; color:#333; margin:16px 0 8px; }
+  .params { display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:12px; }
+  .param-item { background:#f5f7fa; border-radius:8px; padding:12px 16px; }
+  .param-item .label { font-size:12px; color:#888; }
+  .param-item .value { font-size:16px; font-weight:600; color:#1a237e; margin-top:2px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:#e8eaf6; color:#1a237e; padding:10px 12px; text-align:center; font-weight:600; }
+  td { padding:9px 12px; text-align:center; border-bottom:1px solid #eee; }
+  tr:hover td { background:#f5f7fa; }
+  .positive { color:#e53935; font-weight:600; }
+  .negative { color:#2e7d32; font-weight:600; }
+  .chart-img { width:100%; border-radius:8px; margin:12px 0; border:1px solid #eee; }
+  .links { display:flex; gap:16px; margin-top:16px; flex-wrap:wrap; }
+  .btn { display:inline-block; padding:10px 24px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:500; transition:0.2s; }
+  .btn-primary { background:#3949ab; color:white; }
+  .btn-primary:hover { background:#283593; }
+  .btn-outline { border:2px solid #3949ab; color:#3949ab; background:transparent; }
+  .btn-outline:hover { background:#3949ab; color:white; }
+  .signal-legend { display:flex; gap:20px; align-items:center; margin:8px 0; font-size:13px; }
+  .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+  .footer { text-align:center; padding:24px; color:#999; font-size:13px; }
+  @media(max-width:600px) { .params { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📈 双均线量化策略回测报告</h1>
+  <p>MA5 / MA20 趋势跟踪 · 成交量+ATR过滤 · 固定10%止损</p>
+  <p style="font-size:12px;margin-top:4px;">回测区间：上市日 — 2026-07-05 &nbsp;|&nbsp; 数据：前复权日线</p>
+</div>
+
+<div class="container">
+
+  <!-- 策略参数 -->
+  <div class="card">
+    <h2>策略参数</h2>
+    <div class="params">
+      <div class="param-item"><div class="label">短期均线</div><div class="value">MA5 (SMA)</div></div>
+      <div class="param-item"><div class="label">长期均线</div><div class="value">MA20 (SMA)</div></div>
+      <div class="param-item"><div class="label">成交量过滤</div><div class="value">Vol &gt; MA20 × 1.2</div></div>
+      <div class="param-item"><div class="label">ATR过滤</div><div class="value">ATR14 &gt; ATR60</div></div>
+      <div class="param-item"><div class="label">固定止损</div><div class="value">-10%</div></div>
+      <div class="param-item"><div class="label">初始资金</div><div class="value">100,000 元/只</div></div>
+    </div>
+  </div>
+
+  <!-- 绩效汇总 -->
+  <div class="card">
+    <h2>绩效汇总</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>指标</th>
+          <th>新华制药A</th>
+          <th>新华制药H</th>
+          <th>国邦医药A</th>
+          <th>ST人福A</th>
+        </tr>
+      </thead>
+      <tbody id="perf-body">
+        <tr><td>累计收益</td><td>2.06%</td><td>12.24%</td><td>-0.84%</td><td class="positive">14.54%</td></tr>
+        <tr><td>年化收益</td><td>0.17%</td><td>0.94%</td><td>-0.12%</td><td class="positive">1.11%</td></tr>
+        <tr><td>最大回撤</td><td>-7.80%</td><td class="negative">-13.96%</td><td>-3.20%</td><td>-6.68%</td></tr>
+        <tr><td>夏普比率</td><td>0.110</td><td>0.278</td><td>-0.129</td><td class="positive">0.441</td></tr>
+        <tr><td>胜率</td><td>25.00%</td><td>42.86%</td><td>28.57%</td><td class="positive">53.33%</td></tr>
+        <tr><td>盈亏比</td><td>4.04</td><td>6.16</td><td>1.00</td><td>2.61</td></tr>
+        <tr><td>交易次数</td><td>12</td><td>7</td><td>7</td><td>15</td></tr>
+        <tr><td>买入持有</td><td class="positive">53.90%</td><td>-29.05%</td><td class="negative">-48.92%</td><td>6.32%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 净值曲线 -->
+  <div class="card">
+    <h2>净值曲线</h2>
+    <img src="charts/dual_ma_equity_curves.png" class="chart-img" alt="净值曲线">
+  </div>
+
+  <!-- 回撤曲线 -->
+  <div class="card">
+    <h2>回撤曲线</h2>
+    <img src="charts/dual_ma_drawdown.png" class="chart-img" alt="回撤曲线">
+  </div>
+
+  <!-- K线信号图 -->
+  <div class="card">
+    <h2>个股K线与信号标注（最近120交易日）</h2>
+    <h3>新华制药A（000756）</h3>
+    <img src="charts/dual_ma_kline_新华制药A.png" class="chart-img" alt="新华制药A K线">
+    <h3>新华制药H（00719）</h3>
+    <img src="charts/dual_ma_kline_新华制药H.png" class="chart-img" alt="新华制药H K线">
+    <h3>国邦医药A（605507）</h3>
+    <img src="charts/dual_ma_kline_国邦医药A.png" class="chart-img" alt="国邦医药A K线">
+    <h3>ST人福A（600079）</h3>
+    <img src="charts/dual_ma_kline_ST人福A.png" class="chart-img" alt="ST人福A K线">
+  </div>
+
+  <!-- 下载链接 -->
+  <div class="card">
+    <h2>报告下载</h2>
+    <div class="links">
+      <a href="reports/双均线策略回测报告.pdf" class="btn btn-primary" download>📄 下载完整PDF报告</a>
+      <a href="index.html" class="btn btn-outline">← 返回主页</a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  双均线量化策略回测 · Generated on 2026-07-05 · <a href="https://github.com/songjen/AI-quant" style="color:#666;">GitHub</a>
+</div>
+
+</body>
+</html>
