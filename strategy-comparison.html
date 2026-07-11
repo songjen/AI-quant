@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双策略回测对比分析 — 海龟法则 vs 双均线 vs 买入持有</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','Segoe UI',sans-serif;background:#f0f2f5;color:#2c3e50}
+.header{background:linear-gradient(135deg,#1a237e,#0d47a1);color:#fff;padding:18px 30px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:20px}
+.header .badge{background:#ff9800;padding:3px 10px;border-radius:10px;font-size:11px;margin-left:8px}
+.header .links a{color:#82b1ff;text-decoration:none;margin-left:15px;font-size:13px}
+.header .links a:hover{text-decoration:underline}
+.header .updated{color:#90a4ae;font-size:11px;margin-right:12px}
+.container{max-width:1400px;margin:0 auto;padding:16px}
+
+/* 参数说明 */
+.param-box{background:#fff;border-radius:10px;padding:16px 20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);display:flex;gap:30px;flex-wrap:wrap}
+.param-box .strategy-params{flex:1;min-width:300px}
+.param-box h3{font-size:14px;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #1a237e}
+.param-box .turtle-h3{border-color:#e94560}
+.param-box .dma-h3{border-color:#1565c0}
+.param-box .params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.param-box .param-item{background:#f5f6fa;padding:4px 8px;border-radius:4px;font-size:11px}
+.param-box .param-item .label{color:#888}
+.param-box .param-item .val{font-weight:bold;color:#333}
+
+/* 绩效卡片 */
+.perf-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.perf-card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.perf-card .stock-title{font-size:16px;font-weight:bold;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #e0e0e0}
+.perf-card .strat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0}
+.perf-card .strat-row:last-child{border-bottom:none}
+.perf-card .strat-name{font-size:12px;font-weight:600;min-width:80px}
+.perf-card .strat-name.turtle{color:#e94560}
+.perf-card .strat-name.dma{color:#1565c0}
+.perf-card .strat-name.bh{color:#666}
+.perf-card .strat-metrics{display:flex;gap:12px;font-size:11px}
+.perf-card .metric{text-align:center}
+.perf-card .metric .v{font-weight:bold;font-size:14px}
+.perf-card .metric .l{color:#999;font-size:10px}
+.pos{color:#e53935}
+.neg{color:#2e7d32}
+
+/* 图表区域 */
+.section{background:#fff;border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.section h2{font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #1a237e;color:#1a237e}
+.chart{width:100%;height:400px}
+.chart-tall{width:100%;height:500px}
+.chart-half{width:100%;height:350px}
+
+/* 对比表 */
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+th{background:#1a237e;color:#fff;padding:8px 6px;text-align:center;font-weight:600}
+td{padding:7px 6px;text-align:center;border-bottom:1px solid #eee}
+tr:hover td{background:#f5f7ff}
+.turtle-row td{background:#fff5f5}
+.dma-row td{background:#f0f4ff}
+
+/* 结论 */
+.insight-box{background:linear-gradient(135deg,#fff8e1,#fffde7);border-left:4px solid #ff9800;padding:16px 20px;border-radius:8px;margin-bottom:16px}
+.insight-box h3{color:#e65100;font-size:14px;margin-bottom:8px}
+.insight-box ul{margin-left:20px}
+.insight-box li{font-size:12px;line-height:1.8;color:#555}
+.insight-box .highlight{color:#c62828;font-weight:bold}
+
+.footer{text-align:center;padding:16px;color:#888;font-size:11px}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.8);display:flex;justify-content:center;align-items:center;z-index:9999}
+.loading-overlay .spinner{font-size:18px;color:#1a237e}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📊 双策略回测对比分析 <span class="badge">v2.0</span></h1>
+  </div>
+  <div class="links">
+    <span class="updated" id="dataUpdated"></span>
+    <a href="https://songjen.github.io/AI-quant/">← 返回首页</a>
+    <a href="https://songjen.github.io/AI-quant/turtle.html">海龟模拟器</a>
+    <a href="https://songjen.github.io/AI-quant/dual-ma.html">双均线模拟器</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div id="loading" class="loading-overlay"><div class="spinner">⏳ 加载对比数据中...</div></div>
+
+<!-- 参数说明 -->
+<div class="param-box">
+  <div class="strategy-params">
+    <h3 class="turtle-h3">🐢 海龟法则参数</h3>
+    <div class="params-grid" id="turtleParams"></div>
+  </div>
+  <div class="strategy-params">
+    <h3 class="dma-h3">📈 双均线参数</h3>
+    <div class="params-grid" id="dmaParams"></div>
+  </div>
+</div>
+
+<!-- 绩效卡片 -->
+<div class="perf-cards" id="perfCards"></div>
+
+<!-- 年化收益率对比 -->
+<div class="section">
+  <h2>年化收益率对比（海龟 vs 双均线 vs 买入持有）</h2>
+  <div id="chartAnnualReturn" class="chart"></div>
+</div>
+
+<!-- 夏普比率对比 -->
+<div class="section">
+  <h2>夏普比率对比</h2>
+  <div id="chartSharpe" class="chart"></div>
+</div>
+
+<!-- 最大回撤对比 -->
+<div class="section">
+  <h2>最大回撤对比</h2>
+  <div id="chartDrawdown" class="chart"></div>
+</div>
+
+<!-- 胜率对比 -->
+<div class="section">
+  <h2>胜率与交易次数对比</h2>
+  <div id="chartWinRate" class="chart"></div>
+</div>
+
+<!-- 净值曲线对比 -->
+<div class="section">
+  <h2>净值曲线对比（累计收益率%）</h2>
+  <div id="chartEquity" class="chart-tall"></div>
+</div>
+
+<!-- 雷达图 -->
+<div class="section">
+  <h2>多维度雷达图对比</h2>
+  <div id="chartRadar" class="chart-tall"></div>
+</div>
+
+<!-- 完整对比表 -->
+<div class="section">
+  <h2>完整绩效对比表</h2>
+  <div style="overflow-x:auto">
+    <table id="compareTable">
+      <thead>
+        <tr>
+          <th rowspan="2">股票</th>
+          <th rowspan="2">策略</th>
+          <th colspan="2">收益率</th>
+          <th>夏普</th>
+          <th>最大回撤</th>
+          <th>波动率</th>
+          <th>胜率</th>
+          <th>盈亏比</th>
+          <th>交易</th>
+          <th>持仓</th>
+          <th>期末净值</th>
+        </tr>
+        <tr>
+          <th>总收益%</th><th>年化%</th><th>比率</th><th>%</th><th>%</th><th>%</th><th></th><th>次数</th><th>天</th><th>元</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 洞察分析 -->
+<div class="insight-box">
+  <h3>🔍 核心洞察与结论</h3>
+  <ul id="insights"></ul>
+</div>
+
+<div class="footer">
+  AI Quant Lab · 数据已前复权(qfq) · 回测区间详见对比表 · 仅供学习研究，不构成投资建议
+</div>
+
+</div>
+
+<script>
+let DATA = null;
+const STOCK_COLORS = {
+  '新华制药': '#e94560',
+  '国邦药业': '#1565c0',
+  'ST人福': '#ff9800',
+};
+const STRATEGY_COLORS = {
+  '海龟法则': '#e94560',
+  '双均线': '#1565c0',
+  '买入持有': '#78909c',
+};
+
+async function loadData() {
+  const resp = await fetch('data/strategy_comparison.json');
+  DATA = await resp.json();
+  document.getElementById('loading').style.display = 'none';
+
+  // 显示更新时间
+  if (DATA.generated_at) {
+    document.getElementById('dataUpdated').textContent = '数据更新: ' + DATA.generated_at;
+  }
+
+  renderParams();
+  renderPerfCards();
+  renderAnnualReturn();
+  renderSharpe();
+  renderDrawdown();
+  renderWinRate();
+  renderEquity();
+  renderRadar();
+  renderTable();
+  renderInsights();
+}
+
+function renderParams() {
+  const tp = DATA.turtle_params;
+  const dp = DATA.dma_params;
+  const turtleItems = [
+    ['入场通道', tp.entry + '日'], ['离场通道', tp.exit + '日'],
+    ['ATR周期', tp.atr + '日'], ['单笔风险', tp.risk],
+    ['止损', tp.stop], ['最大单元', tp.maxUnit],
+    ['加仓间隔', tp.addon], ['初始资金', '¥' + tp.capital],
+    ['买入费率', (tp.buyCost*10000).toFixed(0) + '‱'],
+    ['卖出费率', (tp.sellCost*10000).toFixed(0) + '‱'],
+    ['滑点', (tp.slippage*100).toFixed(2) + '%'],
+  ];
+  const dmaItems = [
+    ['短期均线', dp.shortMA + '日'], ['长期均线', dp.longMA + '日'],
+    ['止损', dp.stopLoss], ['成交量过滤', dp.volFilter + '倍'],
+    ['ATR过滤', dp.atrFilter ? '开启' : '关闭'],
+    ['初始资金', '¥' + dp.capital],
+  ];
+  document.getElementById('turtleParams').innerHTML = turtleItems.map(([l,v]) =>
+    `<div class="param-item"><span class="label">${l}</span>: <span class="val">${v}</span></div>`).join('');
+  document.getElementById('dmaParams').innerHTML = dmaItems.map(([l,v]) =>
+    `<div class="param-item"><span class="label">${l}</span>: <span class="val">${v}</span></div>`).join('');
+}
+
+function renderPerfCards() {
+  const cards = DATA.stocks.map(s => {
+    const t = s.turtle, d = s.dual_ma, bh = s.buy_hold;
+    const color = STOCK_COLORS[s.name];
+    return `<div class="perf-card">
+      <div class="stock-title" style="border-bottom-color:${color}">${s.name} (${s.code})</div>
+      <div class="strat-row">
+        <span class="strat-name turtle">🐢 海龟</span>
+        <div class="strat-metrics">
+          <div class="metric"><div class="v ${t.annual_return>=0?'pos':'neg'}">${t.annual_return.toFixed(2)}%</div><div class="l">年化</div></div>
+          <div class="metric"><div class="v ${t.sharpe>=0?'pos':'neg'}">${t.sharpe.toFixed(2)}</div><div class="l">夏普</div></div>
+          <div class="metric"><div class="v neg">${t.max_drawdown.toFixed(1)}%</div><div class="l">回撤</div></div>
+          <div class="metric"><div class="v">${t.win_rate.toFixed(0)}%</div><div class="l">胜率</div></div>
+        </div>
+      </div>
+      <div class="strat-row">
+        <span class="strat-name dma">📈 双均线</span>
+        <div class="strat-metrics">
+          <div class="metric"><div class="v ${d.annual_return>=0?'pos':'neg'}">${d.annual_return.toFixed(2)}%</div><div class="l">年化</div></div>
+          <div class="metric"><div class="v ${d.sharpe>=0?'pos':'neg'}">${d.sharpe.toFixed(2)}</div><div class="l">夏普</div></div>
+          <div class="metric"><div class="v neg">${d.max_drawdown.toFixed(1)}%</div><div class="l">回撤</div></div>
+          <div class="metric"><div class="v">${d.win_rate.toFixed(0)}%</div><div class="l">胜率</div></div>
+        </div>
+      </div>
+      <div class="strat-row">
+        <span class="strat-name bh">📊 B&H</span>
+        <div class="strat-metrics">
+          <div class="metric"><div class="v ${bh.annual_return>=0?'pos':'neg'}">${bh.annual_return.toFixed(2)}%</div><div class="l">年化</div></div>
+          <div class="metric"><div class="v ${bh.total_return>=0?'pos':'neg'}">${bh.total_return.toFixed(1)}%</div><div class="l">总收益</div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('perfCards').innerHTML = cards;
+}
+
+function renderAnnualReturn() {
+  const stocks = DATA.stocks.map(s => s.name);
+  const turtleData = DATA.stocks.map(s => s.turtle.annual_return);
+  const dmaData = DATA.stocks.map(s => s.dual_ma.annual_return);
+  const bhData = DATA.stocks.map(s => s.buy_hold.annual_return);
+
+  const chart = echarts.init(document.getElementById('chartAnnualReturn'));
+  chart.setOption({
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, formatter: p => {
+      let html = p[0].name + '<br/>';
+      p.forEach(item => {
+        const color = item.value >= 0 ? '#e53935' : '#2e7d32';
+        html += `${item.marker} ${item.seriesName}: <span style="color:${color};font-weight:bold">${item.value.toFixed(2)}%</span><br/>`;
+      });
+      return html;
+    }},
+    legend: {data: ['海龟法则', '双均线', '买入持有'], top: 5},
+    grid: {left: 60, right: 30, bottom: 40},
+    xAxis: {type: 'category', data: stocks},
+    yAxis: {type: 'value', name: '年化收益率%', axisLabel: {formatter: '{value}%'}},
+    series: [
+      {name: '海龟法则', type: 'bar', data: turtleData, itemStyle: {color: '#e94560'},
+        label: {show: true, position: 'top', formatter: p => p.value.toFixed(2) + '%', fontSize: 10}},
+      {name: '双均线', type: 'bar', data: dmaData, itemStyle: {color: '#1565c0'},
+        label: {show: true, position: 'top', formatter: p => p.value.toFixed(2) + '%', fontSize: 10}},
+      {name: '买入持有', type: 'bar', data: bhData, itemStyle: {color: '#78909c'},
+        label: {show: true, position: 'top', formatter: p => p.value.toFixed(2) + '%', fontSize: 10}},
+    ]
+  });
+}
+
+function renderSharpe() {
+  const stocks = DATA.stocks.map(s => s.name);
+  const turtleData = DATA.stocks.map(s => s.turtle.sharpe);
+  const dmaData = DATA.stocks.map(s => s.dual_ma.sharpe);
+
+  const chart = echarts.init(document.getElementById('chartSharpe'));
+  chart.setOption({
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, formatter: p => {
+      let html = p[0].name + '<br/>';
+      p.forEach(item => {
+        const color = item.value >= 0 ? '#e53935' : '#2e7d32';
+        html += `${item.marker} ${item.seriesName}: <span style="color:${color};font-weight:bold">${item.value.toFixed(3)}</span><br/>`;
+      });
+      return html;
+    }},
+    legend: {data: ['海龟法则', '双均线'], top: 5},
+    grid: {left: 60, right: 30, bottom: 40},
+    xAxis: {type: 'category', data: stocks},
+    yAxis: {type: 'value', name: '夏普比率'},
+    series: [
+      {name: '海龟法则', type: 'bar', data: turtleData, itemStyle: {color: '#e94560'},
+        label: {show: true, position: 'top', formatter: p => p.value.toFixed(3), fontSize: 10}},
+      {name: '双均线', type: 'bar', data: dmaData, itemStyle: {color: '#1565c0'},
+        label: {show: true, position: 'top', formatter: p => p.value.toFixed(3), fontSize: 10}},
+    ],
+    markLine: {silent: true, data: [{yAxis: 0}]}
+  });
+}
+
+function renderDrawdown() {
+  const stocks = DATA.stocks.map(s => s.name);
+  const turtleData = DATA.stocks.map(s => s.turtle.max_drawdown);
+  const dmaData = DATA.stocks.map(s => s.dual_ma.max_drawdown);
+
+  const chart = echarts.init(document.getElementById('chartDrawdown'));
+  chart.setOption({
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}, formatter: p => {
+      let html = p[0].name + '<br/>';
+      p.forEach(item => {
+        html += `${item.marker} ${item.seriesName}: <span style="color:#2e7d32;font-weight:bold">${item.value.toFixed(2)}%</span><br/>`;
+      });
+      return html;
+    }},
+    legend: {data: ['海龟法则', '双均线'], top: 5},
+    grid: {left: 60, right: 30, bottom: 40},
+    xAxis: {type: 'category', data: stocks},
+    yAxis: {type: 'value', name: '最大回撤%', axisLabel: {formatter: '{value}%'}},
+    series: [
+      {name: '海龟法则', type: 'bar', data: turtleData, itemStyle: {color: '#ef5350'},
+        label: {show: true, position: 'bottom', formatter: p => p.value.toFixed(1) + '%', fontSize: 10}},
+      {name: '双均线', type: 'bar', data: dmaData, itemStyle: {color: '#42a5f5'},
+        label: {show: true, position: 'bottom', formatter: p => p.value.toFixed(1) + '%', fontSize: 10}},
+    ]
+  });
+}
+
+function renderWinRate() {
+  const stocks = DATA.stocks.map(s => s.name);
+  const turtleWin = DATA.stocks.map(s => s.turtle.win_rate);
+  const dmaWin = DATA.stocks.map(s => s.dual_ma.win_rate);
+  const turtleTrades = DATA.stocks.map(s => s.turtle.trades);
+  const dmaTrades = DATA.stocks.map(s => s.dual_ma.trades);
+
+  const chart = echarts.init(document.getElementById('chartWinRate'));
+  chart.setOption({
+    tooltip: {trigger: 'axis', axisPointer: {type: 'shadow'}},
+    legend: {data: ['海龟胜率', '双均线胜率', '海龟交易次数', '双均线交易次数'], top: 5},
+    grid: {left: 60, right: 60, bottom: 40},
+    xAxis: {type: 'category', data: stocks},
+    yAxis: [
+      {type: 'value', name: '胜率%', axisLabel: {formatter: '{value}%'}, max: 100},
+      {type: 'value', name: '交易次数', position: 'right'}
+    ],
+    series: [
+      {name: '海龟胜率', type: 'bar', data: turtleWin, itemStyle: {color: '#ef5350'},
+        label: {show: true, position: 'top', formatter: '{c}%', fontSize: 10}},
+      {name: '双均线胜率', type: 'bar', data: dmaWin, itemStyle: {color: '#42a5f5'},
+        label: {show: true, position: 'top', formatter: '{c}%', fontSize: 10}},
+      {name: '海龟交易次数', type: 'line', yAxisIndex: 1, data: turtleTrades,
+        itemStyle: {color: '#c62828'}, lineStyle: {width: 2}, symbol: 'circle', symbolSize: 8},
+      {name: '双均线交易次数', type: 'line', yAxisIndex: 1, data: dmaTrades,
+        itemStyle: {color: '#1565c0'}, lineStyle: {width: 2}, symbol: 'triangle', symbolSize: 8},
+    ]
+  });
+}
+
+function renderEquity() {
+  const series = [];
+  const colors = {turtle: '#e94560', dma: '#1565c0'};
+
+  // 海龟净值
+  for (const [name, data] of Object.entries(DATA.turtle_equity || {})) {
+    series.push({
+      name: name + '(海龟)',
+      type: 'line',
+      data: data.values.map((v, i) => [data.dates[i], v]),
+      symbol: 'none',
+      lineStyle: {width: 1.5, color: STOCK_COLORS[name] || '#e94560', opacity: 0.8, type: 'solid'},
+      itemStyle: {color: STOCK_COLORS[name] || '#e94560'},
+    });
+  }
+
+  // 双均线净值
+  for (const [name, data] of Object.entries(DATA.dma_equity || {})) {
+    series.push({
+      name: name + '(双均线)',
+      type: 'line',
+      data: data.values.map((v, i) => [data.dates[i], v]),
+      symbol: 'none',
+      lineStyle: {width: 1.5, color: STOCK_COLORS[name] || '#1565c0', opacity: 0.8, type: 'dashed'},
+      itemStyle: {color: STOCK_COLORS[name] || '#1565c0'},
+    });
+  }
+
+  const chart = echarts.init(document.getElementById('chartEquity'));
+  chart.setOption({
+    tooltip: {trigger: 'axis', formatter: p => {
+      if (!p.length) return '';
+      let html = p[0].value[0] + '<br/>';
+      p.forEach(item => {
+        const val = item.value[1];
+        const color = val >= 0 ? '#e53935' : '#2e7d32';
+        html += `${item.marker} ${item.seriesName}: <span style="color:${color}">${val.toFixed(2)}%</span><br/>`;
+      });
+      return html;
+    }},
+    legend: {top: 5, textStyle: {fontSize: 11}},
+    grid: {left: 60, right: 30, bottom: 60},
+    xAxis: {type: 'category', data: DATA.turtle_equity && Object.values(DATA.turtle_equity)[0] ?
+      Object.values(DATA.turtle_equity)[0].dates : []},
+    yAxis: {type: 'value', name: '累计收益率%', axisLabel: {formatter: '{value}%'}},
+    dataZoom: [{type: 'inside'}, {type: 'slider', bottom: 10}],
+    series,
+    markLine: {silent: true, data: [{yAxis: 0}]}
+  });
+}
+
+function renderRadar() {
+  // 归一化各指标到0-100
+  const indicators = [
+    {name: '年化收益', max: 5},
+    {name: '夏普比率', max: 1},
+    {name: '胜率', max: 60},
+    {name: '盈亏比', max: 7},
+    {name: '回撤控制', max: 100}, // 越小回撤越好，用100+回撤
+    {name: '交易频率', max: 20},
+  ];
+
+  const series = [];
+  const colors = {turtle: '#e94560', dma: '#1565c0'};
+
+  DATA.stocks.forEach(s => {
+    const t = s.turtle, d = s.dual_ma;
+    const stockColor = STOCK_COLORS[s.name];
+    series.push({
+      name: s.name + '(海龟)',
+      type: 'radar',
+      data: [{
+        value: [
+          Math.max(0, t.annual_return + 5),
+          Math.max(0, t.sharpe + 1.5),
+          t.win_rate,
+          Math.min(t.pnl_ratio, 7),
+          Math.max(0, 100 + t.max_drawdown),
+          Math.min(t.trades, 20),
+        ],
+        name: s.name + '(海龟)',
+        itemStyle: {color: stockColor},
+        areaStyle: {opacity: 0.1},
+        lineStyle: {width: 2, color: stockColor, type: 'solid'},
+      }]
+    });
+    series.push({
+      name: s.name + '(双均线)',
+      type: 'radar',
+      data: [{
+        value: [
+          Math.max(0, d.annual_return + 5),
+          Math.max(0, d.sharpe + 1.5),
+          d.win_rate,
+          Math.min(d.pnl_ratio, 7),
+          Math.max(0, 100 + d.max_drawdown),
+          Math.min(d.trades, 20),
+        ],
+        name: s.name + '(双均线)',
+        itemStyle: {color: stockColor},
+        areaStyle: {opacity: 0.15},
+        lineStyle: {width: 2, color: stockColor, type: 'dashed'},
+      }]
+    });
+  });
+
+  const chart = echarts.init(document.getElementById('chartRadar'));
+  chart.setOption({
+    tooltip: {trigger: 'item'},
+    legend: {top: 5, textStyle: {fontSize: 11}},
+    radar: {
+      indicator: indicators,
+      shape: 'polygon',
+      radius: '70%',
+      splitNumber: 5,
+      axisName: {color: '#555', fontSize: 12},
+      splitArea: {areaStyle: {color: ['#fafafa', '#f0f0f0']}},
+    },
+    series,
+  });
+}
+
+function renderTable() {
+  let html = '';
+  DATA.stocks.forEach(s => {
+    const t = s.turtle, d = s.dual_ma, bh = s.buy_hold;
+    // 海龟行
+    html += `<tr class="turtle-row">
+      <td>${s.name}</td><td style="color:#e94560;font-weight:bold">🐢 海龟</td>
+      <td class="${t.total_return>=0?'pos':'neg'}">${t.total_return.toFixed(2)}%</td>
+      <td class="${t.annual_return>=0?'pos':'neg'}">${t.annual_return.toFixed(2)}%</td>
+      <td class="${t.sharpe>=0?'pos':'neg'}">${t.sharpe.toFixed(3)}</td>
+      <td>${t.max_drawdown.toFixed(2)}%</td>
+      <td>${t.volatility.toFixed(2)}%</td>
+      <td>${t.win_rate.toFixed(1)}%</td>
+      <td>${t.pnl_ratio.toFixed(2)}</td>
+      <td>${t.trades}</td>
+      <td>${t.avg_hold_days.toFixed(0)}</td>
+      <td>¥${t.final_equity.toLocaleString()}</td>
+    </tr>`;
+    // 双均线行
+    html += `<tr class="dma-row">
+      <td></td><td style="color:#1565c0;font-weight:bold">📈 双均线</td>
+      <td class="${d.total_return>=0?'pos':'neg'}">${d.total_return.toFixed(2)}%</td>
+      <td class="${d.annual_return>=0?'pos':'neg'}">${d.annual_return.toFixed(2)}%</td>
+      <td class="${d.sharpe>=0?'pos':'neg'}">${d.sharpe.toFixed(3)}</td>
+      <td>${d.max_drawdown.toFixed(2)}%</td>
+      <td>—</td>
+      <td>${d.win_rate.toFixed(1)}%</td>
+      <td>${d.pnl_ratio.toFixed(2)}</td>
+      <td>${d.trades}</td>
+      <td>${d.avg_hold_days.toFixed(0)}</td>
+      <td>¥${d.final_equity.toLocaleString()}</td>
+    </tr>`;
+    // 买入持有行
+    html += `<tr>
+      <td></td><td style="color:#666">📊 B&H</td>
+      <td class="${bh.total_return>=0?'pos':'neg'}">${bh.total_return.toFixed(2)}%</td>
+      <td class="${bh.annual_return>=0?'pos':'neg'}">${bh.annual_return.toFixed(2)}%</td>
+      <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+      <td>—</td>
+    </tr>`;
+  });
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+function renderInsights() {
+  const insights = [];
+  const stocks = DATA.stocks;
+
+  // 1. 策略整体表现
+  const turtleAvg = stocks.reduce((a,s) => a + s.turtle.annual_return, 0) / stocks.length;
+  const dmaAvg = stocks.reduce((a,s) => a + s.dual_ma.annual_return, 0) / stocks.length;
+  const bhAvg = stocks.reduce((a,s) => a + s.buy_hold.annual_return, 0) / stocks.length;
+  insights.push(`<li><b>策略整体表现</b>：海龟法则三股平均年化 <span class="highlight">${turtleAvg.toFixed(2)}%</span>，双均线平均年化 <span class="highlight">${dmaAvg.toFixed(2)}%</span>，买入持有平均年化 <span class="highlight">${bhAvg.toFixed(2)}%</span>。双均线策略显著优于海龟法则。</li>`);
+
+  // 2. 夏普比率
+  const tSharpeAvg = stocks.reduce((a,s) => a + s.turtle.sharpe, 0) / stocks.length;
+  const dSharpeAvg = stocks.reduce((a,s) => a + s.dual_ma.sharpe, 0) / stocks.length;
+  insights.push(`<li><b>夏普比率</b>：海龟法则平均 <span class="highlight">${tSharpeAvg.toFixed(3)}</span>（全部为负），双均线平均 <span class="highlight">${dSharpeAvg.toFixed(3)}</span>（ST人福最佳0.438）。双均线风险调整后收益远优于海龟。</li>`);
+
+  // 3. 回撤
+  const tDDAvg = stocks.reduce((a,s) => a + Math.abs(s.turtle.max_drawdown), 0) / stocks.length;
+  const dDDAvg = stocks.reduce((a,s) => a + Math.abs(s.dual_ma.max_drawdown), 0) / stocks.length;
+  insights.push(`<li><b>最大回撤</b>：海龟法则平均回撤 <span class="highlight">${tDDAvg.toFixed(1)}%</span>（接近爆仓），双均线平均回撤仅 <span class="highlight">${dDDAvg.toFixed(1)}%</span>。双均线风控能力远超海龟。</li>`);
+
+  // 4. 最佳标的
+  const bestStock = stocks.reduce((best, s) => s.dual_ma.sharpe > best.dual_ma.sharpe ? s : best);
+  insights.push(`<li><b>最佳标的</b>：${bestStock.name}(${bestStock.code}) 在双均线策略下表现最佳，年化${bestStock.dual_ma.annual_return}%，夏普${bestStock.dual_ma.sharpe}，胜率${bestStock.dual_ma.win_rate}%。</li>`);
+
+  // 5. 海龟法则失效原因
+  insights.push(`<li><b>海龟法则失效原因</b>：A股震荡市中虚假突破频繁，趋势跟踪策略反复止损。海龟4单元加仓机制放大了亏损，2N止损在窄幅震荡中被反复触发。</li>`);
+
+  // 6. 双均线优势
+  insights.push(`<li><b>双均线策略优势</b>：成交量+ATR双重过滤有效减少了虚假信号，10%固定止损控制了单笔亏损上限，半凯利公式动态调仓避免了过度集中。</li>`);
+
+  // 7. 建议
+  insights.push(`<li><b>策略建议</b>：在A股震荡环境中，建议使用双均线策略而非趋势跟踪。可进一步优化均线参数（如MA10/MA30）或加入板块轮动过滤，以提升信号质量。</li>`);
+
+  document.getElementById('insights').innerHTML = insights.join('');
+}
+
+window.addEventListener('resize', () => {
+  document.querySelectorAll('[id^="chart"]').forEach(el => {
+    const inst = echarts.getInstanceByDom(el);
+    if (inst) inst.resize();
+  });
+});
+
+loadData().catch(err => {
+  document.getElementById('loading').innerHTML = '<div style="color:#c62828">❌ 数据加载失败: ' + err.message + '</div>';
+});
+</script>
+
+</body>
+</html>
