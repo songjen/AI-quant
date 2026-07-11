@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海龟交易法则回测系统 — AI Quant</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','Segoe UI',sans-serif;background:#f5f6fa;color:#333}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:22px}
+.header .badge{background:#e94560;padding:4px 12px;border-radius:12px;font-size:12px;margin-left:10px}
+.header .links a{color:#0f3460;text-decoration:none;margin-left:15px;font-size:13px}
+.header .links a:hover{text-decoration:underline}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+
+/* 策略说明区 */
+.section{background:#fff;border-radius:10px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.section h2{font-size:18px;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid #e94560;color:#1a1a2e}
+.section h3{font-size:15px;margin:12px 0 8px;color:#16213e}
+
+/* 规则卡片 */
+.rules-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin:15px 0}
+.rule-card{background:linear-gradient(135deg,#f8f9fa,#e9ecef);border-radius:8px;padding:15px;border-left:4px solid #e94560}
+.rule-card .icon{font-size:28px;margin-bottom:8px}
+.rule-card .title{font-weight:bold;font-size:14px;margin-bottom:6px;color:#1a1a2e}
+.rule-card .desc{font-size:12px;color:#555;line-height:1.6}
+.rule-card .formula{background:#fff;padding:6px 10px;border-radius:4px;font-family:'Courier New',monospace;font-size:12px;margin-top:6px;color:#e94560}
+
+/* 绩效卡片 */
+.perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:15px 0}
+.perf-card{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:18px;text-align:center}
+.perf-card .stock-name{font-size:16px;font-weight:bold;margin-bottom:10px}
+.perf-card .return{font-size:28px;font-weight:bold;margin:8px 0}
+.perf-card .neg{color:#e74c3c}
+.perf-card .pos{color:#27ae60}
+.perf-card .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.perf-card .stat-item{text-align:left;font-size:12px}
+.perf-card .stat-label{color:#888}
+.perf-card .stat-value{font-weight:bold}
+
+/* 图表区 */
+.chart-container{width:100%;height:400px;margin:10px 0}
+.chart-large{width:100%;height:500px;margin:10px 0}
+.chart-small{width:100%;height:300px;margin:10px 0}
+
+/* 交易记录表 */
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:#1a1a2e;color:#fff;padding:8px;text-align:center}
+td{padding:6px 8px;border-bottom:1px solid #eee;text-align:center}
+tr:hover{background:#f8f9fa}
+.neg-text{color:#e74c3c;font-weight:bold}
+.pos-text{color:#27ae60;font-weight:bold}
+
+/* 股票选择 */
+.stock-tabs{display:flex;gap:10px;margin:10px 0}
+.stock-tab{padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;border:2px solid #e0e0e0;background:#fff}
+.stock-tab.active{background:#e94560;color:#fff;border-color:#e94560}
+
+/* 参数说明 */
+.param-table{width:100%;border-collapse:collapse;margin:10px 0}
+.param-table th{background:#16213e}
+.param-table td{text-align:left}
+.param-table .param-code{font-family:'Courier New',monospace;color:#e94560}
+
+.footer{text-align:center;padding:20px;color:#888;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🐢 海龟交易法则回测系统 <span class="badge">v1.0</span></h1>
+  </div>
+  <div class="links">
+    <a href="https://songjen.github.io/AI-quant/" style="color:#a0d0ff">← 返回首页</a>
+    <a href="https://songjen.github.io/AI-quant/dual-ma.html" style="color:#a0d0ff">双均线策略</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 策略说明 -->
+  <div class="section">
+    <h2>一、海龟交易法则概述</h2>
+    <p style="line-height:1.8;font-size:13px;color:#555">
+      海龟交易法则（Turtle Trading）由 Richard Dennis 和 William Eckhardt 在 1983 年创立，是一套完整的趋势跟踪交易系统。
+      其核心理念是<strong>"在突破时入场，在趋势结束时离场，用头寸管理控制风险"</strong>。
+      本系统对新华制药(000756)、国邦药业(605507)、ST人福(600079)三只股票进行完整回测。
+    </p>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <div class="icon">📡</div>
+        <div class="title">1. 买入信号 — 唐奇安通道突破</div>
+        <div class="desc">当价格突破过去20日最高价（不含当日），触发买入信号。这是海龟法则System 1的入场规则。</div>
+        <div class="formula">买入条件: High[t] > DC_upper(20)</div>
+      </div>
+      <div class="rule-card">
+        <div class="icon">⚖️</div>
+        <div class="title">2. 头寸管理 — ATR风险定位</div>
+        <div class="desc">每单元风险固定为账户1%。头寸大小由ATR(20)的N值决定，N值越大仓位越小。最多加仓4个单元。</div>
+        <div class="formula">Unit = (Capital × 1%) / (2 × N)</div>
+      </div>
+      <div class="rule-card">
+        <div class="icon">🛡️</div>
+        <div class="title">3. 止损策略 — 2N移动止损</div>
+        <div class="desc">每个单元的止损价为入场价减去2倍N值。加仓后止损价随之上移，整体止损取所有单元最高止损价。</div>
+        <div class="formula">止损价 = Entry - 2 × N</div>
+      </div>
+      <div class="rule-card">
+        <div class="icon">🚪</div>
+        <div class="title">4. 离场信号 — 10日通道反向突破</div>
+        <div class="desc">当收盘价跌破过去10日最低价（不含当日），触发离场信号，全仓卖出。</div>
+        <div class="formula">卖出条件: Close[t] < DC_exit_lower(10)</div>
+      </div>
+    </div>
+
+    <h3>参数配置</h3>
+    <table class="param-table">
+      <tr><th>参数</th><th>值</th><th>说明</th></tr>
+      <tr><td class="param-code">初始资金</td><td>¥50,000</td><td>每只股票独立账户</td></tr>
+      <tr><td class="param-code">入场通道</td><td>20日</td><td>唐奇安通道上轨（System 1）</td></tr>
+      <tr><td class="param-code">离场通道</td><td>10日</td><td>唐奇安通道下轨</td></tr>
+      <tr><td class="param-code">ATR周期(N)</td><td>20</td><td>用于头寸计算和止损</td></tr>
+      <tr><td class="param-code">单笔风险</td><td>1%</td><td>每单元风险占账户比例</td></tr>
+      <tr><td class="param-code">止损倍数</td><td>2×N</td><td>入场价减去2倍ATR</td></tr>
+      <tr><td class="param-code">最大单元</td><td>4</td><td>最多加仓4次</td></tr>
+      <tr><td class="param-code">加仓阈值</td><td>0.5N</td><td>价格上涨0.5N后加仓</td></tr>
+      <tr><td class="param-code">佣金/印花税</td><td>0.03% / 0.05%</td><td>买入佣金，卖出含印花税</td></tr>
+      <tr><td class="param-code">滑点</td><td>0.1%</td><td>模拟成交价偏移</td></tr>
+    </table>
+  </div>
+
+  <!-- 绩效汇总 -->
+  <div class="section">
+    <h2>二、回测绩效汇总</h2>
+    <div class="perf-grid" id="perfCards"></div>
+  </div>
+
+  <!-- 净值曲线 -->
+  <div class="section">
+    <h2>三、净值曲线对比（海龟策略 vs 买入持有）</h2>
+    <div id="chartEquity" class="chart-large"></div>
+  </div>
+
+  <!-- 回撤曲线 -->
+  <div class="section">
+    <h2>四、回撤曲线</h2>
+    <div id="chartDrawdown" class="chart-container"></div>
+  </div>
+
+  <!-- 唐奇安通道图 -->
+  <div class="section">
+    <h2>五、唐奇安通道与买卖信号</h2>
+    <div class="stock-tabs" id="stockTabs"></div>
+    <div id="chartDonchian" class="chart-large"></div>
+  </div>
+
+  <!-- ATR图 -->
+  <div class="section">
+    <h2>六、ATR(20) N值与头寸管理</h2>
+    <div id="chartATR" class="chart-container"></div>
+  </div>
+
+  <!-- 交易记录 -->
+  <div class="section">
+    <h2>七、交易记录明细</h2>
+    <div class="stock-tabs" id="tradeTabs"></div>
+    <div id="tradeTable"></div>
+  </div>
+
+  <!-- 策略评价 -->
+  <div class="section">
+    <h2>八、策略评价与反思</h2>
+    <div style="line-height:1.8;font-size:13px;color:#555">
+      <h3>📉 回测结论</h3>
+      <p>海龟法则在这3只股票上表现极差，3只股票全部大幅亏损：</p>
+      <ul style="margin:10px 0 10px 20px">
+        <li><strong>新华制药</strong>：总收益 -95.38%（vs 买入持有 +84.98%），10笔交易仅2笔盈利</li>
+        <li><strong>国邦药业</strong>：总收益 -93.91%（vs 买入持有 -23.82%），6笔交易全部亏损</li>
+        <li><strong>ST人福</strong>：总收益 -88.90%（vs 买入持有 +13.62%），7笔交易仅1笔盈利</li>
+      </ul>
+
+      <h3>🔍 原因分析</h3>
+      <ul style="margin:10px 0 10px 20px">
+        <li><strong>震荡市失效</strong>：海龟法则是趋势跟踪策略，在震荡市中频繁产生虚假突破信号，导致连续止损</li>
+        <li><strong>加仓放大亏损</strong>：4单元加仓机制在虚假突破时会放大亏损，每笔交易最大亏损可达-8%</li>
+        <li><strong>资金耗尽</strong>：连续亏损后资金大幅缩水，无法再开仓，策略实际在2019-2020年就已停止运行</li>
+        <li><strong>A股特性</strong>：A股市场个股波动性大、假突破频繁，不适合纯趋势跟踪策略</li>
+      </ul>
+
+      <h3>💡 改进方向</h3>
+      <ul style="margin:10px 0 10px 20px">
+        <li>加入<strong>ADX过滤</strong>：只在ADX > 25时执行突破信号，过滤震荡市</li>
+        <li>使用<strong>55日通道</strong>（System 2）：减少交易频率，只捕捉大趋势</li>
+        <li>加入<strong>成交量确认</strong>：突破日成交量需放大1.5倍以上</li>
+        <li>降低<strong>最大单元数</strong>至2个，减少加仓风险</li>
+        <li>改用<strong>波动率过滤</strong>：ATR/价格比率过高时暂停交易</li>
+      </ul>
+
+      <h3>📊 与双均线策略对比</h3>
+      <table style="margin-top:10px">
+        <tr><th>指标</th><th>海龟法则</th><th>双均线策略(MA5/MA20)</th></tr>
+        <tr><td>新华制药</td><td class="neg-text">-95.38%</td><td class="pos-text">+2.06%</td></tr>
+        <tr><td>国邦药业</td><td class="neg-text">-93.91%</td><td class="neg-text">-0.84%</td></tr>
+        <tr><td>ST人福</td><td class="neg-text">-88.90%</td><td class="pos-text">+14.54%</td></tr>
+        <tr><td>交易频率</td><td>低（6-10笔）</td><td>中（7-15笔）</td></tr>
+        <tr><td>平均持仓</td><td>12-19天</td><td>更长</td></tr>
+        <tr><td>风险控制</td><td>2N止损（理论好，实战差）</td><td>10%固定止损</td></tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <p>海龟交易法则回测系统 v1.0 | 数据截至 2026-07-10 | GitHub Pages: <a href="https://songjen.github.io/AI-quant/turtle.html">songjen.github.io/AI-quant/turtle.html</a></p>
+</div>
+
+<script>
+// ============================================================
+// 绩效数据
+// ============================================================
+const PERF = {
+  "000756": {
+    stock:"新华制药",code:"000756",color:"#e74c3c",
+    total_return:-95.38, annual_return:-30.74, max_drawdown:-95.38,
+    volatility:32.21, sharpe:-1.032, win_rate:20.0, pl_ratio:3.99,
+    trades:10, avg_hold:19, buy_hold:84.98, final:2308.85,
+    start:"2018-02-26", end:"2026-07-10"
+  },
+  "605507": {
+    stock:"国邦药业",code:"605507",color:"#2ecc71",
+    total_return:-93.91, annual_return:-43.76, max_drawdown:-93.95,
+    volatility:43.50, sharpe:-1.063, win_rate:0.0, pl_ratio:0.0,
+    trades:6, avg_hold:12, buy_hold:-23.82, final:3043.91,
+    start:"2021-08-30", end:"2026-07-10"
+  },
+  "600079": {
+    stock:"ST人福",code:"600079",color:"#3498db",
+    total_return:-88.90, annual_return:-22.91, max_drawdown:-88.90,
+    volatility:27.26, sharpe:-0.932, win_rate:14.29, pl_ratio:4.47,
+    trades:7, avg_hold:13, buy_hold:13.62, final:5551.36,
+    start:"2018-01-30", end:"2026-07-10"
+  }
+};
+
+const STOCKS = [
+  {code:"000756",name:"新华制药",color:"#e74c3c"},
+  {code:"605507",name:"国邦药业",color:"#2ecc71"},
+  {code:"600079",name:"ST人福",color:"#3498db"}
+];
+
+// ============================================================
+// 绩效卡片
+// ============================================================
+function renderPerfCards() {
+  const container = document.getElementById('perfCards');
+  let html = '';
+  for(const code in PERF) {
+    const p = PERF[code];
+    const retClass = p.total_return >= 0 ? 'pos' : 'neg';
+    html += `
+      <div class="perf-card" style="border-top:4px solid ${p.color}">
+        <div class="stock-name" style="color:${p.color}">${p.stock} (${p.code})</div>
+        <div>初始资金 ¥50,000 → 期末 ¥${p.final.toLocaleString()}</div>
+        <div class="return ${retClass}">${p.total_return.toFixed(2)}%</div>
+        <div class="stats">
+          <div class="stat-item"><span class="stat-label">年化收益:</span> <span class="stat-value ${retClass}">${p.annual_return.toFixed(2)}%</span></div>
+          <div class="stat-item"><span class="stat-label">最大回撤:</span> <span class="stat-value neg">${p.max_drawdown.toFixed(2)}%</span></div>
+          <div class="stat-item"><span class="stat-label">夏普比率:</span> <span class="stat-value">${p.sharpe}</span></div>
+          <div class="stat-item"><span class="stat-label">年化波动:</span> <span class="stat-value">${p.volatility.toFixed(1)}%</span></div>
+          <div class="stat-item"><span class="stat-label">胜率:</span> <span class="stat-value">${p.win_rate.toFixed(1)}%</span></div>
+          <div class="stat-item"><span class="stat-label">盈亏比:</span> <span class="stat-value">${p.pl_ratio}</span></div>
+          <div class="stat-item"><span class="stat-label">交易次数:</span> <span class="stat-value">${p.trades}</span></div>
+          <div class="stat-item"><span class="stat-label">平均持仓:</span> <span class="stat-value">${p.avg_hold}天</span></div>
+          <div class="stat-item"><span class="stat-label">买入持有:</span> <span class="stat-value ${p.buy_hold>=0?'pos':'neg'}">${p.buy_hold.toFixed(2)}%</span></div>
+          <div class="stat-item"><span class="stat-label">数据区间:</span> <span class="stat-value" style="font-size:10px">${p.start}~${p.end}</span></div>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ============================================================
+// 净值曲线
+// ============================================================
+function renderEquityChart() {
+  const chart = echarts.init(document.getElementById('chartEquity'));
+  chart.showLoading();
+
+  // Load equity curve data
+  fetch('data/turtle_equity_curve.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n');
+      const header = lines[0].replace(/﻿/,'').split(',');
+      const data = {};
+      const allDates = new Set();
+
+      for(let i=1; i<lines.length; i++) {
+        const parts = lines[i].split(',');
+        const date = parts[0];
+        const equity = parseFloat(parts[1]);
+        const close = parseFloat(parts[4]);
+        const code = parts[10].padStart(6,'0');
+
+        if(!data[code]) data[code] = {dates:[], equity:[], bh:[]};
+        if(data[code].dates.length === 0) {
+          data[code].firstClose = close;
+        }
+        data[code].dates.push(date);
+        data[code].equity.push(equity);
+        data[code].bh.push(50000 * close / data[code].firstClose);
+        allDates.add(date);
+      }
+
+      const series = [];
+      for(const s of STOCKS) {
+        if(data[s.code]) {
+          series.push({
+            name: `海龟-${s.name}`, type:'line', data: data[s.code].dates.map((d,i)=>[d, data[s.code].equity[i]]),
+            lineStyle:{width:1.5,color:s.color}, symbol:'none', smooth:false
+          });
+          series.push({
+            name: `B&H-${s.name}`, type:'line', data: data[s.code].dates.map((d,i)=>[d, data[s.code].bh[i]]),
+            lineStyle:{width:1,type:'dashed',color:s.color,opacity:0.5}, symbol:'none'
+          });
+        }
+      }
+
+      chart.setOption({
+        tooltip:{trigger:'axis'},
+        legend:{top:5,textStyle:{fontSize:11}},
+        grid:{left:'8%',right:'5%',top:'15%',bottom:'15%'},
+        xAxis:{type:'category',axisLabel:{fontSize:10}},
+        yAxis:{type:'value',name:'净值(元)',axisLabel:{fontSize:10}},
+        dataZoom:[{type:'inside'},{type:'slider',bottom:5}],
+        series: series
+      });
+      chart.hideLoading();
+    })
+    .catch(err => {
+      chart.hideLoading();
+      document.getElementById('chartEquity').innerHTML = '<div style="text-align:center;padding:50px;color:#999">数据加载失败，请通过GitHub查看完整数据</div>';
+    });
+}
+
+// ============================================================
+// 回撤曲线
+// ============================================================
+function renderDrawdownChart() {
+  const chart = echarts.init(document.getElementById('chartDrawdown'));
+  chart.showLoading();
+
+  fetch('data/turtle_equity_curve.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n');
+      const data = {};
+
+      for(let i=1; i<lines.length; i++) {
+        const parts = lines[i].split(',');
+        const date = parts[0];
+        const equity = parseFloat(parts[1]);
+        const code = parts[10].padStart(6,'0');
+
+        if(!data[code]) data[code] = {dates:[], dd:[]};
+        data[code].dates.push(date);
+        const peak = Math.max(...data[code].equity.concat([equity]));
+        data[code].equity = (data[code].equity || []);
+        if(!data[code].peakArr) data[code].peakArr = [];
+        const lastPeak = data[code].peakArr.length > 0 ? data[code].peakArr[data[code].peakArr.length-1] : 0;
+        const newPeak = Math.max(lastPeak, equity);
+        data[code].peakArr.push(newPeak);
+        data[code].dd.push((equity - newPeak) / newPeak * 100);
+      }
+
+      const series = [];
+      for(const s of STOCKS) {
+        if(data[s.code]) {
+          series.push({
+            name: s.name, type:'line',
+            data: data[s.code].dates.map((d,i)=>[d, data[s.code].dd[i]]),
+            lineStyle:{width:1.5,color:s.color},
+            areaStyle:{opacity:0.2,color:s.color},
+            symbol:'none'
+          });
+        }
+      }
+
+      chart.setOption({
+        tooltip:{trigger:'axis',formatter:p=>p.map(x=>`${x[0]}<br/>${x.seriesName}: ${x[1].toFixed(2)}%`).join('<br/>')},
+        legend:{top:5,textStyle:{fontSize:11}},
+        grid:{left:'8%',right:'5%',top:'15%',bottom:'15%'},
+        xAxis:{type:'category',axisLabel:{fontSize:10}},
+        yAxis:{type:'value',name:'回撤%',axisLabel:{fontSize:10,formatter:'{value}%'}},
+        dataZoom:[{type:'inside'},{type:'slider',bottom:5}],
+        series: series
+      });
+      chart.hideLoading();
+    })
+    .catch(err => {
+      chart.hideLoading();
+      document.getElementById('chartDrawdown').innerHTML = '<div style="text-align:center;padding:30px;color:#999">数据加载失败</div>';
+    });
+}
+
+// ============================================================
+// 唐奇安通道图
+// ============================================================
+let currentStock = '000756';
+
+function renderStockTabs() {
+  const container = document.getElementById('stockTabs');
+  let html = '';
+  for(const s of STOCKS) {
+    html += `<div class="stock-tab ${s.code===currentStock?'active':''}" onclick="switchStock('${s.code}')">${s.name}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function switchStock(code) {
+  currentStock = code;
+  renderStockTabs();
+  renderDonchianChart();
+}
+
+function renderDonchianChart() {
+  const chart = echarts.init(document.getElementById('chartDonchian'));
+  chart.showLoading();
+
+  fetch(`data/${currentStock}.json`)
+    .then(r => r.json())
+    .then(json => {
+      const dates = json.dates;
+      const ohlcv = json.ohlcv;
+      const stockInfo = STOCKS.find(s=>s.code===currentStock);
+
+      // 计算唐奇安通道
+      const dcUpper = [], dcLower = [], dcExitLower = [];
+      const entryPeriod = 20, exitPeriod = 10;
+
+      for(let i=0; i<dates.length; i++) {
+        if(i < entryPeriod) {
+          dcUpper.push(null); dcLower.push(null);
+        } else {
+          let maxH = -Infinity, minL = Infinity;
+          for(let j=i-entryPeriod; j<i; j++) {
+            maxH = Math.max(maxH, ohlcv[j][1]);
+            minL = Math.min(minL, ohlcv[j][3]);
+          }
+          dcUpper.push(maxH);
+          dcLower.push(minL);
+        }
+
+        if(i < exitPeriod) {
+          dcExitLower.push(null);
+        } else {
+          let minL = Infinity;
+          for(let j=i-exitPeriod; j<i; j++) {
+            minL = Math.min(minL, ohlcv[j][3]);
+          }
+          dcExitLower.push(minL);
+        }
+      }
+
+      // K线数据
+      const candleData = dates.map((d,i)=>[ohlcv[i][0], ohlcv[i][1], ohlcv[i][3], ohlcv[i][2]]);
+
+      // 买卖信号
+      const buySignals = [], sellSignals = [];
+      for(let i=entryPeriod+1; i<dates.length; i++) {
+        if(dcUpper[i] !== null && ohlcv[i][1] > dcUpper[i] && ohlcv[i-1][1] <= dcUpper[i-1]) {
+          buySignals.push({value:[dates[i], ohlcv[i][1]], itemStyle:{color:'#e74c3c'}});
+        }
+        if(dcExitLower[i] !== null && ohlcv[i][2] < dcExitLower[i] && ohlcv[i-1][2] >= dcExitLower[i-1]) {
+          sellSignals.push({value:[dates[i], ohlcv[i][2]], itemStyle:{color:'#27ae60'}});
+        }
+      }
+
+      chart.setOption({
+        title:{text:`${stockInfo.name} (${currentStock}) — 唐奇安通道与买卖信号`, left:'center', textStyle:{fontSize:14}},
+        tooltip:{trigger:'axis', axisPointer:{type:'cross'}},
+        legend:{top:30, data:['K线','DC上轨(20日)','DC下轨(20日)','DC离场下轨(10日)','买入信号','卖出信号']},
+        grid:{left:'8%',right:'5%',top:'18%',bottom:'15%'},
+        xAxis:{type:'category', data:dates, axisLabel:{fontSize:10}},
+        yAxis:{type:'value', scale:true, axisLabel:{fontSize:10}},
+        dataZoom:[{type:'inside', start:60, end:100},{type:'slider', start:60, end:100, bottom:5}],
+        series: [
+          {name:'K线', type:'candlestick', data:candleData,
+           itemStyle:{color:'#e74c3c', color0:'#2ecc71', borderColor:'#e74c3c', borderColor0:'#2ecc71'}},
+          {name:'DC上轨(20日)', type:'line', data:dcUpper.map((v,i)=>[dates[i],v]),
+           lineStyle:{width:1,type:'dashed',color:'#e74c3c'}, symbol:'none'},
+          {name:'DC下轨(20日)', type:'line', data:dcLower.map((v,i)=>[dates[i],v]),
+           lineStyle:{width:1,type:'dashed',color:'#3498db'}, symbol:'none'},
+          {name:'DC离场下轨(10日)', type:'line', data:dcExitLower.map((v,i)=>[dates[i],v]),
+           lineStyle:{width:1,type:'dotted',color:'#f39c12'}, symbol:'none'},
+          {name:'买入信号', type:'scatter', data:buySignals, symbol:'triangle', symbolSize:10,
+           itemStyle:{color:'#e74c3c'}},
+          {name:'卖出信号', type:'scatter', data:sellSignals, symbol:'pin', symbolSize:30,
+           itemStyle:{color:'#27ae60'}},
+        ]
+      });
+      chart.hideLoading();
+    })
+    .catch(err => {
+      chart.hideLoading();
+      document.getElementById('chartDonchian').innerHTML = '<div style="text-align:center;padding:50px;color:#999">数据加载失败</div>';
+    });
+}
+
+// ============================================================
+// ATR图
+// ============================================================
+function renderATRChart() {
+  const chart = echarts.init(document.getElementById('chartATR'));
+  chart.showLoading();
+
+  fetch('data/turtle_equity_curve.csv')
+    .then(r => r.text())
+    .then(text => {
+      const lines = text.trim().split('\n');
+      const data = {};
+      for(let i=1; i<lines.length; i++) {
+        const parts = lines[i].split(',');
+        const date = parts[0];
+        const atr = parseFloat(parts[5]);
+        const code = parts[10].padStart(6,'0');
+        if(!data[code]) data[code] = {dates:[], atr:[]};
+        data[code].dates.push(date);
+        data[code].atr.push(atr);
+      }
+
+      const series = [];
+      for(const s of STOCKS) {
+        if(data[s.code]) {
+          series.push({
+            name: s.name, type:'line',
+            data: data[s.code].dates.map((d,i)=>[d, data[s.code].atr[i]]),
+            lineStyle:{width:1.5,color:s.color},
+            areaStyle:{opacity:0.1,color:s.color},
+            symbol:'none'
+          });
+        }
+      }
+
+      chart.setOption({
+        title:{text:'ATR(20) N值 — 海龟头寸管理核心指标', left:'center', textStyle:{fontSize:13}},
+        tooltip:{trigger:'axis'},
+        legend:{top:25, textStyle:{fontSize:11}},
+        grid:{left:'8%',right:'5%',top:'20%',bottom:'15%'},
+        xAxis:{type:'category', axisLabel:{fontSize:10}},
+        yAxis:{type:'value', name:'ATR', axisLabel:{fontSize:10}},
+        dataZoom:[{type:'inside'},{type:'slider', bottom:5}],
+        series: series
+      });
+      chart.hideLoading();
+    })
+    .catch(err => {
+      chart.hideLoading();
+      document.getElementById('chartATR').innerHTML = '<div style="text-align:center;padding:30px;color:#999">数据加载失败</div>';
+    });
+}
+
+// ============================================================
+// 交易记录
+// ============================================================
+const TRADES = {
+  "000756": [
+    {entry:"2018-03-13",exit:"2018-03-20",buy:9.04,sell:8.34,units:1,shares:700,reason:"止损(2N)",pnl:-8.02},
+    {entry:"2018-04-26",exit:"2018-05-15",buy:9.14,sell:8.81,units:3,shares:1500,reason:"止损(2N)",pnl:-5.38},
+    {entry:"2018-07-20",exit:"2018-07-30",buy:6.79,sell:6.35,units:2,shares:900,reason:"止损(2N)",pnl:-7.53},
+    {entry:"2018-11-06",exit:"2018-12-07",buy:4.84,sell:4.74,units:4,shares:1600,reason:"止损(2N)",pnl:-5.20},
+    {entry:"2019-01-15",exit:"2019-01-31",buy:4.99,sell:4.69,units:2,shares:600,reason:"止损(2N)",pnl:-7.06},
+    {entry:"2019-02-15",exit:"2019-04-25",buy:5.22,sell:6.57,units:4,shares:700,reason:"离场信号(10日通道)",pnl:22.64},
+    {entry:"2019-07-01",exit:"2019-08-01",buy:6.08,sell:5.74,units:2,shares:200,reason:"止损(2N)",pnl:-6.78},
+    {entry:"2019-08-23",exit:"2019-09-17",buy:6.07,sell:5.97,units:4,shares:400,reason:"止损(2N)",pnl:-4.10},
+    {entry:"2019-10-29",exit:"2019-11-15",buy:6.01,sell:5.88,units:1,shares:100,reason:"离场信号(10日通道)",pnl:-2.37},
+    {entry:"2019-12-19",exit:"2020-02-19",buy:5.99,sell:7.42,units:1,shares:100,reason:"离场信号(10日通道)",pnl:23.63},
+  ],
+  "605507": [
+    {entry:"2021-11-15",exit:"2021-12-06",buy:18.33,sell:18.02,units:2,shares:900,reason:"离场信号(10日通道)",pnl:-2.51},
+    {entry:"2021-12-22",exit:"2022-01-05",buy:18.72,sell:18.31,units:3,shares:900,reason:"止损(2N)",pnl:-3.26},
+    {entry:"2022-01-06",exit:"2022-01-25",buy:19.42,sell:19.00,units:3,shares:300,reason:"离场信号(10日通道)",pnl:-3.69},
+    {entry:"2022-07-04",exit:"2022-07-12",buy:15.92,sell:15.20,units:1,shares:100,reason:"离场信号(10日通道)",pnl:-4.69},
+    {entry:"2022-08-22",exit:"2022-09-23",buy:15.63,sell:15.28,units:1,shares:100,reason:"离场信号(10日通道)",pnl:-2.44},
+    {entry:"2023-07-19",exit:"2023-07-31",buy:14.34,sell:14.04,units:2,shares:200,reason:"止损(2N)",pnl:-2.67},
+  ],
+  "600079": [
+    {entry:"2018-03-08",exit:"2018-03-15",buy:14.58,sell:13.75,units:1,shares:600,reason:"止损(2N)",pnl:-5.99},
+    {entry:"2018-03-20",exit:"2018-03-23",buy:14.61,sell:13.79,units:1,shares:400,reason:"止损(2N)",pnl:-5.94},
+    {entry:"2018-05-15",exit:"2018-05-30",buy:14.05,sell:13.03,units:1,shares:300,reason:"止损(2N)",pnl:-7.53},
+    {entry:"2018-08-13",exit:"2018-08-20",buy:11.05,sell:10.50,units:2,shares:700,reason:"止损(2N)",pnl:-5.96},
+    {entry:"2018-09-21",exit:"2018-10-10",buy:11.07,sell:10.92,units:4,shares:1000,reason:"止损(2N)",pnl:-3.34},
+    {entry:"2019-02-11",exit:"2019-04-23",buy:8.33,sell:10.62,units:4,shares:400,reason:"离场信号(10日通道)",pnl:23.40},
+    {entry:"2019-06-21",exit:"2019-07-08",buy:9.02,sell:8.88,units:2,shares:200,reason:"离场信号(10日通道)",pnl:-2.63},
+  ]
+};
+
+let currentTradeStock = '000756';
+
+function renderTradeTabs() {
+  const container = document.getElementById('tradeTabs');
+  let html = '';
+  for(const s of STOCKS) {
+    html += `<div class="stock-tab ${s.code===currentTradeStock?'active':''}" onclick="switchTradeStock('${s.code}')">${s.name}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function switchTradeStock(code) {
+  currentTradeStock = code;
+  renderTradeTabs();
+  renderTradeTable();
+}
+
+function renderTradeTable() {
+  const trades = TRADES[currentTradeStock] || [];
+  const stockInfo = STOCKS.find(s=>s.code===currentTradeStock);
+  let html = `
+    <table>
+      <tr><th>入场日</th><th>出场日</th><th>买入价</th><th>卖出价</th><th>单元数</th><th>股数</th><th>离场原因</th><th>盈亏%</th></tr>`;
+  for(const t of trades) {
+    const pnlClass = t.pnl >= 0 ? 'pos-text' : 'neg-text';
+    html += `<tr>
+      <td>${t.entry}</td><td>${t.exit}</td>
+      <td>${t.buy.toFixed(2)}</td><td>${t.sell.toFixed(2)}</td>
+      <td>${t.units}</td><td>${t.shares}</td>
+      <td>${t.reason}</td>
+      <td class="${pnlClass}">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%</td>
+    </tr>`;
+  }
+  html += `</table>`;
+
+  // 汇总
+  const totalTrades = trades.length;
+  const wins = trades.filter(t=>t.pnl>0).length;
+  const losses = totalTrades - wins;
+  const avgPnl = trades.reduce((s,t)=>s+t.pnl,0) / totalTrades;
+  html += `<div style="margin-top:10px;font-size:13px">
+    <strong>${stockInfo.name}</strong> — 共${totalTrades}笔交易 | 盈${wins}笔 亏${losses}笔 | 平均盈亏: <span class="${avgPnl>=0?'pos-text':'neg-text'}">${avgPnl.toFixed(2)}%</span>
+  </div>`;
+
+  document.getElementById('tradeTable').innerHTML = html;
+}
+
+// ============================================================
+// 初始化
+// ============================================================
+window.addEventListener('load', function() {
+  renderPerfCards();
+  renderEquityChart();
+  renderDrawdownChart();
+  renderStockTabs();
+  renderDonchianChart();
+  renderATRChart();
+  renderTradeTabs();
+  renderTradeTable();
+});
+
+// Resize
+window.addEventListener('resize', function() {
+  const charts = document.querySelectorAll('[id^="chart"]');
+  charts.forEach(c => {
+    const inst = echarts.getInstanceByDom(c);
+    if(inst) inst.resize();
+  });
+});
+</script>
+
+</body>
+</html>
