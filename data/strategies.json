@@ -1,0 +1,103 @@
+{
+  "site_name": "Songjen的研究空间",
+  "subtitle": "A股量化策略研究 · 交互式回测 · 可视化分析",
+  "updated": "2026-07-11",
+  "strategies": [
+    {
+      "id": "dual-ma",
+      "name": "双均线交叉策略",
+      "category": "趋势跟踪",
+      "icon": "📈",
+      "color": "#4fc3f7",
+      "url": "dual-ma.html",
+      "status": "active",
+      "summary": "MA5/MA20金叉死叉信号，成交量+ATR双重过滤，固定10%止损",
+      "features": ["可调均线周期", "成交量过滤", "ATR波动过滤", "凯利公式仓位"],
+      "stocks": ["新华制药", "国邦药业", "ST人福"]
+    },
+    {
+      "id": "turtle",
+      "name": "海龟交易法则",
+      "category": "趋势跟踪",
+      "icon": "🐢",
+      "color": "#26a69a",
+      "url": "turtle.html",
+      "status": "active",
+      "summary": "唐奇安通道20日突破入场，ATR头寸管理，2N止损，10日通道离场",
+      "features": ["唐奇安通道", "ATR头寸1%风险", "4单元加仓", "2N止损规则"],
+      "stocks": ["新华制药", "国邦药业", "ST人福"]
+    },
+    {
+      "id": "strategy-comparison",
+      "name": "策略综合对比",
+      "category": "对比分析",
+      "icon": "📊",
+      "color": "#ab47bc",
+      "url": "strategy-comparison.html",
+      "status": "active",
+      "summary": "海龟法则 vs 双均线 vs 买入持有，年化收益/夏普比率/最大回撤多维度对比",
+      "features": ["净值曲线对比", "雷达图多维评估", "17项指标对比表", "洞察分析"],
+      "stocks": ["新华制药", "国邦药业", "ST人福"]
+    },
+    {
+      "id": "dashboard",
+      "name": "技术分析面板",
+      "category": "分析工具",
+      "icon": "🔬",
+      "color": "#ff7043",
+      "url": "dashboard.html",
+      "status": "active",
+      "summary": "Ichimoku云图 + RSI + MACD + 布林带 + ATR，多指标实时交叉验证",
+      "features": ["K线+Ichimoku云", "MACD/RSI/ATR", "布林带通道", "五大信号面板"],
+      "stocks": ["新华制药", "国邦药业", "ST人福", "新华制药H"]
+    },
+    {
+      "id": "bollinger",
+      "name": "布林带均值回归",
+      "category": "均值回归",
+      "icon": "📉",
+      "color": "#66bb6a",
+      "url": null,
+      "status": "coming_soon",
+      "summary": "布林带触轨回归策略，结合RSI超买超卖确认入场",
+      "features": ["即将上线"],
+      "stocks": []
+    },
+    {
+      "id": "momentum",
+      "name": "动量轮动策略",
+      "category": "动量策略",
+      "icon": "🔄",
+      "color": "#ffa726",
+      "url": null,
+      "status": "coming_soon",
+      "summary": "多因子动量排序，截面动量+时序动量双重确认",
+      "features": ["即将上线"],
+      "stocks": []
+    },
+    {
+      "id": "pair-trading",
+      "name": "配对交易策略",
+      "category": "统计套利",
+      "icon": "⚖️",
+      "color": "#78909c",
+      "url": null,
+      "status": "coming_soon",
+      "summary": "协整检验+价差Z-score，均值回复入场信号",
+      "features": ["即将上线"],
+      "stocks": []
+    },
+    {
+      "id": "ml-predict",
+      "name": "机器学习预测",
+      "category": "AI预测",
+      "icon": "🤖",
+      "color": "#ec407a",
+      "url": null,
+      "status": "coming_soon",
+      "summary": "LSTM/Transformer价格预测，特征工程+模型集成",
+      "features": ["即将上线"],
+      "stocks": []
+    }
+  ]
+}

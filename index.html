@@ -3,651 +3,284 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI量化指标分析面板 | Ichimoku · RSI · MACD · Bollinger · ATR</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<title>Songjen的研究空间 · A股量化策略</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f5f6fa;color:#2c3e50}
-.header{background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.header h1{font-size:20px;font-weight:600}
-.header h1 span{color:#4fc3f7}
-.header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.stock-selector{display:flex;gap:8px;flex-wrap:wrap}
-.stock-btn{padding:6px 14px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:#fff;border-radius:6px;cursor:pointer;font-size:13px;transition:all .2s}
-.stock-btn:hover{background:rgba(255,255,255,0.1)}
-.stock-btn.active{background:#4fc3f7;color:#1a1a2e;border-color:#4fc3f7;font-weight:600}
-.controls{background:#fff;padding:12px 24px;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.ctrl-group{display:flex;align-items:center;gap:6px}
-.ctrl-group label{font-size:12px;color:#666;font-weight:600;white-space:nowrap}
-.ctrl-group input{width:42px;padding:3px 6px;border:1px solid #ddd;border-radius:4px;font-size:12px;text-align:center}
-.ctrl-group input:focus{outline:none;border-color:#4fc3f7}
-.ctrl-group .sep{color:#ccc;margin:0 2px}
-.apply-btn{padding:5px 16px;background:#4fc3f7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;transition:background .2s}
-.apply-btn:hover{background:#29b6f6}
-.reset-btn{padding:5px 12px;background:#eee;color:#666;border:none;border-radius:4px;cursor:pointer;font-size:13px}
-.reset-btn:hover{background:#ddd}
-.chart-container{padding:12px 16px;display:grid;grid-template-rows:1fr;gap:8px}
-#mainChart{width:100%;height:480px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-#macdChart,#rsiChart,#atrChart{width:100%;height:180px;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-.signal-panel{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 16px 12px}
-.signal-card{background:#fff;border-radius:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);text-align:center}
-.signal-card .ind-name{font-size:11px;color:#999;margin-bottom:4px}
-.signal-card .ind-value{font-size:20px;font-weight:700;margin-bottom:4px}
-.signal-card .ind-signal{font-size:11px;padding:2px 8px;border-radius:10px;display:inline-block}
-.sig-bullish{background:#e8f5e9;color:#2e7d32}
-.sig-bearish{background:#fbe9e7;color:#c62828}
-.sig-neutral{background:#f5f5f5;color:#666}
-.info-section{padding:16px 24px;background:#fff;margin:8px 16px 16px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
-.info-section h2{font-size:16px;color:#1a1a2e;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #4fc3f7}
-.info-section h3{font-size:14px;color:#333;margin:16px 0 8px}
-.info-section table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
-.info-section th{background:#1a1a2e;color:#fff;padding:8px 12px;text-align:left}
-.info-section td{padding:8px 12px;border-bottom:1px solid #eee}
-.info-section td:first-child{font-weight:600;color:#333}
-.info-section p{font-size:13px;line-height:1.8;color:#555;margin:8px 0}
-.formula{background:#f8f9fa;border-left:3px solid #4fc3f7;padding:10px 14px;margin:8px 0;font-family:'Courier New',monospace;font-size:12px;border-radius:0 4px 4px 0}
-.loading{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:30px 50px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:9999;text-align:center}
-.loading .spinner{border:3px solid #e0e0e0;border-top:3px solid #4fc3f7;border-radius:50%;width:36px;height:36px;animation:spin 1s linear infinite;margin:0 auto 12px}
+:root{
+  --bg:#0d0d0d;--bg-card:#1a1a1a;--bg-card-hover:#222;--border:rgba(255,255,255,0.08);
+  --text:#f0f0f0;--text-dim:#888;--text-muted:#555;
+  --accent:#4fc3f7;--accent-glow:rgba(79,195,247,0.15);
+}
+body{
+  font-family:'Segoe UI','Microsoft YaHei',-apple-system,sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== Nav ===== */
+.nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(13,13,13,0.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between;
+}
+.nav-brand{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.nav-brand .dot{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:13px;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-gh{color:var(--text-dim);font-size:12px;display:flex;align-items:center;gap:6px;text-decoration:none}
+.nav-gh:hover{color:var(--text)}
+
+/* ===== Hero ===== */
+.hero{
+  text-align:center;padding:72px 32px 48px;
+  background:radial-gradient(ellipse at center top,var(--accent-glow),transparent 60%);
+}
+.hero h1{
+  font-size:38px;font-weight:800;letter-spacing:1px;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff,#a0a0a0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero p{font-size:15px;color:var(--text-dim);max-width:560px;margin:0 auto;line-height:1.7}
+
+/* ===== Filter ===== */
+.filter-bar{
+  display:flex;justify-content:center;gap:8px;padding:0 32px 32px;flex-wrap:wrap;
+}
+.filter-btn{
+  padding:7px 18px;border:1px solid var(--border);background:transparent;
+  color:var(--text-dim);border-radius:20px;cursor:pointer;font-size:12px;
+  transition:all .2s;
+}
+.filter-btn:hover{border-color:rgba(255,255,255,0.2);color:var(--text)}
+.filter-btn.active{background:var(--accent);color:#0d0d0d;border-color:var(--accent);font-weight:600}
+
+/* ===== Strategy Grid ===== */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:20px;padding:0 32px 40px;max-width:1400px;margin:0 auto;
+}
+.card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+  padding:28px 24px;position:relative;overflow:hidden;transition:all .3s;
+  text-decoration:none;color:inherit;display:block;
+}
+.card:hover{
+  background:var(--bg-card-hover);border-color:rgba(255,255,255,0.15);
+  transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;width:100%;height:3px;
+  background:var(--card-color,#4fc3f7);
+}
+.card-icon{
+  font-size:28px;margin-bottom:14px;display:inline-block;
+}
+.card-category{
+  display:inline-block;font-size:10px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;color:var(--card-color,#4fc3f7);
+  background:rgba(79,195,247,0.08);padding:3px 10px;border-radius:4px;
+  margin-bottom:10px;
+}
+.card-name{
+  font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.3;
+}
+.card-desc{
+  font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;
+}
+.card-features{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.card-tag{
+  font-size:11px;color:var(--text-muted);background:rgba(255,255,255,0.04);
+  padding:3px 9px;border-radius:4px;border:1px solid var(--border);
+}
+.card-stocks{font-size:11px;color:var(--text-muted);margin-bottom:14px}
+.card-stocks span{color:var(--text-dim)}
+.card-arrow{
+  font-size:13px;color:var(--card-color,#4fc3f7);font-weight:600;
+  display:flex;align-items:center;gap:4px;
+}
+.card-arrow .arr{transition:transform .2s}
+.card:hover .card-arrow .arr{transform:translateX(4px)}
+
+/* Coming Soon card */
+.card.disabled{opacity:.5;cursor:default}
+.card.disabled:hover{transform:none;box-shadow:none;background:var(--bg-card)}
+.card.disabled .card-arrow{color:var(--text-muted)}
+.card-badge{
+  position:absolute;top:12px;right:12px;
+  font-size:10px;font-weight:600;padding:3px 8px;border-radius:4px;
+  background:rgba(255,255,255,0.06);color:var(--text-muted);
+}
+
+/* ===== Stats ===== */
+.stats{
+  display:flex;justify-content:center;gap:48px;padding:40px 32px;
+  border-top:1px solid var(--border);
+}
+.stat{text-align:center}
+.stat-num{font-size:28px;font-weight:800;color:var(--accent)}
+.stat-label{font-size:12px;color:var(--text-dim);margin-top:4px}
+
+/* ===== Footer ===== */
+.footer{
+  text-align:center;padding:24px 32px 32px;
+  border-top:1px solid var(--border);
+}
+.footer p{font-size:12px;color:var(--text-muted);line-height:1.8}
+.footer a{color:var(--text-dim);text-decoration:none}
+.footer a:hover{color:var(--accent)}
+
+/* ===== Loading ===== */
+.loading{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+}
+.loading .spinner{
+  border:3px solid var(--border);border-top:3px solid var(--accent);
+  border-radius:50%;width:36px;height:36px;animation:spin 1s linear infinite;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:768px){.signal-panel{grid-template-columns:repeat(2,1fr)}.controls{gap:10px}}
+
+@media(max-width:640px){
+  .hero{padding:48px 24px 32px}
+  .hero h1{font-size:28px}
+  .grid{padding:0 16px 32px;gap:16px}
+  .nav{padding:0 16px}
+  .stats{gap:24px}
+}
 </style>
 </head>
 <body>
 
 <div class="loading" id="loading">
 <div class="spinner"></div>
-<div>正在加载股票数据...</div>
+<div style="color:var(--text-dim);font-size:14px">加载策略数据...</div>
 </div>
 
-<div class="header">
-<h1>AI量化指标分析面板 <span>| Ichimoku · RSI · MACD · Bollinger · ATR</span></h1>
-<div class="header-right">
-<span id="dataUpdated" style="color:#8fa0c0;font-size:11px;"></span>
-<a href="strategy-comparison.html" style="color:#4fc3f7;font-size:12px;text-decoration:none;margin-right:8px">📊 策略对比</a>
-<a href="turtle.html" style="color:#4fc3f7;font-size:12px;text-decoration:none;margin-right:8px">🐢 海龟法则</a>
-<a href="dual-ma.html" style="color:#4fc3f7;font-size:12px;text-decoration:none;margin-right:8px">📈 双均线</a>
-<div class="stock-selector" id="stockSelector"></div>
+<nav class="nav">
+<div class="nav-brand">Songjen<span class="dot">.</span>研究空间</div>
+<div class="nav-links">
+<a href="dashboard.html">技术分析</a>
+<a href="https://github.com/songjen/AI-quant" target="_blank" class="nav-gh">GitHub ↗</a>
 </div>
+</nav>
+
+<section class="hero">
+<h1>Songjen的研究空间</h1>
+<p>A股量化策略研究平台 · 交互式参数回测 · 多维度绩效对比<br>覆盖趋势跟踪、均值回归等策略体系，数据每日自动更新</p>
+</section>
+
+<div class="filter-bar" id="filterBar"></div>
+<div class="grid" id="strategyGrid"></div>
+
+<div class="stats">
+<div class="stat"><div class="stat-num" id="statStrategies">0</div><div class="stat-label">策略体系</div></div>
+<div class="stat"><div class="stat-num" id="statStocks">3</div><div class="stat-label">覆盖股票</div></div>
+<div class="stat"><div class="stat-num" id="statDataPoints">0</div><div class="stat-label">数据点</div></div>
+<div class="stat"><div class="stat-num" id="statUpdated">--</div><div class="stat-label">数据更新</div></div>
 </div>
 
-<div class="controls">
-<div class="ctrl-group">
-<label>RSI周期</label>
-<input type="number" id="rsiPeriod" value="14" min="2" max="50">
-</div>
-<div class="ctrl-group">
-<label>MACD</label>
-<input type="number" id="macdFast" value="12" min="2" max="30">
-<span class="sep">/</span>
-<input type="number" id="macdSlow" value="26" min="5" max="60">
-<span class="sep">/</span>
-<input type="number" id="macdSignal" value="9" min="2" max="30">
-</div>
-<div class="ctrl-group">
-<label>布林带</label>
-<input type="number" id="bbPeriod" value="20" min="5" max="50">
-<span class="sep">σ=</span>
-<input type="number" id="bbStd" value="2" min="1" max="4" step="0.5">
-</div>
-<div class="ctrl-group">
-<label>ATR周期</label>
-<input type="number" id="atrPeriod" value="14" min="2" max="50">
-</div>
-<div class="ctrl-group">
-<label>Ichimoku</label>
-<input type="number" id="ichiTenkan" value="9" min="2" max="30" title="转换线">
-<span class="sep">/</span>
-<input type="number" id="ichiKijun" value="26" min="5" max="60" title="基准线">
-<span class="sep">/</span>
-<input type="number" id="ichiSenkouB" value="52" min="10" max="120" title="先行B">
-<span class="sep">/</span>
-<input type="number" id="ichiDisplace" value="26" min="5" max="60" title="位移">
-</div>
-<button class="apply-btn" onclick="recalculate()">应用参数</button>
-<button class="reset-btn" onclick="resetParams()">重置</button>
-</div>
-
-<div class="chart-container">
-<div id="mainChart"></div>
-<div id="macdChart"></div>
-<div id="rsiChart"></div>
-<div id="atrChart"></div>
-</div>
-
-<div class="signal-panel" id="signalPanel"></div>
-
-<div class="info-section">
-<h2>Ichimoku Kinko Hyo（一目均衡表）指标详解</h2>
-
-<h3>一、计算方法</h3>
-<table>
-<tr><th>线条</th><th>名称</th><th>计算公式</th><th>默认周期</th></tr>
-<tr><td>Tenkan-sen</td><td>转换线</td><td>(N日内最高价 + N日内最低价) / 2</td><td>9日</td></tr>
-<tr><td>Kijun-sen</td><td>基准线</td><td>(N日内最高价 + N日内最低价) / 2</td><td>26日</td></tr>
-<tr><td>Senkou Span A</td><td>先行线A</td><td>(转换线 + 基准线) / 2，向前位移26日</td><td>26日位移</td></tr>
-<tr><td>Senkou Span B</td><td>先行线B</td><td>(N日内最高价 + N日内最低价) / 2，向前位移26日</td><td>52日+26日位移</td></tr>
-<tr><td>Chikou Span</td><td>滞后线</td><td>收盘价，向后位移26日</td><td>-26日位移</td></tr>
-</table>
-
-<h3>二、Kumo云带（Senkou Span A与B之间的区域）</h3>
-<p><strong>绿色云（Bullish）</strong>：Span A > Span B，代表多头力量主导，云带构成支撑区。</p>
-<p><strong>红色云（Bearish）</strong>：Span A < Span B，代表空头力量主导，云带构成阻力区。</p>
-<p><strong>云带翻转</strong>：Span A与Span B交叉时，趋势可能发生转折。云带越厚（A与B距离越大），支撑/阻力越强。</p>
-
-<h3>三、五大核心信号</h3>
-<table>
-<tr><th>信号</th><th>条件</th><th>含义</th></tr>
-<tr><td>价格 vs 云带</td><td>价格在云上方 / 下方 / 云中</td><td>多头趋势 / 空头趋势 / 震荡</td></tr>
-<tr><td>TK金叉</td><td>转换线上穿基准线</td><td>短期动能转多，买入信号</td></tr>
-<tr><td>TK死叉</td><td>转换线下穿基准线</td><td>短期动能转空，卖出信号</td></tr>
-<tr><td>云带翻转</td><td>Span A上穿/下穿Span B</td><td>中期趋势转折确认</td></tr>
-<tr><td>Chikou确认</td><td>滞后线在价格上方/下方</td><td>趋势得到滞后确认</td></tr>
-</table>
-
-<h3>四、三重确认交易系统</h3>
-<div class="formula">
-强势多头 = 价格 > 云带 AND Tenkan > Kijun AND 云带为绿色<br>
-强势空头 = 价格 < 云带 AND Tenkan < Kijun AND 云带为红色<br>
-中性/震荡 = 上述条件不满足时
-</div>
-
-<h3>五、与其他指标的配合逻辑</h3>
-<table>
-<tr><th>指标</th><th>角色</th><th>与Ichimoku配合方式</th></tr>
-<tr><td>RSI</td><td>超买超卖</td><td>Ichimoku给出趋势方向，RSI寻找入场时机（回调至30-40买入）</td></tr>
-<tr><td>MACD</td><td>动能确认</td><td>Ichimoku金叉 + MACD柱状图扩张 = 多头动能共振</td></tr>
-<tr><td>布林带</td><td>波动通道</td><td>布林带触及下轨 + Ichimoku云带支撑 = 高概率反弹</td></tr>
-<tr><td>ATR</td><td>波动率</td><td>ATR升高 + Ichimoku云带翻转 = 趋势加速确认</td></tr>
-</table>
-</div>
+<footer class="footer">
+<p>数据来源：腾讯财经API · 前复权(qfq) · GitHub Actions 每日自动增量更新<br>
+技术栈：ECharts · 纯前端回测引擎 · GitHub Pages · <a href="https://github.com/songjen/AI-quant" target="_blank">songjen/AI-quant</a></p>
+</footer>
 
 <script>
-// ============================================================
-// Global state
-// ============================================================
-let allStockData = {};
-let currentStockCode = '000756';
-let charts = { main:null, macd:null, rsi:null, atr:null };
-let currentParams = {
-  rsi:14, macdFast:12, macdSlow:26, macdSignal:9,
-  bbPeriod:20, bbStd:2, atrPeriod:14,
-  ichiTenkan:9, ichiKijun:26, ichiSenkouB:52, ichiDisplace:26
-};
-
-// ============================================================
-// Data loading
-// ============================================================
-async function loadData(){
+async function init(){
   try{
-    const resp = await fetch('data/all_stocks.json');
-    allStockData = await resp.json();
-    // 显示数据更新时间
-    const firstKey = Object.keys(allStockData)[0];
-    if(firstKey && allStockData[firstKey].updated) {
-      const el = document.getElementById('dataUpdated');
-      if(el) el.textContent = '数据更新: ' + allStockData[firstKey].updated;
-    }
-    document.getElementById('loading').style.display='none';
-    initStockSelector();
-    initCharts();
-    recalculate();
+    const resp = await fetch('data/strategies.json');
+    const data = await resp.json();
+    document.getElementById('loading').style.display = 'none';
+    renderStrategies(data);
+    renderFilters(data);
+    renderStats(data);
+    document.title = data.site_name + ' · A股量化策略';
   }catch(e){
-    document.getElementById('loading').innerHTML='数据加载失败: '+e.message+'<br>请确保通过HTTP服务器访问';
+    document.getElementById('loading').innerHTML =
+      '<div style="color:#e24b4a;font-size:14px">数据加载失败: '+e.message+'</div>';
   }
 }
 
-function initStockSelector(){
-  const container=document.getElementById('stockSelector');
-  container.innerHTML='';
-  for(const code in allStockData){
-    const s=allStockData[code];
-    const btn=document.createElement('button');
-    btn.className='stock-btn'+(code===currentStockCode?' active':'');
-    btn.textContent=s.name+'('+s.market+')';
-    btn.onclick=function(){currentStockCode=code;document.querySelectorAll('.stock-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');recalculate();};
-    container.appendChild(btn);
-  }
-}
+let currentFilter = 'all';
 
-// ============================================================
-// Indicator calculations (client-side)
-// ============================================================
-function ema(values,period){
-  const k=2/(period+1);
-  const result=new Array(values.length).fill(null);
-  let emaPrev=null;
-  for(let i=0;i<values.length;i++){
-    if(values[i]===null)continue;
-    if(emaPrev===null){emaPrev=values[i];}
-    else{emaPrev=values[i]*k+emaPrev*(1-k);}
-    result[i]=emaPrev;
-  }
-  return result;
-}
-
-function sma(values,period){
-  const result=new Array(values.length).fill(null);
-  let sum=0,count=0;
-  for(let i=0;i<values.length;i++){
-    if(values[i]===null)continue;
-    sum+=values[i];count++;
-    if(count>period){sum-=values[i-period];count=period;}
-    if(count===period)result[i]=sum/period;
-  }
-  return result;
-}
-
-function calcRSI(closes,period){
-  const rsi=new Array(closes.length).fill(null);
-  if(closes.length<period+1)return rsi;
-  let avgGain=0,avgLoss=0;
-  for(let i=1;i<=period;i++){
-    const ch=closes[i]-closes[i-1];
-    if(ch>0)avgGain+=ch;else avgLoss+=Math.abs(ch);
-  }
-  avgGain/=period;avgLoss/=period;
-  rsi[period]=avgLoss===0?100:100-100/(1+avgGain/avgLoss);
-  for(let i=period+1;i<closes.length;i++){
-    const ch=closes[i]-closes[i-1];
-    const gain=ch>0?ch:0;
-    const loss=ch<0?Math.abs(ch):0;
-    avgGain=(avgGain*(period-1)+gain)/period;
-    avgLoss=(avgLoss*(period-1)+loss)/period;
-    rsi[i]=avgLoss===0?100:100-100/(1+avgGain/avgLoss);
-  }
-  return rsi;
-}
-
-function calcMACD(closes,fast,slow,signal){
-  const emaFast=ema(closes,fast);
-  const emaSlow=ema(closes,slow);
-  const dif=closes.map((_,i)=>emaFast[i]!==null&&emaSlow[i]!==null?emaFast[i]-emaSlow[i]:null);
-  const difClean=dif.map(v=>v===null?0:v);
-  const dea=ema(difClean,signal);
-  const histogram=dif.map((v,i)=>v!==null&&dea[i]!==null?(v-dea[i])*2:null);
-  return{dif,dea,histogram};
-}
-
-function calcBollinger(closes,period,stdDev){
-  const mid=sma(closes,period);
-  const upper=new Array(closes.length).fill(null);
-  const lower=new Array(closes.length).fill(null);
-  const pctB=new Array(closes.length).fill(null);
-  const bandwidth=new Array(closes.length).fill(null);
-  for(let i=period-1;i<closes.length;i++){
-    let sum=0;
-    for(let j=i-period+1;j<=i;j++)sum+=closes[j];
-    const mean=sum/period;
-    let variance=0;
-    for(let j=i-period+1;j<=i;j++)variance+=(closes[j]-mean)**2;
-    variance/=(period-1);
-    const sd=Math.sqrt(variance);
-    upper[i]=mean+stdDev*sd;
-    lower[i]=mean-stdDev*sd;
-    mid[i]=mean;
-    if(upper[i]!==lower[i])pctB[i]=(closes[i]-lower[i])/(upper[i]-lower[i]);
-    if(mid[i]>0)bandwidth[i]=(upper[i]-lower[i])/mid[i];
-  }
-  return{mid,upper,lower,pctB,bandwidth};
-}
-
-function calcATR(highs,lows,closes,period){
-  const tr=new Array(closes.length).fill(null);
-  tr[0]=highs[0]-lows[0];
-  for(let i=1;i<closes.length;i++){
-    tr[i]=Math.max(highs[i]-lows[i],Math.abs(highs[i]-closes[i-1]),Math.abs(lows[i]-closes[i-1]));
-  }
-  const atr=new Array(closes.length).fill(null);
-  if(closes.length<period+1)return{tr,atr};
-  let sum=0;
-  for(let i=1;i<=period;i++)sum+=tr[i];
-  atr[period]=sum/period;
-  for(let i=period+1;i<closes.length;i++){
-    atr[i]=(atr[i-1]*(period-1)+tr[i])/period;
-  }
-  return{tr,atr};
-}
-
-function calcIchimoku(highs,lows,closes,tenkanP,kijunP,senkouBP,displace){
-  const n=closes.length;
-  const tenkan=new Array(n).fill(null);
-  const kijun=new Array(n).fill(null);
-  const senkouA=new Array(n).fill(null);
-  const senkouB=new Array(n).fill(null);
-  const chikou=new Array(n).fill(null);
-
-  for(let i=tenkanP-1;i<n;i++){
-    let hh=-Infinity,ll=Infinity;
-    for(let j=i-tenkanP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
-    tenkan[i]=(hh+ll)/2;
-  }
-  for(let i=kijunP-1;i<n;i++){
-    let hh=-Infinity,ll=Infinity;
-    for(let j=i-kijunP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
-    kijun[i]=(hh+ll)/2;
-  }
-  for(let i=0;i<n;i++){
-    if(tenkan[i]!==null&&kijun[i]!==null){
-      const val=(tenkan[i]+kijun[i])/2;
-      if(i+displace<n)senkouA[i+displace]=val;
-    }
-  }
-  for(let i=senkouBP-1;i<n;i++){
-    let hh=-Infinity,ll=Infinity;
-    for(let j=i-senkouBP+1;j<=i;j++){if(highs[j]>hh)hh=highs[j];if(lows[j]<ll)ll=lows[j];}
-    const val=(hh+ll)/2;
-    if(i+displace<n)senkouB[i+displace]=val;
-  }
-  for(let i=0;i<n-displace;i++){
-    chikou[i]=closes[i+displace];
-  }
-  return{tenkan,kijun,senkouA,senkouB,chikou};
-}
-
-// ============================================================
-// Chart initialization
-// ============================================================
-function initCharts(){
-  charts.main=echarts.init(document.getElementById('mainChart'));
-  charts.macd=echarts.init(document.getElementById('macdChart'));
-  charts.rsi=echarts.init(document.getElementById('rsiChart'));
-  charts.atr=echarts.init(document.getElementById('atrChart'));
-  window.addEventListener('resize',()=>{
-    Object.values(charts).forEach(c=>c&&c.resize());
+function renderFilters(data){
+  const cats = ['all'];
+  data.strategies.forEach(s => {
+    if(!cats.includes(s.category)) cats.push(s.category);
   });
+  const catLabels = {
+    'all':'全部','趋势跟踪':'趋势跟踪','对比分析':'对比分析',
+    '均值回归':'均值回归','动量策略':'动量策略','统计套利':'统计套利',
+    'AI预测':'AI预测','分析工具':'分析工具'
+  };
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = cats.map(c =>
+    '<button class="filter-btn'+(c==='all'?' active':'')+'" onclick="setFilter(\''+c+'\')">'+(catLabels[c]||c)+'</button>'
+  ).join('');
 }
 
-// ============================================================
-// Main recalculate function
-// ============================================================
-function recalculate(){
-  const stock=allStockData[currentStockCode];
-  if(!stock)return;
-  const dates=stock.dates;
-  const ohlcv=stock.ohlcv;
-  const opens=ohlcv.map(d=>d[0]);
-  const closes=ohlcv.map(d=>d[1]);
-  const lows=ohlcv.map(d=>d[2]);
-  const highs=ohlcv.map(d=>d[3]);
-  const volumes=ohlcv.map(d=>d[4]);
-
-  // Read params
-  currentParams.rsi=parseInt(document.getElementById('rsiPeriod').value)||14;
-  currentParams.macdFast=parseInt(document.getElementById('macdFast').value)||12;
-  currentParams.macdSlow=parseInt(document.getElementById('macdSlow').value)||26;
-  currentParams.macdSignal=parseInt(document.getElementById('macdSignal').value)||9;
-  currentParams.bbPeriod=parseInt(document.getElementById('bbPeriod').value)||20;
-  currentParams.bbStd=parseFloat(document.getElementById('bbStd').value)||2;
-  currentParams.atrPeriod=parseInt(document.getElementById('atrPeriod').value)||14;
-  currentParams.ichiTenkan=parseInt(document.getElementById('ichiTenkan').value)||9;
-  currentParams.ichiKijun=parseInt(document.getElementById('ichiKijun').value)||26;
-  currentParams.ichiSenkouB=parseInt(document.getElementById('ichiSenkouB').value)||52;
-  currentParams.ichiDisplace=parseInt(document.getElementById('ichiDisplace').value)||26;
-
-  // Calculate indicators
-  const rsi=calcRSI(closes,currentParams.rsi);
-  const macd=calcMACD(closes,currentParams.macdFast,currentParams.macdSlow,currentParams.macdSignal);
-  const bb=calcBollinger(closes,currentParams.bbPeriod,currentParams.bbStd);
-  const atrData=calcATR(highs,lows,closes,currentParams.atrPeriod);
-  const ichi=calcIchimoku(highs,lows,closes,currentParams.ichiTenkan,currentParams.ichiKijun,currentParams.ichiSenkouB,currentParams.ichiDisplace);
-
-  // Show last 250 days
-  const showCount=Math.min(250,dates.length);
-  const startIdx=Math.max(0,dates.length-showCount);
-  const visDates=dates.slice(startIdx);
-  const visCandle=ohlcv.slice(startIdx).map(d=>[d[0],d[1],d[2],d[3]]);
-  const visVol=volumes.slice(startIdx);
-
-  // Slice indicator arrays
-  const sliceArr=arr=>arr.slice(startIdx);
-  const visRSI=sliceArr(rsi);
-  const visDIF=sliceArr(macd.dif);
-  const visDEA=sliceArr(macd.dea);
-  const visHist=sliceArr(macd.histogram);
-  const visBBUpper=sliceArr(bb.upper);
-  const visBBMid=sliceArr(bb.mid);
-  const visBBLower=sliceArr(bb.lower);
-  const visATR=sliceArr(atrData.atr);
-  const visTenkan=sliceArr(ichi.tenkan);
-  const visKijun=sliceArr(ichi.kijun);
-  const visSenkouA=sliceArr(ichi.senkouA);
-  const visSenkouB=sliceArr(ichi.senkouB);
-  const visChikou=sliceArr(ichi.chikou);
-
-  // Build cloud data for custom series
-  const cloudData=[];
-  for(let i=0;i<visDates.length;i++){
-    if(visSenkouA[i]!==null&&visSenkouB[i]!==null){
-      cloudData.push([i,visSenkouA[i],visSenkouB[i]]);
-    }
-  }
-
-  // === Main Chart ===
-  charts.main.setOption({
-    title:{text:stock.name+' ('+stock.code+') '+stock.market+' — K线 + Ichimoku云 + 布林带',left:'center',top:8,textStyle:{fontSize:14,fontWeight:600}},
-    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
-      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
-      params.forEach(p=>{
-        if(p.value!==null&&p.value!==undefined&&p.seriesName!=='Cloud'){
-          let val=Array.isArray(p.value)?p.value[1]:p.value;
-          if(val!==null&&val!==undefined)html+='<br/><span style="color:'+p.color+'">●</span> '+p.seriesName+': '+Number(val).toFixed(2);
-        }
-      });
-      return html+'</div>';
-    }},
-    legend:{top:32,left:'center',data:['K线','Tenkan','Kijun','Span A','Span B','Chikou','BB Upper','BB Lower'],textStyle:{fontSize:11}},
-    grid:{left:60,right:20,top:70,bottom:50},
-    xAxis:{type:'category',data:visDates,axisLabel:{fontSize:10}},
-    yAxis:{scale:true,axisLabel:{fontSize:10}},
-    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100},{type:'slider',xAxisIndex:0,start:0,end:100,bottom:5,height:20}],
-    series:[
-      // Cloud custom series
-      {name:'Cloud',type:'custom',renderItem:function(params,api){
-        const idx=api.value(0);
-        const a=api.value(1);
-        const b=api.value(2);
-        const pointA=api.coord([idx,a]);
-        const pointB=api.coord([idx,b]);
-        const isBullish=a>=b;
-        const nextIdx=idx+1;
-        let width=4;
-        if(nextIdx<visDates.length){
-          const nextPoint=api.coord([nextIdx,0]);
-          width=nextPoint[0]-pointA[0]-1;
-        }
-        return{type:'rect',shape:{x:pointA[0]-1,y:Math.min(pointA[1],pointB[1]),width:Math.max(width,2),height:Math.max(Math.abs(pointA[1]-pointB[1]),1)},style:{fill:isBullish?'rgba(151,196,89,0.25)':'rgba(226,75,74,0.18)'}};
-      },data:cloudData,z:1,silent:true},
-      // Candlestick
-      {name:'K线',type:'candlestick',data:visCandle,itemStyle:{color:'#e24b4a',color0:'#3cb371',borderColor:'#e24b4a',borderColor0:'#3cb371'},z:5},
-      // Ichimoku lines
-      {name:'Tenkan',type:'line',data:visTenkan,smooth:true,symbol:'none',lineStyle:{width:1.2,color:'#185fa5'},z:4},
-      {name:'Kijun',type:'line',data:visKijun,smooth:true,symbol:'none',lineStyle:{width:1.2,color:'#a32d2d'},z:4},
-      {name:'Span A',type:'line',data:visSenkouA,symbol:'none',lineStyle:{width:1,color:'#639922',type:'solid'},z:3},
-      {name:'Span B',type:'line',data:visSenkouB,symbol:'none',lineStyle:{width:1,color:'#791f1f',type:'solid'},z:3},
-      {name:'Chikou',type:'line',data:visChikou,symbol:'none',lineStyle:{width:1,color:'#888780',type:'dashed'},z:3},
-      // Bollinger Bands
-      {name:'BB Upper',type:'line',data:visBBUpper,symbol:'none',lineStyle:{width:1,color:'#993556',type:'dotted'},z:2},
-      {name:'BB Lower',type:'line',data:visBBLower,symbol:'none',lineStyle:{width:1,color:'#993556',type:'dotted'},z:2}
-    ]
-  },true);
-
-  // === MACD Chart ===
-  charts.macd.setOption({
-    title:{text:'MACD ('+currentParams.macdFast+','+currentParams.macdSlow+','+currentParams.macdSignal+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
-    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
-      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
-      params.forEach(p=>{
-        if(p.value!==null&&p.value!==undefined)html+='<br/><span style="color:'+p.color+'">●</span> '+p.seriesName+': '+Number(p.value).toFixed(4);
-      });
-      return html+'</div>';
-    }},
-    grid:{left:60,right:20,top:32,bottom:24},
-    xAxis:{type:'category',data:visDates,axisLabel:{show:false}},
-    yAxis:{scale:true,axisLabel:{fontSize:10}},
-    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
-    series:[
-      {name:'Histogram',type:'bar',data:visHist.map((v,i)=>({value:v,itemStyle:{color:v>=0?'rgba(226,75,74,0.6)':'rgba(60,179,113,0.6)'}}))},
-      {name:'DIF',type:'line',data:visDIF,symbol:'none',lineStyle:{width:1.2,color:'#185fa5'}},
-      {name:'DEA',type:'line',data:visDEA,symbol:'none',lineStyle:{width:1.2,color:'#a32d2d'}}
-    ]
-  },true);
-
-  // === RSI Chart ===
-  charts.rsi.setOption({
-    title:{text:'RSI ('+currentParams.rsi+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
-    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
-      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
-      params.forEach(p=>{
-        if(p.value!==null&&p.value!==undefined&&p.seriesName==='RSI')html+='<br/><span style="color:'+p.color+'">●</span> RSI: '+Number(p.value).toFixed(2);
-      });
-      return html+'</div>';
-    }},
-    grid:{left:60,right:20,top:32,bottom:24},
-    xAxis:{type:'category',data:visDates,axisLabel:{show:false}},
-    yAxis:{min:0,max:100,axisLabel:{fontSize:10}},
-    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
-    series:[
-      {name:'Overbought',type:'line',data:visDates.map(()=>70),symbol:'none',lineStyle:{width:1,color:'#e24b4a',type:'dashed'},silent:true},
-      {name:'Oversold',type:'line',data:visDates.map(()=>30),symbol:'none',lineStyle:{width:1,color:'#3cb371',type:'dashed'},silent:true},
-      {name:'RSI',type:'line',data:visRSI,symbol:'none',lineStyle:{width:1.5,color:'#7f77dd'},areaStyle:{color:'rgba(127,119,221,0.08)'}}
-    ]
-  },true);
-
-  // === ATR Chart ===
-  charts.atr.setOption({
-    title:{text:'ATR ('+currentParams.atrPeriod+')',left:'center',top:4,textStyle:{fontSize:12,fontWeight:600}},
-    tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(params){
-      let html='<div style="font-size:12px"><b>'+params[0].axisValue+'</b>';
-      params.forEach(p=>{
-        if(p.value!==null&&p.value!==undefined&&p.seriesName==='ATR')html+='<br/><span style="color:'+p.color+'">●</span> ATR: '+Number(p.value).toFixed(3);
-      });
-      return html+'</div>';
-    }},
-    grid:{left:60,right:20,top:32,bottom:24},
-    xAxis:{type:'category',data:visDates,axisLabel:{fontSize:10}},
-    yAxis:{scale:true,axisLabel:{fontSize:10}},
-    dataZoom:[{type:'inside',xAxisIndex:0,start:0,end:100}],
-    series:[
-      {name:'ATR',type:'line',data:visATR,symbol:'none',lineStyle:{width:1.5,color:'#ba7517'},areaStyle:{color:'rgba(186,117,23,0.1)'}}
-    ]
-  },true);
-
-  // Sync data zoom across all charts
-  syncZoom();
-
-  // Update signal panel
-  updateSignalPanel(closes,rsi,macd,bb,atrData,ichi,stock);
+function setFilter(cat){
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const resp = window._strategiesData;
+  if(resp) renderStrategies(resp);
 }
 
-// ============================================================
-// Sync zoom across charts
-// ============================================================
-function syncZoom(){
-  Object.values(charts).forEach(chart=>{
-    if(!chart)return;
-    chart.off('dataZoom');
-    chart.on('dataZoom',function(){
-      const start=chart.getOption().dataZoom[0].start;
-      const end=chart.getOption().dataZoom[0].end;
-      Object.values(charts).forEach(c=>{
-        if(c&&c!==chart){
-          c.setOption({dataZoom:[{start:start,end:end}]});
-        }
-      });
+function renderStrategies(data){
+  window._strategiesData = data;
+  const grid = document.getElementById('strategyGrid');
+  const filtered = currentFilter === 'all'
+    ? data.strategies
+    : data.strategies.filter(s => s.category === currentFilter);
+
+  grid.innerHTML = filtered.map(s => {
+    const isActive = s.status === 'active';
+    const tag = isActive ? '' : '<div class="card-badge">即将上线</div>';
+    const features = s.features.map(f => '<span class="card-tag">'+f+'</span>').join('');
+    const stocks = s.stocks.length > 0
+      ? '<div class="card-stocks">覆盖标的：<span>'+s.stocks.join(' · ')+'</span></div>'
+      : '';
+    const arrow = isActive
+      ? '<div class="card-arrow">进入策略 <span class="arr">→</span></div>'
+      : '<div class="card-arrow">开发中</div>';
+
+    return '<a'+(isActive?' href="'+s.url+'"':'')+' class="card'+(isActive?'':' disabled')+'"'+
+      ' style="--card-color:'+s.color+'">'+
+      tag+
+      '<div class="card-icon">'+s.icon+'</div>'+
+      '<div class="card-category">'+s.category+'</div>'+
+      '<div class="card-name">'+s.name+'</div>'+
+      '<div class="card-desc">'+s.summary+'</div>'+
+      '<div class="card-features">'+features+'</div>'+
+      stocks+
+      arrow+
+      '</a>';
+  }).join('');
+}
+
+function renderStats(data){
+  const active = data.strategies.filter(s => s.status === 'active');
+  document.getElementById('statStrategies').textContent = active.length;
+  document.getElementById('statUpdated').textContent = (data.updated || '--').slice(5);
+
+  // Count data points
+  fetch('data/all_stocks.json')
+    .then(r => r.json())
+    .then(d => {
+      let total = 0;
+      for(const k in d){
+        if(d[k].ohlcv) total += d[k].ohlcv.length;
+      }
+      document.getElementById('statDataPoints').textContent = total.toLocaleString();
+    })
+    .catch(() => {
+      document.getElementById('statDataPoints').textContent = '5,000+';
     });
-  });
 }
 
-// ============================================================
-// Signal panel
-// ============================================================
-function updateSignalPanel(closes,rsi,macd,bb,atrData,ichi,stock){
-  const last=closes.length-1;
-  const lastRSI=rsi[last];
-  const lastDIF=macd.dif[last];
-  const lastDEA=macd.dea[last];
-  const lastHist=macd.histogram[last];
-  const lastBBUpper=bb.upper[last];
-  const lastBBLower=bb.lower[last];
-  const lastBBMid=bb.mid[last];
-  const lastPctB=bb.pctB[last];
-  const lastATR=atrData.atr[last];
-  const lastClose=closes[last];
-  const lastATRPct=lastATR?(lastATR/lastClose*100):0;
-  const lastTenkan=ichi.tenkan[last];
-  const lastKijun=ichi.kijun[last];
-  const lastSpanA=ichi.senkouA[last];
-  const lastSpanB=ichi.senkouB[last];
-
-  // Signal logic
-  let rsiSignal,rsiClass;
-  if(lastRSI>70){rsiSignal='超买';rsiClass='sig-bearish';}
-  else if(lastRSI<30){rsiSignal='超卖';rsiClass='sig-bullish';}
-  else{rsiSignal='中性';rsiClass='sig-neutral';}
-
-  let macdSignal,macdClass;
-  if(lastDIF>lastDEA&&lastHist>0){macdSignal='金叉(多)';macdClass='sig-bullish';}
-  else if(lastDIF<lastDEA&&lastHist<0){macdSignal='死叉(空)';macdClass='sig-bearish';}
-  else{macdSignal='中性';macdClass='sig-neutral';}
-
-  let bbSignal,bbClass;
-  if(lastPctB>1){bbSignal='破上轨';bbClass='sig-bearish';}
-  else if(lastPctB<0){bbSignal='破下轨';bbClass='sig-bullish';}
-  else if(lastPctB>0.7){bbSignal='偏强';bbClass='sig-neutral';}
-  else if(lastPctB<0.3){bbSignal='偏弱';bbClass='sig-neutral';}
-  else{bbSignal='中性';bbClass='sig-neutral';}
-
-  let atrSignal,atrClass;
-  if(lastATRPct>4){atrSignal='高波动';atrClass='sig-bearish';}
-  else if(lastATRPct<2){atrSignal='低波动';atrClass='sig-bullish';}
-  else{atrSignal='正常';atrClass='sig-neutral';}
-
-  let ichiSignal,ichiClass;
-  let ichiScore=0;
-  if(lastClose>Math.max(lastSpanA,lastSpanB))ichiScore++;
-  else if(lastClose<Math.min(lastSpanA,lastSpanB))ichiScore--;
-  if(lastTenkan>lastKijun)ichiScore++;
-  else if(lastTenkan<lastKijun)ichiScore--;
-  if(lastSpanA>lastSpanB)ichiScore++;
-  else if(lastSpanA<lastSpanB)ichiScore--;
-  if(ichiScore>=2){ichiSignal='强多头';ichiClass='sig-bullish';}
-  else if(ichiScore===1){ichiSignal='偏多';ichiClass='sig-bullish';}
-  else if(ichiScore===0){ichiSignal='中性';ichiClass='sig-neutral';}
-  else if(ichiScore===-1){ichiSignal='偏空';ichiClass='sig-bearish';}
-  else{ichiSignal='强空头';ichiClass='sig-bearish';}
-
-  const panel=document.getElementById('signalPanel');
-  panel.innerHTML=`
-    <div class="signal-card"><div class="ind-name">RSI(${currentParams.rsi})</div><div class="ind-value" style="color:${lastRSI>70?'#c62828':lastRSI<30?'#2e7d32':'#666'}">${lastRSI?lastRSI.toFixed(1):'--'}</div><div class="ind-signal ${rsiClass}">${rsiSignal}</div></div>
-    <div class="signal-card"><div class="ind-name">MACD</div><div class="ind-value" style="color:${lastDIF>lastDEA?'#2e7d32':'#c62828'}">${lastHist?lastHist.toFixed(3):'--'}</div><div class="ind-signal ${macdClass}">${macdSignal}</div></div>
-    <div class="signal-card"><div class="ind-name">Bollinger %B</div><div class="ind-value" style="color:${lastPctB>1?'#c62828':lastPctB<0?'#2e7d32':'#666'}">${lastPctB?lastPctB.toFixed(2):'--'}</div><div class="ind-signal ${bbClass}">${bbSignal}</div></div>
-    <div class="signal-card"><div class="ind-name">ATR/Price</div><div class="ind-value" style="color:${lastATRPct>4?'#c62828':lastATRPct<2?'#2e7d32':'#666'}">${lastATRPct?lastATRPct.toFixed(2)+'%':'--'}</div><div class="ind-signal ${atrClass}">${atrSignal}</div></div>
-    <div class="signal-card"><div class="ind-name">Ichimoku</div><div class="ind-value" style="color:${ichiScore>0?'#2e7d32':ichiScore<0?'#c62828':'#666'}">${ichiScore>0?'+':''}${ichiScore}</div><div class="ind-signal ${ichiClass}">${ichiSignal}</div></div>
-  `;
-}
-
-// ============================================================
-// Reset parameters
-// ============================================================
-function resetParams(){
-  document.getElementById('rsiPeriod').value=14;
-  document.getElementById('macdFast').value=12;
-  document.getElementById('macdSlow').value=26;
-  document.getElementById('macdSignal').value=9;
-  document.getElementById('bbPeriod').value=20;
-  document.getElementById('bbStd').value=2;
-  document.getElementById('atrPeriod').value=14;
-  document.getElementById('ichiTenkan').value=9;
-  document.getElementById('ichiKijun').value=26;
-  document.getElementById('ichiSenkouB').value=52;
-  document.getElementById('ichiDisplace').value=26;
-  recalculate();
-}
-
-// ============================================================
-// Init
-// ============================================================
-loadData();
+init();
 </script>
 </body>
 </html>
