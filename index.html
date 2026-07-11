@@ -62,6 +62,7 @@ body{font-family:'Segoe UI','Microsoft YaHei',sans-serif;background:#f5f6fa;colo
 <div class="header">
 <h1>AI量化指标分析面板 <span>| Ichimoku · RSI · MACD · Bollinger · ATR</span></h1>
 <div class="header-right">
+<span id="dataUpdated" style="color:#8fa0c0;font-size:11px;"></span>
 <div class="stock-selector" id="stockSelector"></div>
 </div>
 </div>
@@ -177,6 +178,12 @@ async function loadData(){
   try{
     const resp = await fetch('data/all_stocks.json');
     allStockData = await resp.json();
+    // 显示数据更新时间
+    const firstKey = Object.keys(allStockData)[0];
+    if(firstKey && allStockData[firstKey].updated) {
+      const el = document.getElementById('dataUpdated');
+      if(el) el.textContent = '数据更新: ' + allStockData[firstKey].updated;
+    }
     document.getElementById('loading').style.display='none';
     initStockSelector();
     initCharts();
