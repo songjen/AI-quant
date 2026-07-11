@@ -6,10 +6,12 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Data files (large/binary)
-# Allow data/*.json for dashboard
+# Data files
+# Allow data/*.json for dashboard and csv/*.csv for incremental updates
 *.json
 !data/*.json
+*.csv
+!csv/*.csv
 
 # Scripts (source, not deliverable)
 fetch_st_renfu.py

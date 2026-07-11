@@ -92,6 +92,7 @@ tr:hover{background:#f8f9fa}
     <h1>🐢 海龟交易法则交互式回测模拟器 <span class="badge">v2.0</span></h1>
   </div>
   <div class="links">
+    <span id="dataUpdated" style="color:#8fa0c0;font-size:11px;margin-right:10px;"></span>
     <a href="https://songjen.github.io/AI-quant/">← 返回首页</a>
     <a href="https://songjen.github.io/AI-quant/dual-ma.html">双均线策略</a>
   </div>
@@ -347,6 +348,11 @@ async function loadAllData() {
         ohlcv: d.ohlcv,  // [open, high, low, close, volume]
         name: d.name || s.name
       };
+      // 显示数据更新时间
+      if(d.updated) {
+        const el = document.getElementById('dataUpdated');
+        if(el) el.textContent = `数据更新: ${d.updated}`;
+      }
     } catch(e) {
       showError(`加载 ${s.name} 数据失败: ${e.message}`);
     }
