@@ -89,15 +89,15 @@
     },
     {
       "id": "ml-predict",
-      "name": "机器学习预测",
+      "name": "6模型分类建模对比",
       "category": "AI预测",
       "icon": "🤖",
       "color": "#ec407a",
-      "url": null,
-      "status": "coming_soon",
-      "summary": "LSTM/Transformer价格预测，特征工程+模型集成",
-      "features": ["即将上线"],
-      "stocks": []
+      "url": "model-compare.html",
+      "status": "active",
+      "summary": "逻辑回归/决策树/随机森林/KNN/LSTM/GRU六模型对比，AUC/F1/ROC全面评估",
+      "features": ["6模型对比", "AUC/ROC评估", "特征重要性", "传统vs深度学习"],
+      "stocks": ["新华制药", "ST人福", "富祥药业", "赛托生物", "同和药业", "美诺华", "润都股份"]
     }
   ]
 }

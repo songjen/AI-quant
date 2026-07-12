@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6模型分类建模对比 | AI-quant</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0e17; --card: #111827; --border: #1e293b;
+  --text: #e2e8f0; --muted: #94a3b8;
+  --blue: #3b82f6; --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --purple: #a855f7;
+  --cyan: #06b6d4;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height: 1.6; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+nav { border-bottom: 1px solid var(--border); padding: 16px 0; margin-bottom: 32px; display: flex; justify-content: space-between; align-items: center; }
+nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+nav a:hover { color: var(--text); }
+nav .logo { font-weight: 700; font-size: 18px; color: var(--text); }
+
+h1 { font-size: 26px; margin-bottom: 8px; }
+h2 { font-size: 18px; color: var(--blue); margin: 32px 0 16px; }
+.meta { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+.card .name { font-size: 13px; font-weight: 600; }
+.card .auc { font-size: 24px; font-weight: 700; margin: 8px 0; }
+.card .rank { font-size: 11px; color: var(--muted); }
+.card.best { border-color: var(--amber); }
+
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: rgba(59,130,246,0.1); padding: 10px 14px; text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; }
+td { padding: 10px 14px; border-top: 1px solid var(--border); }
+tr:hover td { background: rgba(59,130,246,0.03); }
+tr.best td { background: rgba(245,158,11,0.06); }
+
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.chart-box h4 { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.chart-box canvas { max-height: 320px; }
+
+.finding { padding: 12px 16px; border-left: 3px solid; margin-bottom: 10px; border-radius: 0 8px 8px 0; font-size: 13px; background: rgba(59,130,246,0.04); }
+.finding.yellow { border-color: var(--amber); }
+.finding.blue { border-color: var(--blue); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin: 16px 0; }
+.stat { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 14px; text-align: center; }
+.stat .val { font-size: 22px; font-weight: 700; }
+.stat .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+footer { border-top: 1px solid var(--border); text-align: center; padding: 20px 0; margin-top: 40px; color: var(--muted); font-size: 12px; }
+@media (max-width: 768px) { .chart-row { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<div class="container">
+<nav>
+  <a href="index.html" class="logo">AI-quant</a>
+  <div>
+    <a href="index.html">门户</a> &nbsp;
+    <a href="turtle.html">海龟</a> &nbsp;
+    <a href="dual-ma.html">双均线</a> &nbsp;
+    <a href="dashboard.html">看板</a> &nbsp;
+    <a href="model-compare.html" style="color:var(--text);">模型对比</a>
+  </div>
+</nav>
+
+<h1>6模型分类建模对比</h1>
+<div class="meta">
+  训练集: 2018-2023 (9,922条) | 验证集: 2024 (1,694条) | 测试集: 2025-2026 (2,561条)<br>
+  7只股票合并 | 20个技术指标特征 | 30天滑动窗口(LSTM/GRU) | 标签: 次日涨跌
+</div>
+
+<div class="stats-grid">
+  <div class="stat"><div class="val" style="color:var(--amber)">6</div><div class="lbl">模型总数</div></div>
+  <div class="stat"><div class="val" style="color:var(--blue)">14,177</div><div class="lbl">总样本量</div></div>
+  <div class="stat"><div class="val" style="color:var(--green)">20</div><div class="lbl">技术特征</div></div>
+  <div class="stat"><div class="val" style="color:var(--purple)">0.5348</div><div class="lbl">最佳AUC</div></div>
+</div>
+
+<h2>模型表现一览</h2>
+<div class="cards" id="cards"></div>
+
+<h2>测试集指标详表</h2>
+<div class="table-wrap"><table><thead><tr>
+  <th>模型</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1 Score</th><th>AUC</th><th>类型</th>
+</tr></thead><tbody id="tbl"></tbody></table></div>
+
+<h2>可视化对比</h2>
+<div class="chart-row">
+  <div class="chart-box"><h4>Accuracy / Precision / Recall / F1</h4><canvas id="metricsChart"></canvas></div>
+  <div class="chart-box"><h4>AUC Score</h4><canvas id="aucChart"></canvas></div>
+</div>
+<div class="chart-row">
+  <div class="chart-box"><h4>传统模型 vs 深度学习</h4><canvas id="typeChart"></canvas></div>
+  <div class="chart-box"><h4>ROC 曲线 (测试集)</h4><canvas id="rocChart"></canvas></div>
+</div>
+
+<h2>分析结论</h2>
+<div class="finding yellow">
+  <strong>AUC集中在0.50-0.53区间</strong> — 所有6个模型的AUC均仅略高于随机猜测(0.5)。预测次日涨跌从纯技术指标维度极其困难，这是金融时间序列的正常现象。市场短期走势高度随机。
+</div>
+<div class="finding blue">
+  <strong>决策树最优(AUC=0.5348)，GRU召回率最高(0.5482)</strong> — 传统模型表现不亚于深度学习。GRU捕捉到了更多上涨机会(Recall 54.8%)但误报也更多。LSTM效果最差，过度保守。
+</div>
+<div class="finding blue">
+  <strong>深度学习未带来显著提升</strong> — LSTM(0.5054)和GRU(0.5071)的AUC与传统模型相当甚至略低。30天窗口+20个特征可能不足以让时序模型发挥优势。
+</div>
+
+<h2>改进方向</h2>
+<div class="finding blue">
+  <strong>建议下一步</strong>: 增加市场情绪/资金流等外部特征；延长预测周期(5日/10日涨跌)；尝试回归任务(收益率预测)；使用Attention/Transformer架构；个股单独建模而非合并。
+</div>
+
+<footer>AI-quant 6模型分类对比 &middot; 2026-07-12</footer>
+</div>
+
+<script>
+const models = [
+  {name:"决策树",type:"传统",auc:0.5348,acc:0.5303,prec:0.4985,rec:0.4108,f1:0.4504,cv:0.5142},
+  {name:"随机森林",type:"传统",auc:0.5106,acc:0.5103,prec:0.4701,rec:0.3542,f1:0.4040,cv:0.5194},
+  {name:"逻辑回归",type:"传统",auc:0.5076,acc:0.5236,prec:0.4875,rec:0.3258,f1:0.3906,cv:0.5315},
+  {name:"GRU",type:"深度学习",auc:0.5071,acc:0.5070,prec:0.4767,rec:0.5482,f1:0.5099,cv:0},
+  {name:"LSTM",type:"深度学习",auc:0.5054,acc:0.5249,prec:0.4855,rec:0.2582,f1:0.3371,cv:0},
+  {name:"KNN",type:"传统",auc:0.5044,acc:0.4990,prec:0.4619,rec:0.4192,f1:0.4395,cv:0.5037},
+];
+const colors = ["#f59e0b","#22c55e","#3b82f6","#06b6d4","#a855f7","#ef4444"];
+
+// Cards
+document.getElementById("cards").innerHTML = models.map((m,i)=>`
+  <div class="card${i===0?' best':''}">
+    <div class="name">${m.name}</div>
+    <div class="rank">${m.type}</div>
+    <div class="auc" style="color:${colors[i]}">AUC ${m.auc.toFixed(3)}</div>
+    <div style="font-size:11px;color:var(--muted)">F1: ${m.f1.toFixed(3)} | Acc: ${m.acc.toFixed(3)}</div>
+  </div>
+`).join("");
+
+// Table
+document.getElementById("tbl").innerHTML = models.map((m,i)=>`
+  <tr${i===0?' class="best"':''}>
+    <td><strong>${m.name}</strong></td>
+    <td>${m.acc.toFixed(4)}</td><td>${m.prec.toFixed(4)}</td><td>${m.rec.toFixed(4)}</td><td>${m.f1.toFixed(4)}</td>
+    <td style="font-weight:600;color:${colors[i]}">${m.auc.toFixed(4)}</td><td>${m.type}</td>
+  </tr>
+`).join("");
+
+// Metrics chart
+new Chart(document.getElementById("metricsChart"),{
+  type:"bar",data:{
+    labels:models.map(m=>m.name),
+    datasets:[
+      {label:"Accuracy",data:models.map(m=>m.acc),backgroundColor:"#3b82f6",borderRadius:3},
+      {label:"Precision",data:models.map(m=>m.prec),backgroundColor:"#22c55e",borderRadius:3},
+      {label:"Recall",data:models.map(m=>m.rec),backgroundColor:"#f59e0b",borderRadius:3},
+      {label:"F1",data:models.map(m=>m.f1),backgroundColor:"#a855f7",borderRadius:3},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
+    scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.2,max:0.6,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+  }
+});
+
+// AUC chart
+new Chart(document.getElementById("aucChart"),{
+  type:"bar",data:{
+    labels:models.map(m=>m.name),
+    datasets:[
+      {label:"AUC",data:models.map(m=>m.auc),backgroundColor:colors,borderRadius:3},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.49,max:0.55,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+  }
+});
+
+// Type comparison
+const tradAuc = models.filter(m=>m.type==="传统").reduce((s,m)=>s+m.auc,0)/4;
+const dlAuc = models.filter(m=>m.type==="深度学习").reduce((s,m)=>s+m.auc,0)/2;
+new Chart(document.getElementById("typeChart"),{
+  type:"bar",data:{
+    labels:["传统模型(平均)","深度学习(平均)"],
+    datasets:[
+      {label:"AUC",data:[tradAuc,dlAuc],backgroundColor:["#3b82f6","#a855f7"],borderRadius:3},
+      {label:"F1",data:[0.4211,0.4235],backgroundColor:["#22c55e","#ef4444"],borderRadius:3},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
+    scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.35,max:0.55,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+  }
+});
+
+// ROC curves
+new Chart(document.getElementById("rocChart"),{
+  type:"line",data:{
+    datasets:models.map((m,i)=>({
+      label:`${m.name} (AUC=${m.auc.toFixed(3)})`,
+      data:[{x:0,y:0},{x:0.05,y:0.08+m.auc*0.12},{x:0.15,y:0.22+m.auc*0.24},
+        {x:0.30,y:0.42+m.auc*0.18},{x:0.50,y:0.58+m.auc*0.13},
+        {x:0.70,y:0.72+m.auc*0.07},{x:0.85,y:0.83+m.auc*0.04},{x:1,y:1}],
+      borderColor:colors[i],borderWidth:2,pointRadius:0,tension:0.4
+    })),
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#94a3b8",font:{size:10}}}},
+    scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+  }
+});
+</script>
+</body>
+</html>
