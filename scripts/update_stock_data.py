@@ -27,6 +27,12 @@ STOCKS = [
     {"code": "605507", "name": "国邦药业",  "market": "A股", "exchange": "sh", "start": "2021-01-01"},
     {"code": "600079", "name": "ST人福",    "market": "A股", "exchange": "sh", "start": "2018-01-01"},
     {"code": "00719",  "name": "新华制药H", "market": "港股", "exchange": "hk", "start": "2018-01-01"},
+    # === 第二批：医药制药板块 ===
+    {"code": "300497", "name": "富祥药业",  "market": "A股", "exchange": "sz", "start": "2015-01-01"},
+    {"code": "300583", "name": "赛托生物",  "market": "A股", "exchange": "sz", "start": "2017-01-01"},
+    {"code": "300636", "name": "同和药业",  "market": "A股", "exchange": "sz", "start": "2017-01-01"},
+    {"code": "603538", "name": "美诺华",    "market": "A股", "exchange": "sh", "start": "2017-01-01"},
+    {"code": "002923", "name": "润都股份",  "market": "A股", "exchange": "sz", "start": "2018-01-01"},
 ]
 
 # 路径（相对于repo根目录）
@@ -85,22 +91,35 @@ def fetch_full_history(stock):
 
     print(f"  全量下载 {stock['name']}({stock['code']}) 从 {start_date} 到 {end_date}")
 
-    while True:
+    # 安全限制：最多迭代800次（对应约50万条记录，远超任何正常股票）
+    max_iterations = 800
+    iteration = 0
+
+    while iteration < max_iterations:
+        iteration += 1
         batch = fetch_kline(api_code, start_date, end_date, MAX_COUNT)
         if not batch:
             break
 
         all_data.extend(batch)
-        print(f"    获取 {len(batch)} 条，累计 {len(all_data)} 条")
 
         # 如果返回不足MAX_COUNT条，说明已全部获取
         if len(batch) < MAX_COUNT:
+            print(f"    获取 {len(batch)} 条（最后一批），累计 {len(all_data)} 条")
             break
+
+        print(f"    获取 {len(batch)} 条，累计 {len(all_data)} 条")
 
         # 向前滚动end_date（使用最后一条数据的日期）
         last_date = batch[-1][0]
+        # 如果最后日期早于start_date，说明已获取到足够早的数据
+        if last_date <= start_date:
+            print(f"    已到达起始日期 {start_date}，停止")
+            break
         end_date = last_date
         time.sleep(0.5)
+    else:
+        print(f"  [警告] 达到最大迭代次数 {max_iterations}，停止下载")
 
     return all_data
 
