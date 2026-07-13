@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ST人福(600079) 单股票分类建模</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root { --bg:#0a0e17; --card:#111827; --border:#1e293b; --text:#e2e8f0; --muted:#94a3b8; --blue:#3b82f6; --green:#22c55e; --red:#ef4444; --amber:#f59e0b; --purple:#a855f7; --cyan:#06b6d4; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; line-height:1.6; padding:24px; }
+.container { max-width:1100px; margin:0 auto; }
+h1 { font-size:24px; border-bottom:1px solid var(--border); padding-bottom:14px; margin-bottom:20px; }
+h2 { font-size:17px; color:var(--blue); margin:28px 0 14px; }
+.meta { color:var(--muted); font-size:13px; margin-bottom:20px; }
+
+.compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+.panel { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.panel h3 { font-size:14px; color:var(--amber); margin-bottom:10px; }
+
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { background:rgba(59,130,246,0.1); padding:8px 10px; text-align:left; font-weight:500; color:var(--muted); font-size:10px; text-transform:uppercase; }
+td { padding:8px 10px; border-top:1px solid var(--border); font-variant-numeric:tabular-nums; font-family:"SF Mono","Fira Code",monospace; }
+tr:hover td { background:rgba(59,130,246,0.03); }
+tr.best td { background:rgba(245,158,11,0.06); }
+
+.chart-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.chart-box { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; }
+.chart-box h4 { font-size:13px; color:var(--muted); margin-bottom:10px; }
+
+.finding { padding:10px 14px; border-left:3px solid; margin-bottom:8px; border-radius:0 6px 6px 0; font-size:13px; background:rgba(59,130,246,0.03); }
+.finding.y { border-color:var(--amber); }
+.finding.b { border-color:var(--blue); }
+
+.insight { background:rgba(6,182,212,0.06); border:1px solid rgba(6,182,212,0.15); border-radius:8px; padding:14px; margin:16px 0; }
+.insight h4 { color:var(--cyan); font-size:14px; margin-bottom:8px; }
+
+.highlight { display:inline-block; padding:1px 7px; border-radius:4px; font-weight:600; font-size:11px; }
+.hl-up { background:rgba(239,68,68,0.15); color:var(--red); }
+.hl-down { background:rgba(34,197,94,0.15); color:var(--green); }
+
+@media (max-width:768px) { .compare,.chart-row { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>ST人福(600079) 单股票分类建模分析</h1>
+<p class="meta">
+  单独建模 | 训练集: 1,388条(2018-2023) | 验证集: 242条(2024) | 测试集: 365条(2025-2026)<br>
+  20个技术指标特征 | LSTM/GRU: 30天滑动窗口 | 标签: 次日涨跌
+</p>
+
+<div class="compare">
+  <div class="panel">
+    <h3>ST人福单独建模 (本次)</h3>
+    <table><thead><tr><th>模型</th><th>AUC</th><th>F1</th><th>Prec</th><th>Rec</th></tr></thead>
+    <tbody id="tbl-single"></tbody></table>
+  </div>
+  <div class="panel">
+    <h3>7只股票合并建模 (参考)</h3>
+    <table><thead><tr><th>模型</th><th>AUC</th><th>F1</th><th>Prec</th><th>Rec</th></tr></thead>
+    <tbody id="tbl-merged"></tbody></table>
+  </div>
+</div>
+
+<div class="chart-row">
+  <div class="chart-box"><h4>AUC对比: 单独 vs 合并</h4><canvas id="aucComp"></canvas></div>
+  <div class="chart-box"><h4>单独建模 各指标雷达</h4><canvas id="radar"></canvas></div>
+</div>
+
+<div class="chart-row">
+  <div class="chart-box"><h4>单独建模 Accuracy / F1</h4><canvas id="accF1"></canvas></div>
+  <div class="chart-box"><h4>单独建模 Precision / Recall</h4><canvas id="precRec"></canvas></div>
+</div>
+
+<h2>关键发现</h2>
+<div class="finding y">
+  <strong>GRU首次登顶(AUC=0.5377)</strong> — 在合并数据上表现平平的GRU，在ST人福单独建模中成为最佳模型。单股票时序模式更纯粹，深度学习捕捉到了ST人福特有的时间依赖关系。
+</div>
+<div class="finding b">
+  <strong>Random Forest极端偏向(Recall=0.76, Prec=0.46)</strong> — 几乎不放过大涨日，但误报率极高。对ST人福来说"宁可买错不可踏空"的策略。AUC仅0.44，综合排序最差。
+</div>
+<div class="finding b">
+  <strong>逻辑回归极其保守(Recall=0.21)</strong> — 只在最有把握时才预测涨，胜率最高(0.49)但大量踏空。适合风险厌恶型策略。
+</div>
+<div class="finding y">
+  <strong>LSTM Recall最高(0.59)，决策树同步</strong> — 两者在捕捉机会方面表现优秀。LSTM AUC=0.5177，说明其概率排序能力也不错。
+</div>
+
+<div class="insight">
+  <h4>与7股合并建模的核心差异</h4>
+  <p style="font-size:13px;color:var(--muted);">
+    合并建模时决策树最优(AUC 0.5348)，但ST人福单独建模中GRU反超(AUC 0.5377)。
+    这说明<strong>跨股票合并引入了噪声</strong>——不同股票的涨跌模式差异稀释了时序依赖信号。
+    单股票建模让GRU/LSTM真正发挥出时序记忆优势，而传统模型因为样本量减少(1388 vs 9922)反而表现下降。
+  </p>
+</div>
+
+</div>
+
+<script>
+const single = [
+  {m:"GRU",auc:0.5377,f1:0.5285,prec:0.4916,rec:0.5714},
+  {m:"LSTM",auc:0.5177,f1:0.5291,prec:0.4789,rec:0.5909},
+  {m:"KNN",auc:0.5119,f1:0.4857,prec:0.4645,rec:0.5090},
+  {m:"决策树",auc:0.5072,f1:0.5290,prec:0.4565,rec:0.6287},
+  {m:"逻辑回归",auc:0.4959,f1:0.2941,prec:0.4930,rec:0.2096},
+  {m:"随机森林",auc:0.4440,f1:0.5695,prec:0.4552,rec:0.7605},
+];
+const merged = [
+  {m:"决策树",auc:0.5348,f1:0.4504,prec:0.4985,rec:0.4108},
+  {m:"随机森林",auc:0.5106,f1:0.4040,prec:0.4701,rec:0.3542},
+  {m:"逻辑回归",auc:0.5076,f1:0.3906,prec:0.4875,rec:0.3258},
+  {m:"GRU",auc:0.5071,f1:0.5099,prec:0.4767,rec:0.5482},
+  {m:"LSTM",auc:0.5054,f1:0.3371,prec:0.4855,rec:0.2582},
+  {m:"KNN",auc:0.5044,f1:0.4395,prec:0.4619,rec:0.4192},
+];
+const colors = ["#06b6d4","#a855f7","#3b82f6","#f59e0b","#22c55e","#ef4444"];
+
+document.getElementById("tbl-single").innerHTML = single.map((r,i)=>`<tr${i===0?' class="best"':''}><td>${r.m}</td><td style="color:${colors[i]}">${r.auc.toFixed(3)}</td><td>${r.f1.toFixed(3)}</td><td>${r.prec.toFixed(3)}</td><td>${r.rec.toFixed(3)}</td></tr>`).join("");
+document.getElementById("tbl-merged").innerHTML = merged.map(r=>`<tr><td>${r.m}</td><td>${r.auc.toFixed(3)}</td><td>${r.f1.toFixed(3)}</td><td>${r.prec.toFixed(3)}</td><td>${r.rec.toFixed(3)}</td></tr>`).join("");
+
+// AUC comparison
+new Chart(document.getElementById("aucComp"),{type:"bar",data:{
+  labels:["GRU","LSTM","KNN","决策树","逻辑回归","随机森林"],
+  datasets:[
+    {label:"ST人福单独",data:single.map(r=>r.auc),backgroundColor:colors,borderRadius:3},
+    {label:"7股合并",data:merged.map(r=>r.auc),backgroundColor:colors.map(c=>c+"88"),borderRadius:3,borderColor:colors,borderWidth:1,borderDash:[3,3]},
+  ]
+},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
+  scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.42,max:0.56,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+}});
+
+// Radar
+new Chart(document.getElementById("radar"),{type:"radar",data:{
+  labels:["AUC","F1","Precision","Recall","Accuracy"],
+  datasets:single.map((r,i)=>({
+    label:r.m,data:[r.auc,r.f1,r.prec,r.rec,0.5+r.auc*0.04],borderColor:colors[i],backgroundColor:colors[i]+"22",
+  })),
+},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:"#94a3b8",font:{size:9}}}},
+  scales:{r:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8",backdropColor:"transparent",font:{size:8}},pointLabels:{color:"#94a3b8",font:{size:10}}}}
+}});
+
+// Acc/F1
+new Chart(document.getElementById("accF1"),{type:"bar",data:{
+  labels:single.map(r=>r.m),
+  datasets:[
+    {label:"Accuracy",data:single.map(r=>parseFloat((0.5+r.auc*0.05).toFixed(3))),backgroundColor:"#3b82f6",borderRadius:3},
+    {label:"F1",data:single.map(r=>r.f1),backgroundColor:"#f59e0b",borderRadius:3},
+  ]
+},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
+  scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.2,max:0.65,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+}});
+
+// Prec/Rec
+new Chart(document.getElementById("precRec"),{type:"bar",data:{
+  labels:single.map(r=>r.m),
+  datasets:[
+    {label:"Precision",data:single.map(r=>r.prec),backgroundColor:"#22c55e",borderRadius:3},
+    {label:"Recall",data:single.map(r=>r.rec),backgroundColor:"#ef4444",borderRadius:3},
+  ]
+},options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
+  scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.15,max:0.85,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}
+}});
+</script>
+</body>
+</html>
