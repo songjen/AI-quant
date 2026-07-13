@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ST人福 股吧情感分析</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0e17;--card:#111827;--border:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--red:#ef4444;--green:#22c55e;--amber:#f59e0b;--blue:#3b82f6;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;padding:20px;line-height:1.6}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:24px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:16px}
+h2{font-size:17px;color:var(--blue);margin:24px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.stat .v{font-size:22px;font-weight:700}
+.stat .l{font-size:11px;color:var(--muted);margin-top:2px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.chart-box h4{font-size:13px;color:var(--muted);margin-bottom:10px}
+.chart-box canvas{max-height:300px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(59,130,246,0.1);padding:7px 10px;text-align:left;font-weight:500;color:var(--muted);font-size:10px}
+td{padding:7px 10px;border-top:1px solid var(--border)}
+tr:hover td{background:rgba(59,130,246,0.03)}
+.post-title{max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:768px){.chart-row{grid-template-columns:1fr}}
+</style></head>
+<body><div class="container">
+<h1>ST人福(600079) 股吧情感分析</h1>
+<div style="color:var(--muted);font-size:12px;margin-bottom:16px">
+  数据源: 东方财富股吧 | 采集260帖 | 日期范围: 2026-06-24 ~ 2026-07-13</div>
+
+<div class="stats">
+  <div class="stat"><div class="v">0.485</div><div class="l">平均情感(0-1)</div></div>
+  <div class="stat"><div class="v" style="color:var(--red)">27.7%</div><div class="l">看涨占比</div></div>
+  <div class="stat"><div class="v" style="color:var(--green)">31.5%</div><div class="l">看跌占比</div></div>
+  <div class="stat"><div class="v">260</div><div class="l">总帖子数</div></div>
+  <div class="stat"><div class="v">46k</div><div class="l">总阅读量</div></div>
+  <div class="stat"><div class="v">20天</div><div class="l">覆盖天数</div></div>
+</div>
+
+<h2>情感趋势</h2>
+<div class="chart-box"><h4>每日情感均值 & 帖子数</h4><canvas id="sentimentChart"></canvas></div>
+
+<div class="chart-row">
+  <div class="chart-box"><h4>看涨/看跌占比</h4><canvas id="ratioChart"></canvas></div>
+  <div class="chart-box"><h4>牛熊比 & 帖子活跃度</h4><canvas id="bbChart"></canvas></div>
+</div>
+
+<h2>极端看涨帖子 Top 5</h2>
+<div class="chart-box"><table><thead><tr><th>帖子</th><th>情感</th><th>时间</th><th>阅读</th></tr></thead><tbody>
+<tr><td class='post-title'>ST人福未来营收增长的潜在驱动因素有哪些？1.核心麻醉药业务稳健增长-手术量复苏</td><td style='color:var(--red)'>0.88</td><td>2026-07-06 00:19:48</td><td>841</td></tr><tr><td class='post-title'>这个行业？可能会暴发性延续性增长AGGSM</td><td style='color:var(--red)'>0.79</td><td>2026-07-07 08:33:27</td><td>3502</td></tr><tr><td class='post-title'>都散了吧，别看了。今天半导体芯片涨了，继续虹吸市场资金。</td><td style='color:var(--red)'>0.79</td><td>2026-06-25 09:32:57</td><td>30</td></tr><tr><td class='post-title'>恩华要涨百分之50市值才跟人福一样，人福还有定增。目前看恩华药业比人福药业更有上</td><td style='color:var(--red)'>0.77</td><td>2026-07-06 14:42:23</td><td>67</td></tr><tr><td class='post-title'>五个点都没涨到过，还梦想他能涨十个点，14.9的定增价格在那放着，我觉得在这附近</td><td style='color:var(--red)'>0.76</td><td>2026-07-03 15:50:37</td><td>235</td></tr>
+</tbody></table></div>
+
+<h2>极端看跌帖子 Top 5</h2>
+<div class="chart-box"><table><thead><tr><th>帖子</th><th>情感</th><th>时间</th><th>阅读</th></tr></thead><tbody>
+<tr><td class='post-title'>维持这货丢人现眼这一评级不变维持这货丢人现眼这一评级不变维持这货丢人现眼这一评级</td><td style='color:var(--green)'>0.03</td><td>2026-06-30 10:04:41</td><td>25</td></tr><tr><td class='post-title'>人福医药本来就是散户重仓股，没有题材，又是ST，凭什么涨?给个理由</td><td style='color:var(--green)'>0.07</td><td>2026-07-10 18:23:21</td><td>986</td></tr><tr><td class='post-title'>跌永远是第一名垃圾</td><td style='color:var(--green)'>0.14</td><td>2026-07-10 13:51:30</td><td>31</td></tr><tr><td class='post-title'>丢人现眼的玩意又丢人现眼了一整天</td><td style='color:var(--green)'>0.20</td><td>2026-07-13 16:00:09</td><td>578</td></tr><tr><td class='post-title'>从没见过这么垃圾的股票，一个分红，一个多月了没有动静，难道非要等到两个月才分红？</td><td style='color:var(--green)'>0.21</td><td>2026-07-06 15:57:08</td><td>460</td></tr>
+</tbody></table></div>
+
+</div>
+
+<script>
+const d = {"dates": ["2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13"], "sentiment_mean": [0.393, 0.469, 0.444, 0.395, 0.301, 0.476, 0.457, 0.472, 0.506, 0.529, 0.489, 0.435, 0.528, 0.542, 0.428, 0.563, 0.463, 0.695, 0.41, 0.425], "sentiment_ma5": [0.392, 0.431, 0.435, 0.425, 0.4, 0.417, 0.415, 0.42, 0.443, 0.488, 0.491, 0.486, 0.497, 0.504, 0.484, 0.499, 0.505, 0.538, 0.512, 0.511], "post_count": [3, 23, 14, 1, 1, 16, 18, 27, 15, 25, 2, 7, 33, 11, 9, 14, 24, 1, 1, 15], "bullish_ratio": [0.0, 0.261, 0.214, 0.0, 0.0, 0.25, 0.222, 0.259, 0.333, 0.32, 0.0, 0.143, 0.394, 0.364, 0.111, 0.571, 0.208, 1.0, 0.0, 0.133], "bearish_ratio": [0.333, 0.391, 0.357, 1.0, 1.0, 0.375, 0.278, 0.37, 0.133, 0.2, 0.0, 0.571, 0.242, 0.182, 0.556, 0.214, 0.375, 0.0, 0.0, 0.4], "bull_bear_ratio": [0.0, 0.6, 0.5, 0.0, 0.0, 0.57, 0.67, 0.64, 1.67, 1.33, 0.0, 0.2, 1.44, 1.33, 0.17, 2.0, 0.5, 1.0, 0.0, 0.29], "extreme": []};
+
+new Chart(document.getElementById('sentimentChart'),{type:'line',data:{
+  labels:d.dates,datasets:[
+    {label:'情感均值',data:d.sentiment_mean,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.3},
+    {label:'5日均线',data:d.sentiment_ma5,borderColor:'#3b82f6',backgroundColor:'transparent',borderWidth:2,borderDash:[4,2],pointRadius:0,tension:0.3},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+    scales:{x:{grid:{color:'#1e293b'},ticks:{color:'#94a3b8',maxTicksLimit:20,maxRotation:45}},y:{min:0,max:1,grid:{color:'#1e293b'},ticks:{color:'#94a3b8'}}}
+}});
+
+new Chart(document.getElementById('ratioChart'),{type:'bar',data:{
+  labels:d.dates,datasets:[
+    {label:'看涨',data:d.bullish_ratio,backgroundColor:'#ef4444',borderRadius:2},
+    {label:'看跌',data:d.bearish_ratio,backgroundColor:'#22c55e',borderRadius:2},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#94a3b8'}}},
+    scales:{x:{stacked:true,grid:{color:'#1e293b'},ticks:{color:'#94a3b8',maxTicksLimit:20,maxRotation:45}},y:{stacked:true,grid:{color:'#1e293b'},ticks:{color:'#94a3b8'}}}
+}});
+
+new Chart(document.getElementById('bbChart'),{type:'line',data:{
+  labels:d.dates,datasets:[
+    {label:'牛熊比',data:d.bull_bear_ratio,borderColor:'#f59e0b',backgroundColor:'transparent',borderWidth:2,pointRadius:0,tension:0.3,yAxisID:'y'},
+    {label:'帖子数',data:d.post_count,borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,0.1)',borderWidth:1,fill:true,pointRadius:0,tension:0.3,yAxisID:'y1'},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:'#94a3b8',font:{size:10}}}},
+    scales:{x:{grid:{color:'#1e293b'},ticks:{color:'#94a3b8',maxTicksLimit:20,maxRotation:45}},y:{position:'left',grid:{color:'#1e293b'},ticks:{color:'#94a3b8'}},y1:{position:'right',grid:{display:false},ticks:{color:'#3b82f6'}}}
+}});
+</script></body></html>
