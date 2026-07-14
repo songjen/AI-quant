@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>model_data_stock.csv 分类建模</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0a0e17;--card:#111827;--border:#1e293b;--text:#e2e8f0;--muted:#94a3b8;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#a855f7;--cyan:#06b6d4}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;padding:20px;line-height:1.6}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:24px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:16px}
+h2{font-size:17px;color:var(--blue);margin:24px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.stat .v{font-size:22px;font-weight:700}
+.stat .l{font-size:11px;color:var(--muted);margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0}
+th{background:rgba(59,130,246,0.1);padding:7px 10px;text-align:left;font-weight:500;color:var(--muted);font-size:10px}
+td{padding:7px 10px;border-top:1px solid var(--border);font-variant-numeric:tabular-nums;font-family:"SF Mono","Fira Code",monospace}
+tr:hover td{background:rgba(59,130,246,0.03)}
+tr.best td{background:rgba(245,158,11,0.06)}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.chart-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.chart-box h4{font-size:13px;color:var(--muted);margin-bottom:10px}
+.finding{padding:10px 14px;border-left:3px solid;margin-bottom:8px;border-radius:0 6px 6px 0;font-size:13px;background:rgba(59,130,246,0.03)}
+.finding.y{border-color:var(--amber)}
+.finding.b{border-color:var(--blue)}
+@media(max-width:768px){.chart-row{grid-template-columns:1fr}}
+</style></head>
+<body><div class="container">
+<h1>model_data_stock.csv 分类建模</h1>
+<div style="color:var(--muted);font-size:12px;margin-bottom:16px">
+  4,281只A股 | 17个财务因子 | 训练前3季度/测试后2季度 | 预测: 下季度涨跌
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="v">20,772</div><div class="l">总样本</div></div>
+  <div class="stat"><div class="v">4,281</div><div class="l">股票数</div></div>
+  <div class="stat"><div class="v">17</div><div class="l">财务特征</div></div>
+  <div class="stat"><div class="v" style="color:var(--amber)">0.5415</div><div class="l">最佳AUC (RF)</div></div>
+  <div class="stat"><div class="v">12,282</div><div class="l">训练集</div></div>
+  <div class="stat"><div class="v">8,490</div><div class="l">测试集</div></div>
+</div>
+
+<h2>模型表现</h2>
+<div class="chart-box"><div style="overflow-x:auto"><table><thead><tr>
+  <th>排名</th><th>模型</th><th>AUC</th><th>F1</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>CV AUC</th><th>TP</th><th>TN</th></tr></thead>
+<tbody id="tbl"></tbody></table></div></div>
+
+<div class="chart-row">
+  <div class="chart-box"><h4>核心指标对比</h4><canvas id="metrics"></canvas></div>
+  <div class="chart-box"><h4>AUC vs CV_AUC</h4><canvas id="aucCv"></canvas></div>
+</div>
+
+<div class="chart-row">
+  <div class="chart-box"><h4>特征重要性 (RandomForest Top 10)</h4><canvas id="featRF"></canvas></div>
+  <div class="chart-box"><h4>特征重要性 (GBDT Top 10)</h4><canvas id="featGB"></canvas></div>
+</div>
+
+<h2>分析结论</h2>
+<div class="finding y">
+  <strong>AUC=0.54(>$TD 0.5>) — 财务因子有微弱但稳定的预测力</strong><br>
+  在大样本(8,490测试)下AUC稳定>0.5, 说明财务指标确实包含对未来涨跌的微弱信号。MV(市值)和PB(市净率)是最重要的两个因子。
+</div>
+<div class="finding b">
+  <strong>MV(市值)是第一特征</strong> — RF 17.4% / GBDT 22.2% 的重要性全部指向市值。大市值VS小市值在A股中是系统性差异, 控制了大量估值/增长因子的解释力。
+</div>
+<div class="finding b">
+  <strong>CV AUC(0.54-0.58)高于Test AUC(0.50-0.54)</strong> — 时序切分下存在概念漂移。训练期(2021年)和测试期(2022年H1)市场环境不同, 模型泛化有折损。
+</div>
+</div>
+
+<script>
+const results=[
+  {m:"RandomForest",auc:0.5415,f1:0.3664,acc:0.5878,prec:0.3567,rec:0.3766,cv:0.5769,tp:1012,tn:3978},
+  {m:"GBDT",auc:0.5384,f1:0.3626,acc:0.5908,prec:0.3576,rec:0.3677,cv:0.5775,tp:988,tn:4028},
+  {m:"DecisionTree",auc:0.5277,f1:0.3802,acc:0.5326,prec:0.3276,rec:0.4529,cv:0.5566,tp:1217,tn:3305},
+  {m:"KNN",auc:0.5192,f1:0.3756,acc:0.5555,prec:0.3381,rec:0.4224,cv:0.5376,tp:1135,tn:3581},
+  {m:"Logistic",auc:0.5035,f1:0.1707,acc:0.6485,prec:0.3370,rec:0.1143,cv:0.5580,tp:307,tn:5199},
+];
+const colors=["#f59e0b","#22c55e","#3b82f6","#a855f7","#ef4444"];
+const rfFeat=["MV","PB","EV/EBITDA","PS(TTM)","EPS增速","CF增速","净资产增速","净利增速","PE(TTM)","PE(扣非)"];
+const rfVal=[0.174,0.1217,0.0621,0.062,0.0522,0.0512,0.0487,0.0484,0.0482,0.0477];
+const gbFeat=["MV","PB","EPS增速","CF增速","EV/EBITDA","营收增速","净资产增速","PS(TTM)","PE(扣非)","PE(TTM)"];
+const gbVal=[0.222,0.1816,0.0782,0.0685,0.0576,0.0461,0.0406,0.0369,0.0355,0.035];
+
+document.getElementById("tbl").innerHTML=results.map((r,i)=>`<tr${i===0?' class="best"':''}><td>${i+1}</td><td>${r.m}</td><td style="color:${colors[i]}">${r.auc.toFixed(4)}</td><td>${r.f1.toFixed(4)}</td><td>${r.acc.toFixed(4)}</td><td>${r.prec.toFixed(4)}</td><td>${r.rec.toFixed(4)}</td><td>${r.cv.toFixed(4)}</td><td>${r.tp}</td><td>${r.tn}</td></tr>`).join("");
+
+new Chart(document.getElementById("metrics"),{type:"bar",data:{labels:results.map(r=>r.m),datasets:[
+  {label:"AUC",data:results.map(r=>r.auc),backgroundColor:"#f59e0b",borderRadius:3},
+  {label:"F1",data:results.map(r=>r.f1),backgroundColor:"#3b82f6",borderRadius:3},
+  {label:"Accuracy",data:results.map(r=>r.acc),backgroundColor:"#22c55e",borderRadius:3},
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#94a3b8",font:{size:10}}}},scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.1,max:0.7,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}}})
+
+new Chart(document.getElementById("aucCv"),{type:"bar",data:{labels:results.map(r=>r.m),datasets:[
+  {label:"CV AUC",data:results.map(r=>r.cv),backgroundColor:"#3b82f6",borderRadius:3},
+  {label:"Test AUC",data:results.map(r=>r.auc),backgroundColor:"#f59e0b",borderRadius:3},
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#94a3b8",font:{size:10}}}},scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{min:0.48,max:0.6,grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}}}}})
+
+new Chart(document.getElementById("featRF"),{type:"bar",data:{labels:rfFeat,datasets:[{label:"RF重要性",data:rfVal,backgroundColor:"#f59e0b",borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8",font:{size:10}}}}}})
+
+new Chart(document.getElementById("featGB"),{type:"bar",data:{labels:gbFeat,datasets:[{label:"GBDT重要性",data:gbVal,backgroundColor:"#22c55e",borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8"}},y:{grid:{color:"#1e293b"},ticks:{color:"#94a3b8",font:{size:10}}}}}})
+</script></body></html>
