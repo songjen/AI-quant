@@ -1,0 +1,83 @@
+{
+  "summary": {
+    "n_quarters": 10,
+    "train_quarters": 6,
+    "test_quarters": 4,
+    "n_stocks": 4281,
+    "n_features": 19,
+    "top_k": 30
+  },
+  "models": {
+    "LinearReg": {
+      "total_return_ew": 0.2287,
+      "total_return_pw": 0.0871,
+      "avg_spearman": 0.065
+    },
+    "LogisticReg": {
+      "total_return_ew": -0.0084,
+      "total_return_pw": -0.0048,
+      "avg_spearman": 0.1217
+    },
+    "DecisionTree": {
+      "total_return_ew": 0.204,
+      "total_return_pw": 0.193,
+      "avg_spearman": 0.0948
+    },
+    "RandomForest": {
+      "total_return_ew": 0.5203,
+      "total_return_pw": 0.5393,
+      "avg_spearman": 0.1418
+    }
+  },
+  "benchmark_total_return": -0.0514,
+  "periods": [
+    {
+      "test_date": "2021-09-30",
+      "benchmark": 0.1136,
+      "LinearReg_ew": 0.2321,
+      "LinearReg_pw": 0.223,
+      "LogisticReg_ew": 0.1014,
+      "LogisticReg_pw": 0.1088,
+      "DecisionTree_ew": 0.1438,
+      "DecisionTree_pw": 0.1391,
+      "RandomForest_ew": 0.163,
+      "RandomForest_pw": 0.1596
+    },
+    {
+      "test_date": "2021-12-31",
+      "benchmark": -0.0837,
+      "LinearReg_ew": 0.0118,
+      "LinearReg_pw": 0.0159,
+      "LogisticReg_ew": 0.0403,
+      "LogisticReg_pw": 0.0437,
+      "DecisionTree_ew": 0.0316,
+      "DecisionTree_pw": 0.0137,
+      "RandomForest_ew": 0.1107,
+      "RandomForest_pw": 0.1428
+    },
+    {
+      "test_date": "2022-03-31",
+      "benchmark": 0.0107,
+      "LinearReg_ew": 0.0738,
+      "LinearReg_pw": -0.0462,
+      "LogisticReg_ew": -0.0581,
+      "LogisticReg_pw": -0.0592,
+      "DecisionTree_ew": 0.0594,
+      "DecisionTree_pw": 0.0597,
+      "RandomForest_ew": 0.1378,
+      "RandomForest_pw": 0.1312
+    },
+    {
+      "test_date": "2022-06-30",
+      "benchmark": -0.092,
+      "LinearReg_ew": -0.089,
+      "LinearReg_pw": -0.1056,
+      "LogisticReg_ew": -0.092,
+      "LogisticReg_pw": -0.0981,
+      "DecisionTree_ew": -0.0308,
+      "DecisionTree_pw": -0.0196,
+      "RandomForest_ew": 0.1088,
+      "RandomForest_pw": 0.1058
+    }
+  ]
+}

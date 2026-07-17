@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<title>Top30 策略增强分析报告</title>
+<style>
+* {margin:0;padding:0;box-sizing:border-box}
+body {font-family:'Microsoft YaHei',sans-serif;background:#f5f6fa;color:#2d3436;padding:24px}
+h1 {font-size:24px;margin-bottom:8px}
+h2 {font-size:16px;color:#636e72;margin:20px 0 12px}
+.card {background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.stat {text-align:center}
+.stat .v {font-size:28px;font-weight:700}
+.stat .l {font-size:12px;color:#636e72}
+.pos {color:#d63031} .neg {color:#00b894}
+img {max-width:100%;border-radius:8px;margin:12px 0}
+table {width:100%;border-collapse:collapse;font-size:13px}
+th {background:#f8f9fa;padding:8px 12px;border-bottom:2px solid #dfe6e9}
+td {padding:8px 12px;border-bottom:1px solid #f1f2f6;text-align:center}
+</style></head>
+<body>
+<h1>Top30 策略增强分析报告</h1>
+<p>模型: LR / Logistic / DT / RF · 技术派生特征: 60 个 · 参数扫描: K=5~50</p>
+<div class="grid">
+  <div class="card stat"><div class="v pos">40.9%</div><div class="l">最优配置累计收益</div></div>
+  <div class="card stat"><div class="v" style="color:#6c5ce7">3.21</div><div class="l">最优 Sharpe (年化)</div></div>
+  <div class="card stat"><div class="v">RandomForest</div><div class="l">最优模型 · TopK=50</div></div>
+  <div class="card stat"><div class="v">79</div><div class="l">总特征数 (基础19+技术60)</div></div>
+</div>
+<h2>参数扫描结果 (按 Sharpe 排序)</h2>
+<div class="card">
+<table><thead><tr><th>模型</th><th>TopK</th><th>总收益</th><th>Sharpe</th><th>最大回撤</th><th>胜率</th><th>Spearman</th></tr></thead>
+<tbody><tr><td>RandomForest</td><td>50</td><td class='pos'>40.9%</td><td>3.21</td><td class='neg'>-0.1%</td><td>75%</td><td>0.143</td></tr><tr><td>RandomForest</td><td>20</td><td class='pos'>18.7%</td><td>1.86</td><td class='neg'>-2.6%</td><td>75%</td><td>0.143</td></tr><tr><td>LogisticReg</td><td>50</td><td class='pos'>27.7%</td><td>1.84</td><td class='neg'>-4.0%</td><td>75%</td><td>0.183</td></tr><tr><td>RandomForest</td><td>5</td><td class='pos'>40.4%</td><td>1.54</td><td class='neg'>-3.1%</td><td>50%</td><td>0.143</td></tr><tr><td>RandomForest</td><td>30</td><td class='pos'>21.7%</td><td>1.49</td><td class='neg'>-3.9%</td><td>75%</td><td>0.143</td></tr><tr><td>LinearReg</td><td>50</td><td class='pos'>15.4%</td><td>1.47</td><td class='neg'>-0.7%</td><td>75%</td><td>0.174</td></tr><tr><td>LogisticReg</td><td>30</td><td class='pos'>11.6%</td><td>1.23</td><td class='neg'>-4.7%</td><td>75%</td><td>0.183</td></tr><tr><td>RandomForest</td><td>10</td><td class='pos'>25.7%</td><td>1.17</td><td class='neg'>-5.4%</td><td>50%</td><td>0.143</td></tr><tr><td>LinearReg</td><td>30</td><td class='pos'>5.8%</td><td>1.13</td><td class='neg'>-2.6%</td><td>75%</td><td>0.174</td></tr><tr><td>DecisionTree</td><td>5</td><td class='pos'>23.1%</td><td>0.81</td><td class='neg'>-7.0%</td><td>50%</td><td>0.068</td></tr><tr><td>LogisticReg</td><td>20</td><td class='pos'>8.9%</td><td>0.80</td><td class='neg'>-5.1%</td><td>50%</td><td>0.183</td></tr><tr><td>DecisionTree</td><td>10</td><td class='pos'>14.0%</td><td>0.66</td><td class='neg'>-4.0%</td><td>25%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>20</td><td class='pos'>2.0%</td><td>0.22</td><td class='neg'>-5.9%</td><td>50%</td><td>0.174</td></tr><tr><td>DecisionTree</td><td>20</td><td class='pos'>0.9%</td><td>0.13</td><td class='neg'>-4.7%</td><td>25%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>10</td><td class='neg'>-0.6%</td><td>0.00</td><td class='neg'>-7.6%</td><td>50%</td><td>0.174</td></tr><tr><td>LogisticReg</td><td>10</td><td class='neg'>-1.4%</td><td>-0.10</td><td class='neg'>-8.1%</td><td>75%</td><td>0.183</td></tr><tr><td>LogisticReg</td><td>5</td><td class='neg'>-11.6%</td><td>-0.58</td><td class='neg'>-11.8%</td><td>25%</td><td>0.183</td></tr><tr><td>DecisionTree</td><td>30</td><td class='neg'>-4.1%</td><td>-0.59</td><td class='neg'>-4.1%</td><td>25%</td><td>0.068</td></tr><tr><td>DecisionTree</td><td>50</td><td class='neg'>-6.8%</td><td>-0.67</td><td class='neg'>-8.2%</td><td>50%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>5</td><td class='neg'>-21.5%</td><td>-2.10</td><td class='neg'>-13.0%</td><td>25%</td><td>0.174</td></tr></tbody></table></div>
+<h2>分析图表</h2>
+<div class="card"><img src="enhanced_analysis.png" alt="增强分析图"></div>
+<div class="card"><img src="top30_overview.png" alt="策略总览"></div>
+</body></html>
