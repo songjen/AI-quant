@@ -1,37 +1,55 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head><meta charset="UTF-8">
-<title>Top30 策略增强分析报告</title>
-<style>
+<!DOCTYPE html><html lang='zh-CN'><head><meta charset='UTF-8'><title>Top30 选股策略报告（10期数据）</title>
 * {margin:0;padding:0;box-sizing:border-box}
-body {font-family:'Microsoft YaHei',sans-serif;background:#f5f6fa;color:#2d3436;padding:24px}
-h1 {font-size:24px;margin-bottom:8px}
-h2 {font-size:16px;color:#636e72;margin:20px 0 12px}
+body {font-family:'Microsoft YaHei',sans-serif;background:#f5f6fa;color:#2d3436;padding:24px;line-height:1.6}
+h1 {font-size:24px;margin-bottom:6px}
+h2 {font-size:17px;color:#2d3436;margin:24px 0 12px;border-left:4px solid #6c5ce7;padding-left:10px}
+.sub {color:#636e72;font-size:13px;margin-bottom:18px}
 .card {background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
-.stat {text-align:center}
-.stat .v {font-size:28px;font-weight:700}
-.stat .l {font-size:12px;color:#636e72}
-.pos {color:#d63031} .neg {color:#00b894}
+.grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+.stat {text-align:center;background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.stat .v {font-size:24px;font-weight:700}
+.stat .l {font-size:12px;color:#636e72;margin-top:4px}
+.pos {color:#d63031} .neg {color:#00b894} .mut {color:#b2bec3;font-size:11px}
 img {max-width:100%;border-radius:8px;margin:12px 0}
 table {width:100%;border-collapse:collapse;font-size:13px}
-th {background:#f8f9fa;padding:8px 12px;border-bottom:2px solid #dfe6e9}
+th {background:#6c5ce7;color:#fff;padding:9px 12px}
 td {padding:8px 12px;border-bottom:1px solid #f1f2f6;text-align:center}
-</style></head>
-<body>
-<h1>Top30 策略增强分析报告</h1>
-<p>模型: LR / Logistic / DT / RF · 技术派生特征: 60 个 · 参数扫描: K=5~50</p>
+tbody tr:nth-child(even) {background:#fafbff}
+.note {font-size:12px;color:#636e72;margin-top:8px}
+</head><body>
+<h1>机器学习选股策略报告 · Top30 季度轮动</h1>
+<p class="sub">数据区间：<b>2020Q1 – 2022Q2（共 10 个季度）</b> · 4,281 只股票 ·
+19 个基础财务因子 + 60 个技术派生特征 = 79 维特征 ·
+训练 6 期 / 测试 4 期 · 每期选 Top 30</p>
+
 <div class="grid">
-  <div class="card stat"><div class="v pos">40.9%</div><div class="l">最优配置累计收益</div></div>
-  <div class="card stat"><div class="v" style="color:#6c5ce7">3.21</div><div class="l">最优 Sharpe (年化)</div></div>
-  <div class="card stat"><div class="v">RandomForest</div><div class="l">最优模型 · TopK=50</div></div>
-  <div class="card stat"><div class="v">79</div><div class="l">总特征数 (基础19+技术60)</div></div>
+  <div class="stat"><div class="v">10 期</div><div class="l">数据季度数</div></div>
+  <div class="stat"><div class="v">4,281</div><div class="l">覆盖股票数</div></div>
+  <div class="stat"><div class="v">79</div><div class="l">总特征数 (基础19+技术60)</div></div>
+  <div class="stat"><div class="v pos">+52%</div><div class="l">RF 等权累计收益</div></div>
+  <div class="stat"><div class="v" style="color:#6c5ce7">3.21</div><div class="l">增强最优 Sharpe (RF TopK=50)</div></div>
 </div>
-<h2>参数扫描结果 (按 Sharpe 排序)</h2>
+
 <div class="card">
-<table><thead><tr><th>模型</th><th>TopK</th><th>总收益</th><th>Sharpe</th><th>最大回撤</th><th>胜率</th><th>Spearman</th></tr></thead>
-<tbody><tr><td>RandomForest</td><td>50</td><td class='pos'>40.9%</td><td>3.21</td><td class='neg'>-0.1%</td><td>75%</td><td>0.143</td></tr><tr><td>RandomForest</td><td>20</td><td class='pos'>18.7%</td><td>1.86</td><td class='neg'>-2.6%</td><td>75%</td><td>0.143</td></tr><tr><td>LogisticReg</td><td>50</td><td class='pos'>27.7%</td><td>1.84</td><td class='neg'>-4.0%</td><td>75%</td><td>0.183</td></tr><tr><td>RandomForest</td><td>5</td><td class='pos'>40.4%</td><td>1.54</td><td class='neg'>-3.1%</td><td>50%</td><td>0.143</td></tr><tr><td>RandomForest</td><td>30</td><td class='pos'>21.7%</td><td>1.49</td><td class='neg'>-3.9%</td><td>75%</td><td>0.143</td></tr><tr><td>LinearReg</td><td>50</td><td class='pos'>15.4%</td><td>1.47</td><td class='neg'>-0.7%</td><td>75%</td><td>0.174</td></tr><tr><td>LogisticReg</td><td>30</td><td class='pos'>11.6%</td><td>1.23</td><td class='neg'>-4.7%</td><td>75%</td><td>0.183</td></tr><tr><td>RandomForest</td><td>10</td><td class='pos'>25.7%</td><td>1.17</td><td class='neg'>-5.4%</td><td>50%</td><td>0.143</td></tr><tr><td>LinearReg</td><td>30</td><td class='pos'>5.8%</td><td>1.13</td><td class='neg'>-2.6%</td><td>75%</td><td>0.174</td></tr><tr><td>DecisionTree</td><td>5</td><td class='pos'>23.1%</td><td>0.81</td><td class='neg'>-7.0%</td><td>50%</td><td>0.068</td></tr><tr><td>LogisticReg</td><td>20</td><td class='pos'>8.9%</td><td>0.80</td><td class='neg'>-5.1%</td><td>50%</td><td>0.183</td></tr><tr><td>DecisionTree</td><td>10</td><td class='pos'>14.0%</td><td>0.66</td><td class='neg'>-4.0%</td><td>25%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>20</td><td class='pos'>2.0%</td><td>0.22</td><td class='neg'>-5.9%</td><td>50%</td><td>0.174</td></tr><tr><td>DecisionTree</td><td>20</td><td class='pos'>0.9%</td><td>0.13</td><td class='neg'>-4.7%</td><td>25%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>10</td><td class='neg'>-0.6%</td><td>0.00</td><td class='neg'>-7.6%</td><td>50%</td><td>0.174</td></tr><tr><td>LogisticReg</td><td>10</td><td class='neg'>-1.4%</td><td>-0.10</td><td class='neg'>-8.1%</td><td>75%</td><td>0.183</td></tr><tr><td>LogisticReg</td><td>5</td><td class='neg'>-11.6%</td><td>-0.58</td><td class='neg'>-11.8%</td><td>25%</td><td>0.183</td></tr><tr><td>DecisionTree</td><td>30</td><td class='neg'>-4.1%</td><td>-0.59</td><td class='neg'>-4.1%</td><td>25%</td><td>0.068</td></tr><tr><td>DecisionTree</td><td>50</td><td class='neg'>-6.8%</td><td>-0.67</td><td class='neg'>-8.2%</td><td>50%</td><td>0.068</td></tr><tr><td>LinearReg</td><td>5</td><td class='neg'>-21.5%</td><td>-2.10</td><td class='neg'>-13.0%</td><td>25%</td><td>0.174</td></tr></tbody></table></div>
-<h2>分析图表</h2>
+  <h2>一、Top30 基础策略（4 模型 · 等权 vs 预测加权）</h2>
+  <p class="note">收益为测试期（4 个季度）等权累计；超额 = 收益 − 基准（基准累计 -5.14%）。</p>
+  <table><thead><tr><th>模型</th><th>等权累计</th><th>等权超额</th><th>加权累计</th><th>加权超额</th><th>Spearman</th></tr></thead>
+  <tbody><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td class='pos'>+22.87%</td><td class='pos'>+28.01%</td><td class='pos'>+8.71%</td><td class='pos'>+13.85%</td><td>0.0650</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td class='neg'>-0.84%</td><td class='pos'>+4.30%</td><td class='neg'>-0.48%</td><td class='pos'>+4.66%</td><td>0.1217</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td class='pos'>+20.40%</td><td class='pos'>+25.54%</td><td class='pos'>+19.30%</td><td class='pos'>+24.44%</td><td>0.0948</td></tr><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td class='pos'>+52.03%</td><td class='pos'>+57.17%</td><td class='pos'>+53.93%</td><td class='pos'>+59.07%</td><td>0.1418</td></tr></tbody></table>
+</div>
+
+<div class="card">
+  <h2>二、各测试期收益明细（等权）</h2>
+  <table><thead><tr><th>测试期</th><th>基准</th><th>线性回归</th><th>逻辑回归</th><th>决策树</th><th>随机森林</th></tr></thead>
+  <tbody><tr><td>2021-09-30</td><td class='neg'>+11.36%</td><td class='pos'>+23.21%</td><td class='pos'>+10.14%</td><td class='pos'>+14.38%</td><td class='pos'>+16.30%</td></tr><tr><td>2021-12-31</td><td class='neg'>-8.37%</td><td class='pos'>+1.18%</td><td class='pos'>+4.03%</td><td class='pos'>+3.16%</td><td class='pos'>+11.07%</td></tr><tr><td>2022-03-31</td><td class='neg'>+1.07%</td><td class='pos'>+7.38%</td><td class='neg'>-5.81%</td><td class='pos'>+5.94%</td><td class='pos'>+13.78%</td></tr><tr><td>2022-06-30</td><td class='neg'>-9.20%</td><td class='neg'>-8.90%</td><td class='neg'>-9.20%</td><td class='neg'>-3.08%</td><td class='pos'>+10.88%</td></tr></tbody></table>
+</div>
+
+<div class="card">
+  <h2>三、增强版参数扫描（技术指标 + TopK=5/10/20/30/50，按 Sharpe 排序）</h2>
+  <p class="note">基准累计 -5.84% · 基准 Sharpe -0.28。最优配置：RandomForest TopK=50（收益 +40.91% / Sharpe 3.21）。</p>
+  <table><thead><tr><th>模型</th><th>TopK</th><th>累计收益</th><th>Sharpe</th><th>最大回撤</th><th>胜率</th><th>Spearman</th></tr></thead>
+  <tbody><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td>50</td><td class='pos'>+40.91%</td><td>3.21</td><td class='neg'>-0.10%</td><td>75%</td><td>0.143</td></tr><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td>20</td><td class='pos'>+18.66%</td><td>1.86</td><td class='neg'>-2.56%</td><td>75%</td><td>0.143</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td>50</td><td class='pos'>+27.73%</td><td>1.84</td><td class='neg'>-4.02%</td><td>75%</td><td>0.183</td></tr><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td>5</td><td class='pos'>+40.44%</td><td>1.54</td><td class='neg'>-3.09%</td><td>50%</td><td>0.143</td></tr><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td>30</td><td class='pos'>+21.69%</td><td>1.49</td><td class='neg'>-3.93%</td><td>75%</td><td>0.143</td></tr><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td>50</td><td class='pos'>+15.37%</td><td>1.47</td><td class='neg'>-0.74%</td><td>75%</td><td>0.174</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td>30</td><td class='pos'>+11.60%</td><td>1.23</td><td class='neg'>-4.71%</td><td>75%</td><td>0.183</td></tr><tr><td>随机森林 <span class='mut'>(RandomForest)</span></td><td>10</td><td class='pos'>+25.70%</td><td>1.17</td><td class='neg'>-5.41%</td><td>50%</td><td>0.143</td></tr><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td>30</td><td class='pos'>+5.78%</td><td>1.13</td><td class='neg'>-2.64%</td><td>75%</td><td>0.174</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td>5</td><td class='pos'>+23.13%</td><td>0.81</td><td class='neg'>-7.02%</td><td>50%</td><td>0.068</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td>20</td><td class='pos'>+8.93%</td><td>0.80</td><td class='neg'>-5.14%</td><td>50%</td><td>0.183</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td>10</td><td class='pos'>+14.02%</td><td>0.66</td><td class='neg'>-3.98%</td><td>25%</td><td>0.068</td></tr><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td>20</td><td class='pos'>+2.01%</td><td>0.22</td><td class='neg'>-5.94%</td><td>50%</td><td>0.174</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td>20</td><td class='pos'>+0.88%</td><td>0.13</td><td class='neg'>-4.72%</td><td>25%</td><td>0.068</td></tr><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td>10</td><td class='neg'>-0.64%</td><td>0.00</td><td class='neg'>-7.62%</td><td>50%</td><td>0.174</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td>10</td><td class='neg'>-1.44%</td><td>-0.10</td><td class='neg'>-8.07%</td><td>75%</td><td>0.183</td></tr><tr><td>逻辑回归 <span class='mut'>(LogisticReg)</span></td><td>5</td><td class='neg'>-11.65%</td><td>-0.58</td><td class='neg'>-11.79%</td><td>25%</td><td>0.183</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td>30</td><td class='neg'>-4.10%</td><td>-0.59</td><td class='neg'>-4.12%</td><td>25%</td><td>0.068</td></tr><tr><td>决策树 <span class='mut'>(DecisionTree)</span></td><td>50</td><td class='neg'>-6.81%</td><td>-0.67</td><td class='neg'>-8.17%</td><td>50%</td><td>0.068</td></tr><tr><td>线性回归 <span class='mut'>(LinearReg)</span></td><td>5</td><td class='neg'>-21.50%</td><td>-2.10</td><td class='neg'>-13.00%</td><td>25%</td><td>0.174</td></tr></tbody></table>
+</div>
+
+<div class="card"><img src="top30_overview.png" alt="Top30 策略总览"></div>
 <div class="card"><img src="enhanced_analysis.png" alt="增强分析图"></div>
-<div class="card"><img src="top30_overview.png" alt="策略总览"></div>
 </body></html>
