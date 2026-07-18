@@ -3,147 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新华制药 — 多因子模型分析面板</title>
+<title>新华制药 — 4模型纯多头策略回测</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0f1923;color:#e0e6f0}
 .header{background:linear-gradient(135deg,#0a1628,#1a2a4a);padding:18px 28px;border-bottom:1px solid #1e3a5f;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-.header h1{font-size:20px;font-weight:700;background:linear-gradient(90deg,#4fc3f7,#81c784);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(90deg,#e94560,#ffb74d);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .header h1 span{-webkit-text-fill-color:#78909c;font-size:12px;font-weight:400;margin-left:6px}
-.header .meta{display:flex;gap:12px;font-size:11px;color:#546e7a}
+.header .badge{background:#ff9800;color:#000;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
 .container{max-width:1400px;margin:0 auto;padding:14px}
 .updated{text-align:right;font-size:10px;color:#455a64;padding:4px 0 10px}
 
-/* 顶部分数卡 */
-.score-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.score-card{background:linear-gradient(135deg,#152238,#1a2d4a);border-radius:8px;padding:14px;border:1px solid #1e3a5f}
+/* 提示条 */
+.notice{background:rgba(233,69,96,0.08);border:1px solid rgba(233,69,96,0.2);border-left:3px solid #e94560;padding:8px 14px;border-radius:6px;margin-bottom:14px;font-size:11px;color:#b0bec5}
+.notice strong{color:#e94560}
+
+/* 分数卡 */
+.score-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.score-card{background:linear-gradient(135deg,#152238,#1a2d4a);border-radius:8px;padding:14px;border:1px solid #1e3a5f;position:relative}
+.rank-badge{position:absolute;top:4px;right:6px;font-size:14px}
 .score-card .l{font-size:10px;color:#78909c}
-.score-card .v{font-size:22px;font-weight:700;line-height:1.3}
+.score-card .v{font-size:20px;font-weight:700;line-height:1.3}
 .score-card .v.pos{color:#e94560}
 .score-card .v.neg{color:#2ecc71}
 .score-card .v.gold{color:#ffd700}
-.score-card .sub{font-size:10px;color:#546e7a;margin-top:2px}
+.score-card .sub{font-size:9px;color:#546e7a;margin-top:2px}
 .score-card.best{border-color:#ffd700;background:linear-gradient(135deg,#1a2d4a,#2a2a1a)}
 .score-card.best .v{color:#ffd700}
+.score-card .signal-info{font-size:9px;color:#4fc3f7;margin-top:3px}
+.score-card .signal-info .cnt{color:#ffb74d;font-weight:600}
 
 .section{background:#152238;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #1e3a5f}
 .section h2{font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e3a5f;color:#81c784}
 .section h2 .sub{font-size:10px;font-weight:400;color:#546e7a;margin-left:6px}
-.chart{width:100%;height:360px}
-.chart-md{width:100%;height:320px}
-.chart-sm{width:100%;height:280px}
+.chart{width:100%;height:380px}
+.chart-sm{width:100%;height:300px}
 
-/* 信号指示器 */
-.signal-row{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
-.signal-item{display:flex;align-items:center;gap:6px;font-size:11px}
-.signal-dot{width:10px;height:10px;border-radius:50%}
-.signal-dot.buy{background:#e94560}
-.signal-dot.sell{background:#2ecc71}
-.signal-dot.hold{background:#fdcb6e}
-
-.tab-bar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.tab-bar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .tab-bar .tab{background:#1e3a5f;border:none;color:#78909c;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px}
 .tab-bar .tab.active{background:#4fc3f7;color:#000;font-weight:600}
-.tab-bar .tab:hover{background:#2a4a6f}
 
 .table-wrap{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:11px}
-th{background:#1a2d4a;color:#81c784;padding:6px;text-align:center;font-weight:600;border-bottom:2px solid #1e3a5f}
-td{padding:5px 6px;text-align:center;border-bottom:1px solid #1a2d4a}
+th{background:#1a2d4a;color:#81c784;padding:5px 4px;text-align:center;font-weight:600;border-bottom:2px solid #1e3a5f;font-size:10px}
+td{padding:4px;text-align:center;border-bottom:1px solid #1a2d4a;font-size:10px}
 tr:hover td{background:rgba(79,195,247,0.05)}
-td:first-child{font-weight:600;text-align:left;padding-left:10px}
-.best-row{background:rgba(255,215,0,0.05)!important}
-.best-row td:first-child{color:#ffd700}
-.pos{color:#e94560}
+.pos{color:#e94560;font-weight:600}
 .neg{color:#2ecc71}
-.signal-buy{color:#e94560;font-weight:700}
-.signal-sell{color:#2ecc71}
+.sig-long{color:#e94560;font-weight:700}
+.sig-cash{color:#546e7a}
+tr.quarter-winner td{background:rgba(255,215,0,0.04)!important}
+tr.quarter-winner td:first-child{color:#ffd700}
 
 .insight-box{background:linear-gradient(135deg,rgba(255,152,0,0.08),rgba(255,193,7,0.04));border:1px solid rgba(255,152,0,0.2);border-left:3px solid #ff9800;padding:12px 16px;border-radius:6px;margin-bottom:14px}
 .insight-box h3{color:#ffb74d;font-size:13px;margin-bottom:6px}
-.insight-box li{font-size:11px;line-height:1.8;color:#90a4ae;margin-left:14px}
+.insight-box li{font-size:11px;line-height:1.9;color:#90a4ae;margin-left:14px}
 .footer{text-align:center;padding:16px;color:#455a64;font-size:10px}
 
-@media(max-width:800px){.score-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.score-cards{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
 <div class="header">
   <div>
-    <h1>&#x1F4CA; 新华制药 多因子模型分析 <span>000756.SZ</span></h1>
+    <h1>&#x1F50D; 新华制药 4模型纯多头回测 <span>000756.SZ</span></h1>
   </div>
-  <div class="meta">
-    <span>行业: 化学制药</span>
-    <span id="updatedLabel">-</span>
+  <div>
+    <span class="badge">&#x1F6A9 A股无做空机制</span>
+    <span class="badge" style="background:#4fc3f7">纯多头策略</span>
   </div>
 </div>
 
 <div class="container">
   <div class="updated" id="updatedTime">-</div>
 
-  <!-- 顶部分数 -->
+  <div class="notice">
+    <strong>&#x26A0; 策略说明：</strong>
+    A股无做空机制，本页面采用<strong>纯多头策略</strong>——
+    模型信号为"做多"时持有该股票，信号为"现金"时持有现金（收益为0）。
+    不做空、不杠杆，仅通过择时规避下跌。
+  </div>
+
+  <!-- 评分卡 -->
   <div class="score-cards" id="scoreCards"></div>
 
-  <!-- 核心图表 -->
+  <!-- 累计净值 -->
   <div class="section">
-    <h2>&#x1F4C8; 模型预测 vs 实际收益 <span class="sub">线性回归预测值 & 逻辑回归概率 & 下期实际收益</span></h2>
-    <div id="chartPredictions" class="chart"></div>
-    <div class="signal-row" id="signalLegend"></div>
+    <h2>&#x1F4C8; 累计净值曲线 <span class="sub">各模型纯多头策略净值 vs 买入持有</span></h2>
+    <div id="chartNav" class="chart"></div>
   </div>
 
-  <!-- 策略收益对比 -->
+  <!-- 季度收益 -->
   <div class="section">
-    <h2>&#x1F4CA; 策略累计收益对比 <span class="sub">线性回归 / 逻辑回归 / 买入持有</span></h2>
-    <div id="chartStrategy" class="chart-md"></div>
+    <h2>&#x1F4CA; 每季度收益对比 <span class="sub">绿色=盈利季度，红色=亏损季度</span></h2>
+    <div id="chartQuarterly" class="chart"></div>
   </div>
 
-  <!-- 特征时间序列 -->
+  <!-- 持股比例 -->
   <div class="section">
-    <h2>&#x1F4CB; 关键估值指标时间序列 <span class="sub">PB / PE / PS / MV</span></h2>
-    <div class="tab-bar" id="featTabs"></div>
-    <div id="chartFeatures" class="chart-md"></div>
-  </div>
-
-  <!-- 财务指标 -->
-  <div class="section">
-    <h2>&#x1F4DD; 财务增长率趋势 <span class="sub">净利润同比增长率 & 营收同比增长率</span></h2>
-    <div id="chartFinancial" class="chart-md"></div>
+    <h2>&#x1F4F6; 模型择时信号分布 <span class="sub">各模型在每季度的做多/现金决策</span></h2>
+    <div id="chartSignals" class="chart-sm"></div>
   </div>
 
   <!-- 信号明细表 -->
   <div class="section">
-    <h2>&#x1F9F0; 每季度预测信号明细</h2>
+    <h2>&#x1F9F0; 每季度信号明细 <span class="sub">&#x1F534;做多 = 持有该股票，&#x26AA;现金 = 持有现金（收益0）</span></h2>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>报告期</th><th>LR预测值</th><th>LR信号</th><th>LG概率</th><th>LG信号</th>
-            <th>实际收益</th><th>PB</th><th>PE(TTM)</th><th>净利润YoY</th><th>营收YoY</th>
+            <th>季度</th><th>实际收益</th>
+            <th>线性回归</th><th>决策树</th><th>随机森林</th><th>逻辑回归</th>
+            <th>最佳模型</th>
           </tr>
         </thead>
-        <tbody id="predTableBody"></tbody>
+        <tbody id="detailTable"></tbody>
       </table>
     </div>
   </div>
 
   <!-- 结论 -->
   <div class="insight-box">
-    <h3>&#x1F4AC; 分析结论</h3>
+    <h3>&#x1F4AC; 核心结论（纯多头策略）</h3>
     <ul id="insightList"></ul>
   </div>
 
-  <div class="footer">AI-quant · 新华制药多因子分析 · Powered by ECharts</div>
+  <div class="footer">AI-quant · 新华制药4模型纯多头回测 · Powered by ECharts</div>
 </div>
 
 <script>
-const PATH = 'data/新华制药_data.json';
-const COLORS = {lr:'#4fc3f7',lg:'#ffb74d',bh:'#546e7a',buy:'#e94560',sell:'#2ecc71',hold:'#fdcb6e'};
+const PATH='data/新华制药_longonly.json';
+const COLORS={lr:'#4fc3f7',dt:'#81c784',rf:'#ce93d8',lg:'#ffb74d',bh:'#546e7a'};
+const CLS={lr:'线性回归',dt:'决策树',rf:'随机森林',lg:'逻辑回归',bh:'买入持有'};
+const MODEL_KEYS=['lr','dt','rf','lg'];
+const MODEL_FULL={lr:{name:'LinearRegression',label:'线性回归',color:'#4fc3f7'},
+  dt:{name:'DecisionTree',label:'决策树',color:'#81c784'},
+  rf:{name:'RandomForest',label:'随机森林',color:'#ce93d8'},
+  lg:{name:'LogisticRegression',label:'逻辑回归',color:'#ffb74d'}};
 
-let DATA = null;
+let DATA=null;
 fetch(PATH).then(r=>r.json()).then(d=>{DATA=d;render();}).catch(e=>{
-  document.body.innerHTML=`<div style="max-width:400px;margin:80px auto;text-align:center;padding:30px;background:#152238;border-radius:8px;border:1px solid #e94560"><h2 style="color:#e94560">&#x26A0; 加载失败</h2><p style="color:#78909c;margin:10px 0">${e.message}</p></div>`;
+  document.body.innerHTML=`<div style="max-width:400px;margin:80px auto;text-align:center;padding:30px;background:#152238;border-radius:8px;border:1px solid #e94560"><h2 style="color:#e94560">&#x26A0; 加载失败</h2><p style="color:#78909c">${e.message}</p></div>`;
 });
 
 function initChart(id){
@@ -152,236 +154,221 @@ function initChart(id){
   window.addEventListener('resize',()=>c.resize());
   return c;
 }
-
 function pct(v){return v==null?'N/A':(v*100).toFixed(2)+'%';}
-function pct1(v){return v==null?'—':(v*100).toFixed(1)+'%';}
-function fmt(v){return v==null?'—':v.toFixed(4);}
-function cls(v){return v==null?'':v>=0?'pos':'neg';}
-function sigCls(v){return v?'signal-buy':'signal-sell';}
 
 function render(){
   const d=DATA;
   document.getElementById('updatedTime').textContent='数据更新: '+d.meta.updated;
-  document.getElementById('updatedLabel').textContent='更新: '+d.meta.updated;
-  renderScoreCards(d);
-  renderPredictionChart(d);
-  renderStrategyChart(d);
-  renderFeatureChart(d);
-  renderFinancialChart(d);
+  renderCards(d);
+  renderNav(d);
+  renderQuarterly(d);
+  renderSignals(d);
   renderTable(d);
   renderInsights(d);
 }
 
-// ═══ 分数卡 ═══
-function renderScoreCards(d){
-  const sc=d.strategy_comparison;
-  const sorted=Object.entries(sc).sort((a,b)=>b[1].sharpe-a[1].sharpe);
+// ═══ 评分卡 ═══
+function renderCards(d){
+  const sr=d.strategy_results;
+  const sorted=Object.entries(sr).sort((a,b)=>b[1].cum_return-a[1].cum_return);
   const container=document.getElementById('scoreCards');
   container.innerHTML='';
-  sorted.forEach(([name,data],idx)=>{
+  const rankEmojis=['&#x1F947;','&#x1F948;','&#x1F949;','&#x1F4AF;','&#x1F4AD;'];
+  sorted.forEach(([key,val],idx)=>{
     const card=document.createElement('div');
     card.className='score-card'+(idx===0?' best':'');
     card.innerHTML=`
-      <div class="l">${idx===0?'&#x1F3C6; ':''}${name}</div>
-      <div class="v ${idx===0?'gold':cls(data.cum_return)}">${pct(data.cum_return)}</div>
-      <div class="sub">夏普 ${data.sharpe.toFixed(2)} · 年化 ${pct(data.ann_return)} · 胜率 ${pct(data.win_rate)}</div>
+      <div class="rank-badge">${rankEmojis[idx]||''}</div>
+      <div class="l">${val.label}</div>
+      <div class="v ${idx===0?'gold':val.cum_return>=0?'pos':'neg'}">${pct(val.cum_return)}</div>
+      <div class="sub">夏普 ${val.sharpe.toFixed(2)} · 年化 ${pct(val.ann_return)} · 胜率 ${pct(val.win_rate)}</div>
+      <div class="sub">最大回撤 ${pct(val.max_dd)}</div>
     `;
     container.appendChild(card);
   });
 }
 
-// ═══ 预测图表 ═══
-function renderPredictionChart(d){
-  const chart=initChart('chartPredictions');
-  const preds=d.predictions;
-  const periods=preds.map(p=>p.period);
-  const lrData=preds.map(p=>p.LR_pred);
-  const lgData=preds.map(p=>p.LG_prob);
-  const actData=preds.map(p=>p.actual_return);
-  const lrSig=preds.map(p=>p.LR_signal);
-  const lgSig=preds.map(p=>p.LG_signal);
+// ═══ 累计净值 ═══
+function renderNav(d){
+  const chart=initChart('chartNav');
+  const qd=d.quarterly_detail;
+  const periods=qd.map(p=>p.period);
+  const rets=qd.map(p=>p.actual_return||0);
 
-  chart.setOption({
-    tooltip:{
-      trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',
-      textStyle:{color:'#e0e6f0',fontSize:11},
-      formatter:function(ps){
-        let s='<b>'+ps[0].axisValue+'</b><br/>';
-        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+p.value.toFixed(4)+'</b><br/>');
-        return s;
-      }
-    },
-    legend:{data:['LR预测值','LG概率','实际收益'],textStyle:{color:'#78909c',fontSize:10},top:0},
-    grid:{left:50,right:10,top:35,bottom:25},
-    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
-    yAxis:[
-      {type:'value',name:'预测值',nameTextStyle:{color:'#78909c',fontSize:9},axisLabel:{color:'#78909c',fontSize:9,formatter:v=>v.toFixed(2)},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
-      {type:'value',name:'概率/收益',nameTextStyle:{color:'#78909c',fontSize:9},axisLabel:{color:'#78909c',fontSize:9,formatter:v=>(v*100).toFixed(0)+'%'},splitLine:{show:false},axisLine:{show:false}},
-    ],
-    series:[
-      {name:'LR预测值',type:'line',data:lrData,smooth:true,symbol:'circle',symbolSize:5,
-       lineStyle:{color:COLORS.lr,width:2},itemStyle:{color:COLORS.lr},
-       areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:COLORS.lr+'30'},{offset:1,color:COLORS.lr+'05'}])}},
-      {name:'LG概率',type:'line',data:lgData,smooth:true,symbol:'diamond',symbolSize:5,
-       lineStyle:{color:COLORS.lg,width:2,type:'dashed'},itemStyle:{color:COLORS.lg},
-       yAxisIndex:1},
-      {name:'实际收益',type:'bar',data:actData.map((v,i)=>({value:v,itemStyle:{color:v>=0?COLORS.buy:COLORS.sell,borderRadius:[2,2,0,0]}})),
-       yAxisIndex:1,barWidth:8,
-       label:{show:true,position:'top',fontSize:8,color:'#b0bec5',formatter:p=>p.data.value==null?'':(p.data.value*100).toFixed(1)+'%'}}
-    ]
-  });
+  // 计算各模型策略的累计净值
+  function calcNav(signalsKey){
+    let nav=[1]; let cur=1;
+    for(let i=1;i<qd.length;i++){
+      const sig=qd[i][signalsKey];
+      const ret=qd[i].actual_return||0;
+      cur*=(1+ret*sig);
+      nav.push(cur);
+    }
+    return nav;
+  }
 
-  // 信号图例
-  document.getElementById('signalLegend').innerHTML=`
-    <div class="signal-item"><span class="signal-dot buy"></span>LR做多 (>中位数)</div>
-    <div class="signal-item"><span class="signal-dot sell"></span>LR做空 (≤中位数)</div>
-    <div class="signal-item"><span class="signal-dot hold"></span>虚线=LG概率0.5阈值线</div>
-  `;
-}
-
-// ═══ 策略对比 ═══
-function renderStrategyChart(d){
-  const chart=initChart('chartStrategy');
-  const sc=d.strategy_comparison;
-  const names=Object.keys(sc);
-  const metrics=['累计收益','年化收益','夏普比率','胜率'];
-  const colors=[COLORS.lg,COLORS.lr,COLORS.bh];
-
-  // 归一化
-  const data=names.map((n,i)=>{
-    const s=sc[n];
-    return {name:n,color:colors[i],values:[s.cum_return,s.ann_return,s.sharpe,s.win_rate]};
-  });
-
-  chart.setOption({
-    radar:{
-      indicator:metrics.map(m=>({name:m,max:1})),
-      center:['50%','50%'],radius:'65%',
-      axisName:{color:'#b0bec5',fontSize:10},
-      splitArea:{areaStyle:{color:['rgba(79,195,247,0.02)','rgba(79,195,247,0.05)']}},
-      axisLine:{lineStyle:{color:'#1e3a5f'}}
-    },
-    legend:{data:names.map(n=>n),textStyle:{color:'#78909c',fontSize:10},top:0},
-    series:[{
-      type:'radar',data:data.map(d=>({
-        name:d.name,value:d.values,
-        lineStyle:{color:d.color,width:2},
-        areaStyle:{color:d.color+'20'},
-        itemStyle:{color:d.color}
-      }))
-    }]
-  });
-}
-
-// ═══ 特征图表 ═══
-let featIdx=0;
-function renderFeatureChart(d){
-  const features=d.feature_history;
-  const keyFeats=Object.keys(features[0]).filter(k=>k!=='period');
-  const tabs=document.getElementById('featTabs');
-  tabs.innerHTML='';
-  keyFeats.forEach((f,i)=>{
-    const tab=document.createElement('button');
-    tab.className='tab'+(i===featIdx?' active':'');
-    tab.textContent=f;
-    tab.onclick=()=>{featIdx=i;tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');updateFeatChart(features,f);};
-    tabs.appendChild(tab);
-  });
-  updateFeatChart(features,keyFeats[0]);
-}
-
-function updateFeatChart(features,feat){
-  const chart=initChart('chartFeatures');
-  const periods=features.map(f=>f.period);
-  const vals=features.map(f=>f[feat]);
-
-  chart.setOption({
-    tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11}},
-    grid:{left:55,right:15,top:10,bottom:25},
-    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
-    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
-    series:[{
-      type:'line',data:vals,smooth:true,symbol:'circle',symbolSize:5,
-      lineStyle:{color:COLORS.lr,width:2},
-      itemStyle:{color:COLORS.lr},
-      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:COLORS.lr+'30'},{offset:1,color:COLORS.lr+'05'}])},
-      label:{show:true,position:'top',fontSize:9,color:'#b0bec5',formatter:p=>p.value?p.value.toFixed(2):''}
-    }]
-  });
-}
-
-// ═══ 财务图表 ═══
-function renderFinancialChart(d){
-  const chart=initChart('chartFinancial');
-  const fin=d.financial;
-  const periods=fin.map(f=>f.period);
-  const netProfit=fin.map(f=>f.net_profit_yoy);
-  const revenue=fin.map(f=>f.revenue_yoy);
-  const roe=fin.map(f=>f.roe);
+  const series=[
+    {name:'线性回归',data:calcNav('LR_signal'),color:COLORS.lr},
+    {name:'决策树',data:calcNav('DT_signal'),color:COLORS.dt},
+    {name:'随机森林',data:calcNav('RF_signal'),color:COLORS.rf},
+    {name:'逻辑回归',data:calcNav('LG_signal'),color:COLORS.lg},
+    {name:'买入持有',data:calcNav('always_one'),color:COLORS.bh}
+  ];
 
   chart.setOption({
     tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11},
       formatter:function(ps){
         let s='<b>'+ps[0].axisValue+'</b><br/>';
-        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+(p.value==null?'N/A':p.value+'%')+'</b><br/>');
+        ps.sort((a,b)=>b.value-a.value);
+        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+p.value.toFixed(4)+'</b><br/>');
         return s;
       }
     },
-    legend:{data:['净利润同比增长率','营收同比增长率','净资产收益率(ROE)'],textStyle:{color:'#78909c',fontSize:10},top:0},
-    grid:{left:50,right:10,top:35,bottom:25},
-    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
-    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9,formatter:v=>v+'%'},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
+    legend:{data:['线性回归','决策树','随机森林','逻辑回归','买入持有'],textStyle:{color:'#78909c',fontSize:10},top:0},
+    grid:{left:50,right:15,top:35,bottom:30},
+    xAxis:{type:'category',data:periods.slice(1),axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9,formatter:v=>v.toFixed(1)},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
+    series:series.map(s=>({
+      name:s.name,type:'line',data:s.data,smooth:true,symbol:'circle',symbolSize:4,
+      lineStyle:{width:s.name==='买入持有'?1.5:2.5,type:s.name==='买入持有'?'dashed':'solid',color:s.color},
+      itemStyle:{color:s.color},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:s.color+'30'},{offset:1,color:s.color+'05'}]),
+        origin:'start'}
+    })).concat([{
+      name:'',type:'line',data:[],silent:true,
+      markLine:{silent:true,data:[{yAxis:1,lineStyle:{color:'#546e7a',type:'dotted',width:1}}]}
+    }])
+  });
+}
+
+// ═══ 季度收益 ═══
+function renderQuarterly(d){
+  const chart=initChart('chartQuarterly');
+  const qd=d.quarterly_detail;
+  const periods=qd.map(p=>p.period);
+  const rets=qd.map(p=>p.actual_return||0);
+
+  // 计算每个策略的季度收益
+  function calcStrat(signalsKey){
+    return qd.map((p,i)=>{
+      if(i===0) return 0;
+      const sig=p[signalsKey];
+      return (rets[i]||0)*sig;
+    });
+  }
+
+  chart.setOption({
+    tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11},
+      formatter:function(ps){
+        let s='<b>'+ps[0].axisValue+'</b><br/>';
+        ps.sort((a,b)=>b.value-a.value);
+        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+(p.value*100).toFixed(2)+'%</b><br/>');
+        return s;
+      }
+    },
+    legend:{data:['买入持有','线性回归','决策树','随机森林','逻辑回归'],textStyle:{color:'#78909c',fontSize:10},top:0},
+    grid:{left:50,right:15,top:35,bottom:30},
+    xAxis:{type:'category',data:periods.slice(1),axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9,formatter:v=>(v*100).toFixed(0)+'%'},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
     series:[
-      {name:'净利润同比增长率',type:'bar',data:netProfit.map(v=>({value:v,itemStyle:{color:v>=0?COLORS.buy:COLORS.sell,borderRadius:[2,2,0,0]}})),barWidth:6},
-      {name:'营收同比增长率',type:'line',data:revenue,smooth:true,symbol:'diamond',symbolSize:4,lineStyle:{color:COLORS.lg,width:2},itemStyle:{color:COLORS.lg}},
-      {name:'净资产收益率(ROE)',type:'line',data:roe,smooth:true,symbol:'triangle',symbolSize:4,lineStyle:{color:'#81c784',width:1.5,type:'dashed'},itemStyle:{color:'#81c784'}}
+      {name:'买入持有',type:'bar',data:rets.slice(1).map(v=>({value:v,itemStyle:{color:v>=0?COLORS.lr:COLORS.bh,borderRadius:[2,2,0,0]}})),barWidth:6},
+      {name:'线性回归',type:'bar',data:calcStrat('LR_signal').slice(1).map(v=>({value:v,itemStyle:{color:v>0?COLORS.lr:COLORS.bh,borderRadius:[2,2,0,0]}})),barWidth:6},
+      {name:'决策树',type:'bar',data:calcStrat('DT_signal').slice(1).map(v=>({value:v,itemStyle:{color:v>0?COLORS.dt:COLORS.bh,borderRadius:[2,2,0,0]}})),barWidth:6},
+      {name:'随机森林',type:'bar',data:calcStrat('RF_signal').slice(1).map(v=>({value:v,itemStyle:{color:v>0?COLORS.rf:COLORS.bh,borderRadius:[2,2,0,0]}})),barWidth:6},
+      {name:'逻辑回归',type:'bar',data:calcStrat('LG_signal').slice(1).map(v=>({value:v,itemStyle:{color:v>0?COLORS.lg:COLORS.bh,borderRadius:[2,2,0,0]}})),barWidth:6},
+    ]
+  });
+}
+
+// ═══ 信号分布 ═══
+function renderSignals(d){
+  const chart=initChart('chartSignals');
+  const qd=d.quarterly_detail;
+  const periods=qd.map(p=>p.period);
+
+  function sigData(signalsKey,label,color){
+    return {
+      name:label,type:'bar',stack:'signal',
+      data:qd.map((p,i)=>{
+        if(i===0) return 0;
+        return p[signalsKey];
+      }),
+      itemStyle:{color:color,borderRadius:0},
+      barWidth:14
+    };
+  }
+
+  chart.setOption({
+    tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11},
+      formatter:function(ps){
+        let s='<b>'+ps[0].axisValue+'</b><br/>';
+        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': '+(p.value?'&#x1F534;做多':'&#x26AA;现金')+'<br/>');
+        return s;
+      }
+    },
+    legend:{data:['线性回归','决策树','随机森林','逻辑回归'],textStyle:{color:'#78909c',fontSize:10},top:0},
+    grid:{left:50,right:15,top:35,bottom:30},
+    xAxis:{type:'category',data:periods.slice(1),axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:{
+      type:'value',min:0,max:4,
+      axisLabel:{color:'#78909c',fontSize:9,formatter:v=>{return ['','现金','1/4做多','半仓','3/4','全仓做多'][v]||''}},
+      splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}
+    },
+    series:[
+      sigData('LR_signal','线性回归',COLORS.lr),
+      sigData('DT_signal','决策树',COLORS.dt),
+      sigData('RF_signal','随机森林',COLORS.rf),
+      sigData('LG_signal','逻辑回归',COLORS.lg),
     ]
   });
 }
 
 // ═══ 表格 ═══
 function renderTable(d){
-  const preds=d.predictions;
-  const tbody=document.getElementById('predTableBody');
+  const qd=d.quarterly_detail;
+  const tbody=document.getElementById('detailTable');
   tbody.innerHTML='';
-  preds.forEach(p=>{
+
+  qd.forEach((p,i)=>{
     const tr=document.createElement('tr');
+    const ret=p.actual_return||0;
+    const sigs=[
+      {key:'LR_signal',color:COLORS.lr},{key:'DT_signal',color:COLORS.dt},
+      {key:'RF_signal',color:COLORS.rf},{key:'LG_signal',color:COLORS.lg}
+    ];
+
+    // 找出该季度盈利的模型
+    const winners=sigs.filter(s=>p[s.key] && ret>0);
+
     tr.innerHTML=`
-      <td>${p.period}</td>
-      <td>${p.LR_pred.toFixed(4)}</td>
-      <td class="${sigCls(p.LR_signal)}">${p.LR_signal?'&#x25B2; 做多':'&#x25BC; 做空'}</td>
-      <td>${(p.LG_prob*100).toFixed(1)}%</td>
-      <td class="${sigCls(p.LG_signal)}">${p.LG_signal?'&#x25B2; 做多':'&#x25BC; 做空'}</td>
-      <td class="${cls(p.actual_return)}">${pct(p.actual_return)}</td>
-      <td>${p.LR_pred.toFixed(2)}</td>
-      <td>${p.LG_prob.toFixed(2)}</td>
-      <td>—</td>
-      <td>—</td>
+      <td style="font-weight:600">${p.period}</td>
+      <td class="${ret>=0?'pos':'neg'}">${ret==0?'0.00%':(ret*100).toFixed(2)+'%'}</td>
+      <td class="${p.LR_signal?'sig-long':'sig-cash'}">${p.LR_signal?'&#x1F534; 做多':'&#x26AA; 现金'}</td>
+      <td class="${p.DT_signal?'sig-long':'sig-cash'}">${p.DT_signal?'&#x1F534; 做多':'&#x26AA; 现金'}</td>
+      <td class="${p.RF_signal?'sig-long':'sig-cash'}">${p.RF_signal?'&#x1F534; 做多':'&#x26AA; 现金'}</td>
+      <td class="${p.LG_signal?'sig-long':'sig-cash'}">${p.LG_signal?'&#x1F534; 做多':'&#x26AA; 现金'}</td>
+      <td>${winners.map(w=>{const m=MODEL_KEYS.find(k=>'sig_'+k.toUpperCase()===w.key.toUpperCase());return CLS[m]||'';}).join(', ')||'—'}</td>
     `;
-    // 从feature_history补充估值数据
-    const fh=d.feature_history.find(f=>f.period===p.period);
-    if(fh){
-      tr.cells[6].textContent=fh['市净率PB(MRQ)']?.toFixed(2)||'—';
-      tr.cells[7].textContent=fh['市盈率PE(TTM)']?.toFixed(2)||'—';
-      tr.cells[8].textContent=fh['净利润同比增长率']!=null?fh['净利润同比增长率'].toFixed(2)+'%':'—';
-      tr.cells[9].textContent=fh['营业总收入(同比增长率)']!=null?fh['营业总收入(同比增长率)'].toFixed(2)+'%':'—';
-    }
+    if(ret>0.1) tr.className='quarter-winner';
     tbody.appendChild(tr);
   });
 }
 
 // ═══ 结论 ═══
 function renderInsights(d){
-  const sc=d.strategy_comparison;
-  const sorted=Object.entries(sc).sort((a,b)=>b[1].sharpe-a[1].sharpe);
+  const sr=d.strategy_results;
+  const sorted=Object.entries(sr).sort((a,b)=>b[1].cum_return-a[1].cum_return);
   const best=sorted[0];
+  const worst=sorted[sorted.length-1];
+
   const list=document.getElementById('insightList');
   list.innerHTML=`
-    <li>&#x1F3C6; <strong style="color:#ffd700">${best[0]}</strong> 策略最优：累计收益 ${pct(best[1].cum_return)}，年化 ${pct(best[1].ann_return)}，夏普 ${best[1].sharpe.toFixed(2)}</li>
-    <li>&#x1F4C8; <strong>逻辑回归</strong>大幅跑赢买入持有（+132% vs +53%），说明模型对新华制药的方向判断准确率高</li>
-    <li>&#x1F50D; 线性回归表现不佳（-18%），可能与新华制药波动较大、线性假设不成立有关</li>
-    <li>&#x1F4DD; 新华制药净利润增长率在2020-2021年保持增长，2022年后趋势放缓，模型信号也随之调整</li>
-    <li>&#x26A0; 本分析基于全市场模型（4000+股票训练），对单只股票的专属预测精度有限，仅供参考</li>
+    <li>&#x1F3C6; <strong style="color:#ffd700">${best[1].label}</strong> 纯多头策略最优：累计收益 ${pct(best[1].cum_return)}，夏普 ${best[1].sharpe.toFixed(2)}，仅 ${Math.round(8/17*100)}% 时间持仓</li>
+    <li>&#x1F4C8; <strong>线性回归 (+222%)</strong> 和 <strong>随机森林 (+186%)</strong> 通过<strong style="color:#e94560">精准择时</strong>大幅超越买入持有 (+53%)</li>
+    <li>&#x1F50D; 线性回归成功<strong style="color:#2ecc71">避开</strong>了2020Q1(-16%)、2020Q4(-9%)、2021Q2(-8%)、2022Q2(-34%)的最大跌幅</li>
+    <li>&#x1F4AF; 线性回归在2021Q3(+43%)和2022Q1(+180%)两大爆发季度<strong style="color:#e94560">正确做多</strong>，这是超额收益的核心来源</li>
+    <li>&#x26A0; 决策树仅交易2次(-9%)，过于保守；逻辑回归始终做多(=买入持有)，无择时能力</li>
+    <li>&#x1F4DD; 4个模型排名：<strong>线性回归 &gt; 随机森林 &gt; 逻辑回归(=买入持有) &gt; 决策树</strong></li>
   `;
 }
 </script>

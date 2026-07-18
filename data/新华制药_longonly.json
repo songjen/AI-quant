@@ -1,0 +1,195 @@
+{
+  "meta": {
+    "stock": "新华制药",
+    "code": "000756",
+    "updated": "2026-07-18 10:17"
+  },
+  "strategy_results": {
+    "LinearRegression": {
+      "label": "线性回归",
+      "cum_return": 2.229,
+      "ann_return": 0.5982,
+      "sharpe": 0.4986,
+      "win_rate": 0.3,
+      "max_dd": -0.1206
+    },
+    "DecisionTree": {
+      "label": "决策树",
+      "cum_return": -0.0862,
+      "ann_return": -0.0354,
+      "sharpe": -1.0165,
+      "win_rate": 0.0,
+      "max_dd": -0.0862
+    },
+    "RandomForest": {
+      "label": "随机森林",
+      "cum_return": 1.8622,
+      "ann_return": 0.5229,
+      "sharpe": 0.4295,
+      "win_rate": 0.3,
+      "max_dd": -0.1495
+    },
+    "LogisticRegression": {
+      "label": "逻辑回归",
+      "cum_return": 0.5327,
+      "ann_return": 0.1863,
+      "sharpe": 0.1352,
+      "win_rate": 0.4,
+      "max_dd": -0.3404
+    },
+    "BH": {
+      "label": "买入持有",
+      "cum_return": 0.5327,
+      "ann_return": 0.1863,
+      "sharpe": 0.1352,
+      "win_rate": 0.4,
+      "max_dd": -0.3404
+    }
+  },
+  "quarterly_detail": [
+    {
+      "period": "2018/03/31",
+      "actual_return": null,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 0,
+      "LG_signal": 0
+    },
+    {
+      "period": "2018/06/30",
+      "actual_return": null,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2018/09/30",
+      "actual_return": null,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2018/12/31",
+      "actual_return": null,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2019/03/31",
+      "actual_return": null,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2019/06/30",
+      "actual_return": null,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2019/09/30",
+      "actual_return": null,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2019/12/31",
+      "actual_return": null,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2020/03/31",
+      "actual_return": -0.1562,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2020/06/30",
+      "actual_return": -0.0862,
+      "LR_signal": 1,
+      "DT_signal": 1,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2020/09/30",
+      "actual_return": 0.0075,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2020/12/31",
+      "actual_return": -0.0917,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 0,
+      "LG_signal": 1
+    },
+    {
+      "period": "2021/03/31",
+      "actual_return": 0.0164,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 0,
+      "LG_signal": 1
+    },
+    {
+      "period": "2021/06/30",
+      "actual_return": -0.0762,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2021/09/30",
+      "actual_return": 0.4255,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2021/12/31",
+      "actual_return": -0.1206,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 0,
+      "LG_signal": 1
+    },
+    {
+      "period": "2022/03/31",
+      "actual_return": 1.7978,
+      "LR_signal": 1,
+      "DT_signal": 0,
+      "RF_signal": 1,
+      "LG_signal": 1
+    },
+    {
+      "period": "2022/06/30",
+      "actual_return": -0.3404,
+      "LR_signal": 0,
+      "DT_signal": 0,
+      "RF_signal": 0,
+      "LG_signal": 1
+    }
+  ]
+}
