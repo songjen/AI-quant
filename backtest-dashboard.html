@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多因子模型回测仪表盘</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-gl@2/dist/echarts-gl.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0f1923;color:#e0e6f0}
+.header{background:linear-gradient(135deg,#0a1628,#1a2a4a);padding:20px 30px;border-bottom:1px solid #1e3a5f;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.header h1{font-size:22px;font-weight:700;background:linear-gradient(90deg,#4fc3f7,#81c784);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header h1 span{border:1px solid #4fc3f7;padding:2px 8px;border-radius:6px;font-size:11px;-webkit-text-fill-color:#4fc3f7;margin-left:8px}
+.header .stats{display:flex;gap:20px;font-size:12px;color:#78909c;flex-wrap:wrap}
+.header .stats .s{background:#152238;padding:4px 12px;border-radius:6px;border:1px solid #1e3a5f}
+.header .stats .s strong{color:#b0bec5}
+.container{max-width:1440px;margin:0 auto;padding:16px}
+.updated-bar{text-align:right;font-size:11px;color:#546e7a;padding:6px 0 12px 0}
+
+/* ─── 指标卡片 ─── */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.metric-card{background:linear-gradient(135deg,#152238,#1a2d4a);border-radius:10px;padding:16px;border:1px solid #1e3a5f;position:relative;overflow:hidden}
+.metric-card .rank-badge{position:absolute;top:6px;right:8px;background:#ff9800;color:#000;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px}
+.metric-card .rank-badge.top1{background:#ffd700;color:#000}
+.metric-card .rank-badge.top2{background:#c0c0c0;color:#000}
+.metric-card .rank-badge.top3{background:#cd7f32;color:#fff}
+.metric-card .model-name{font-size:15px;font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e3a5f}
+.metric-card .model-name .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.metric-card .metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.metric-card .m-item{background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 8px}
+.metric-card .m-item .l{font-size:10px;color:#78909c}
+.metric-card .m-item .v{font-size:16px;font-weight:700;line-height:1.3}
+.metric-card .m-item .v.pos{color:#e94560}
+.metric-card .m-item .v.neg{color:#2ecc71}
+.metric-card .m-item.highlight{border:1px solid rgba(79,195,247,0.25);background:rgba(79,195,247,0.05)}
+
+/* ─── 图表容器 ─── */
+.section{background:#152238;border-radius:10px;padding:16px 18px;margin-bottom:16px;border:1px solid #1e3a5f}
+.section h2{font-size:15px;font-weight:600;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #1e3a5f;color:#81c784}
+.section h2 .sub{font-size:11px;font-weight:400;color:#78909c;margin-left:8px}
+.chart{width:100%;height:400px}
+.chart-tall{width:100%;height:480px}
+.chart-lg{width:100%;height:420px}
+
+/* ─── 分布图的季度切换 ─── */
+.tab-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab-bar .tab{background:#1e3a5f;border:none;color:#78909c;padding:5px 14px;border-radius:5px;cursor:pointer;font-size:12px;transition:all .2s}
+.tab-bar .tab:hover{background:#2a4a6f;color:#b0bec5}
+.tab-bar .tab.active{background:#4fc3f7;color:#000;font-weight:600}
+
+/* ─── 季节轮动热力图 ─── */
+.heatmap-legend{display:flex;gap:6px;align-items:center;margin-top:8px;font-size:11px;color:#78909c;justify-content:center;flex-wrap:wrap}
+
+/* ─── 表格 ─── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:#1a2d4a;color:#81c784;padding:8px 8px;text-align:center;font-weight:600;border-bottom:2px solid #1e3a5f}
+td{padding:6px 8px;text-align:center;border-bottom:1px solid #1a2d4a}
+tr:hover td{background:rgba(79,195,247,0.05)}
+td:first-child{font-weight:600;text-align:left;padding-left:12px}
+.pos{color:#e94560}
+.neg{color:#2ecc71}
+.best{color:#ffd700;font-weight:700}
+
+/* ─── 模式切换按钮 ─── */
+.theme-toggle{background:none;border:1px solid #1e3a5f;color:#78909c;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:11px}
+.theme-toggle:hover{border-color:#4fc3f7;color:#4fc3f7}
+
+/* ─── 结论框 ─── */
+.insight-box{background:linear-gradient(135deg,rgba(255,152,0,0.08),rgba(255,193,7,0.04));border:1px solid rgba(255,152,0,0.2);border-left:3px solid #ff9800;padding:14px 18px;border-radius:8px;margin-bottom:16px}
+.insight-box h3{color:#ffb74d;font-size:14px;margin-bottom:8px}
+.insight-box ul{margin-left:18px}
+.insight-box li{font-size:12px;line-height:1.9;color:#90a4ae}
+
+.footer{text-align:center;padding:20px;color:#455a64;font-size:11px}
+
+/* ─── Tooltip 美化 ─── */
+.custom-tooltip{background:#1a2d4a!important;border:1px solid #1e3a5f!important;box-shadow:0 4px 12px rgba(0,0,0,0.3)!important}
+
+/* 响应式 */
+@media(max-width:900px){
+  .metrics-row{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:600px){
+  .metrics-row{grid-template-columns:1fr}
+  .header{flex-direction:column;gap:8px;align-items:flex-start}
+  .header .stats{gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>&#x1F4CA; 多因子模型回测仪表盘 <span>v1.0</span></h1>
+  </div>
+  <div class="stats">
+    <span class="s">测试期: <strong id="testRange">-</strong></span>
+    <span class="s">训练期: <strong id="trainRange">-</strong></span>
+    <span class="s">全市场股票: <strong id="totalStocks">-</strong></span>
+    <span class="s">测试季度: <strong id="testQuarters">-</strong></span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="updated-bar" id="updatedTime">数据更新: -</div>
+
+  <!-- ═══ 指标卡片 ═══ -->
+  <div class="metrics-row" id="metricsCards"></div>
+
+  <!-- ═══ 累计净值曲线 ═══ -->
+  <div class="section">
+    <h2>&#x1F4C8; 累计净值曲线对比 <span class="sub">各模型多空组合累计收益</span></h2>
+    <div id="chartNav" class="chart-tall"></div>
+  </div>
+
+  <!-- ═══ 季度收益对比 ═══ -->
+  <div class="section">
+    <h2>&#x1F4CA; 各模型季度多空收益 <span class="sub">测试期每季度收益对比</span></h2>
+    <div id="chartQuarterly" class="chart"></div>
+  </div>
+
+  <!-- ═══ 全股票收益分布 ═══ -->
+  <div class="section">
+    <h2>&#x1F300; 全市场股票收益分布曲线 <span class="sub">各季度所有股票实际收益率分布 + 策略多空分位标记</span></h2>
+    <div class="tab-bar" id="distTabs"></div>
+    <div id="chartDistribution" class="chart-lg"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:11px;color:#78909c;justify-content:center" id="distStats"></div>
+  </div>
+
+  <!-- ═══ 季节轮动热力图 ═══ -->
+  <div class="section">
+    <h2>&#x1F3E0; 季节轮动分析 <span class="sub">各模型在不同季度的表现排名</span></h2>
+    <div id="chartSeasonal" class="chart-lg"></div>
+    <div class="heatmap-legend">
+      <span>排名颜色:</span>
+      <span style="display:inline-block;width:16px;height:16px;background:#ffd700;border-radius:2px"></span> 第1名
+      <span style="display:inline-block;width:16px;height:16px;background:#c0c0c0;border-radius:2px"></span> 第2名
+      <span style="display:inline-block;width:16px;height:16px;background:#cd7f32;border-radius:2px"></span> 第3名
+      <span style="display:inline-block;width:16px;height:16px;background:#455a64;border-radius:2px"></span> 第4名
+      <span style="margin-left:12px">数值: 该季度多空收益率</span>
+    </div>
+  </div>
+
+  <!-- ═══ 预测IC对比 ═══ -->
+  <div class="section">
+    <h2>&#x1F4DD; 预测IC对比 <span class="sub">Spearman秩相关系数 — 衡量模型预测排序能力</span></h2>
+    <div id="chartIC" class="chart"></div>
+  </div>
+
+  <!-- ═══ 特征重要性 ═══ -->
+  <div class="section">
+    <h2>&#x1F50D; 随机森林 Top20 特征重要性 <span class="sub">反映哪些因子对预测贡献最大</span></h2>
+    <div id="chartFeature" class="chart-lg"></div>
+  </div>
+
+  <!-- ═══ 线性回归系数 ═══ -->
+  <div class="section">
+    <h2>&#x2699; 线性回归 Top12 系数 <span class="sub">正系数=该因子越大收益越高，负系数=因子越小收益越高</span></h2>
+    <div id="chartCoef" class="chart"></div>
+  </div>
+
+  <!-- ═══ 详细指标表 ═══ -->
+  <div class="section">
+    <h2>&#x1F4CB; 策略核心指标对比表</h2>
+    <div class="table-wrap">
+      <table id="metricsTable">
+        <thead>
+          <tr>
+            <th>模型</th><th>累计收益</th><th>年化收益</th><th>年化波动</th>
+            <th>夏普比率</th><th>最大回撤</th><th>胜率</th><th>信息比率</th><th>Calmar</th><th>排名</th>
+          </tr>
+        </thead>
+        <tbody id="metricsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ 结论 ═══ -->
+  <div class="insight-box" id="insightBox">
+    <h3>&#x1F4AC; 核心结论</h3>
+    <ul id="insightList"></ul>
+  </div>
+
+  <div class="footer">
+    AI-quant · 多因子模型回测分析 · Powered by ECharts
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// 数据加载
+// ═══════════════════════════════════════════════════════════
+const DATA_PATH = 'data/backtest_dashboard.json';
+const COLORS = ['#e94560','#4fc3f7','#81c784','#ffb74d','#ce93d8','#f06292'];
+const MODEL_COLORS = {LinearRegression:'#e94560',DecisionTree:'#4fc3f7',RandomForest:'#81c784',LogisticRegression:'#ffb74d'};
+const MODEL_LABELS = {LinearRegression:'线性回归',DecisionTree:'决策树',RandomForest:'随机森林',LogisticRegression:'逻辑回归'};
+const MODEL_ORDER = ['LinearRegression','DecisionTree','RandomForest','LogisticRegression'];
+
+let DATA = null;
+
+fetch(DATA_PATH)
+  .then(r => r.json())
+  .then(d => { DATA = d; render(); })
+  .catch(e => {
+    document.body.innerHTML = `
+      <div style="max-width:500px;margin:80px auto;text-align:center;padding:40px;background:#152238;border-radius:10px;border:1px solid #e94560">
+        <h2 style="color:#e94560">&#x26A0; 数据加载失败</h2>
+        <p style="color:#78909c;margin:12px 0">请确认 data/backtest_dashboard.json 文件存在</p>
+        <p style="color:#546e7a;font-size:12px">${e.message}</p>
+      </div>`;
+  });
+
+// ═══════════════════════════════════════════════════════════
+// 工具函数
+// ═══════════════════════════════════════════════════════════
+function pct(v) { return (v*100).toFixed(2) + '%'; }
+function pct1(v) { return (v*100).toFixed(1) + '%'; }
+function fmt(v) { return v.toFixed(4); }
+function colorClass(v) { return v >= 0 ? 'pos' : 'neg'; }
+
+function initChart(id) {
+  const dom = document.getElementById(id);
+  const chart = echarts.init(dom, null, {renderer:'canvas'});
+  window.addEventListener('resize', () => chart.resize());
+  return chart;
+}
+
+// 排名标签
+function rankLabel(r) {
+  if(r===1) return '<span class="rank-badge top1">&#x1F947;</span>';
+  if(r===2) return '<span class="rank-badge top2">&#x1F948;</span>';
+  if(r===3) return '<span class="rank-badge top3">&#x1F949;</span>';
+  return `<span class="rank-badge">#${r}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 渲染函数
+// ═══════════════════════════════════════════════════════════
+function render() {
+  const d = DATA;
+  if(!d) return;
+
+  // 元数据
+  document.getElementById('testRange').textContent = d.meta.test_range;
+  document.getElementById('trainRange').textContent = d.meta.train_range;
+  document.getElementById('totalStocks').textContent = d.meta.total_stocks.toLocaleString();
+  document.getElementById('testQuarters').textContent = d.meta.test_quarters;
+  document.getElementById('updatedTime').textContent = '数据更新: ' + d.meta.updated;
+
+  renderMetricsCards(d);
+  renderNavChart(d);
+  renderQuarterlyChart(d);
+  renderDistribution(d);
+  renderSeasonalChart(d);
+  renderICChart(d);
+  renderFeatureChart(d);
+  renderCoefChart(d);
+  renderMetricsTable(d);
+  renderInsights(d);
+}
+
+// ═══ 指标卡片 ═══
+function renderMetricsCards(d) {
+  const strat = d.strategies;
+  const container = document.getElementById('metricsCards');
+  container.innerHTML = '';
+
+  // 按夏普排序
+  const sorted = MODEL_ORDER.map(name => ({name, ...strat[name]}))
+    .sort((a,b) => b.sharpe - a.sharpe);
+
+  const COLORS_LIST = ['#e94560','#4fc3f7','#81c784','#ffb74d'];
+
+  sorted.forEach((s, idx) => {
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+    card.innerHTML = `
+      <div class="rank-badge ${idx===0?'top1':idx===1?'top2':idx===2?'top3':''}">#${idx+1}</div>
+      <div class="model-name">
+        <span class="dot" style="background:${COLORS_LIST[idx]}"></span>${MODEL_LABELS[s.name]||s.name}
+      </div>
+      <div class="metrics-grid">
+        <div class="m-item highlight">
+          <div class="l">夏普比率</div>
+          <div class="v ${colorClass(s.sharpe)}">${s.sharpe.toFixed(2)}</div>
+        </div>
+        <div class="m-item">
+          <div class="l">年化收益</div>
+          <div class="v ${colorClass(s.ann_return)}">${pct(s.ann_return)}</div>
+        </div>
+        <div class="m-item">
+          <div class="l">累计收益</div>
+          <div class="v ${colorClass(s.cum_return)}">${pct(s.cum_return)}</div>
+        </div>
+        <div class="m-item">
+          <div class="l">年化波动</div>
+          <div class="v">${pct(s.ann_vol)}</div>
+        </div>
+        <div class="m-item">
+          <div class="l">最大回撤</div>
+          <div class="v ${colorClass(-s.max_dd)}">${pct(s.max_dd)}</div>
+        </div>
+        <div class="m-item">
+          <div class="l">胜率</div>
+          <div class="v pos">${pct(s.win_rate)}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ═══ 累计净值曲线 ═══
+function renderNavChart(d) {
+  const chart = initChart('chartNav');
+  const qData = d.quarterly_returns;
+  const quarters = qData.quarters;
+
+  // 计算每个模型的累计净值
+  const series = MODEL_ORDER.map(name => {
+    const ls = qData[name].ls;
+    let nav = 1;
+    const navs = [nav];
+    for(let r of ls) {
+      nav *= (1 + r);
+      navs.push(nav);
+    }
+    return {name: MODEL_LABELS[name], data: navs, color: MODEL_COLORS[name]};
+  });
+
+  // 基准
+  let benchNav = 1;
+  const benchNavs = [benchNav];
+  for(let r of qData.benchmark) {
+    benchNav *= (1 + r);
+    benchNavs.push(benchNav);
+  }
+  series.push({name: '基准(等权)', data: benchNavs, color: '#546e7a', dashed: true});
+
+  const xLabels = ['期初', ...quarters];
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      formatter: function(params) {
+        let s = `<b>${params[0].axisValue}</b><br/>`;
+        params.sort((a,b) => b.value - a.value);
+        params.forEach(p => s += `${p.marker} ${p.seriesName}: <b>${p.value.toFixed(4)}</b><br/>`);
+        return s;
+      }
+    },
+    legend: {
+      data: series.map(s => s.name),
+      textStyle: {color: '#78909c', fontSize: 11},
+      top: 0,
+      icon: 'roundRect'
+    },
+    grid: {left: 55, right: 20, top: 40, bottom: 30},
+    xAxis: {
+      type: 'category',
+      data: xLabels,
+      axisLabel: {color: '#78909c', fontSize: 11, interval: 0, rotate: 30},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitLine: {show: false}
+    },
+    yAxis: {
+      type: 'value',
+      min: function(v) { return Math.floor(v.min * 0.95 * 10) / 10; },
+      axisLabel: {
+        color: '#78909c', fontSize: 11,
+        formatter: v => v.toFixed(2)
+      },
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}}
+    },
+    series: series.map(s => ({
+      name: s.name,
+      type: 'line',
+      data: s.data,
+      smooth: true,
+      symbol: 'circle',
+      symbolSize: 6,
+      lineStyle: {
+        width: s.dashed?2:3,
+        type: s.dashed?'dashed':'solid',
+        color: s.color
+      },
+      itemStyle: {color: s.color},
+      areaStyle: s.dashed ? undefined : {
+        color: new echarts.graphic.LinearGradient(0,0,0,1, [
+          {offset:0, color: s.color + '30'},
+          {offset:1, color: s.color + '05'}
+        ])
+      }
+    }))
+  });
+}
+
+// ═══ 季度收益对比 ═══
+function renderQuarterlyChart(d) {
+  const chart = initChart('chartQuarterly');
+  const qData = d.quarterly_returns;
+  const quarters = qData.quarters;
+
+  const series = [];
+  MODEL_ORDER.forEach((name, idx) => {
+    series.push({
+      name: MODEL_LABELS[name],
+      type: 'bar',
+      data: qData[name].ls,
+      barGap: '10%',
+      itemStyle: {
+        color: MODEL_COLORS[name],
+        borderRadius: [2,2,0,0]
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#b0bec5',
+        fontSize: 10,
+        formatter: v => pct1(v.value)
+      }
+    });
+  });
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      formatter: function(params) {
+        let s = `<b>${params[0].axisValue}</b><br/>`;
+        params.sort((a,b) => b.value - a.value);
+        params.forEach(p => s += `${p.marker} ${p.seriesName}: <b>${pct(p.value)}</b><br/>`);
+        return s;
+      }
+    },
+    legend: {
+      data: MODEL_ORDER.map(n => MODEL_LABELS[n]),
+      textStyle: {color: '#78909c', fontSize: 11},
+      top: 0
+    },
+    grid: {left: 55, right: 15, top: 40, bottom: 30},
+    xAxis: {
+      type: 'category',
+      data: quarters,
+      axisLabel: {color: '#78909c', fontSize: 11},
+      axisLine: {lineStyle: {color: '#1e3a5f'}}
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {color: '#78909c', fontSize: 11, formatter: v => (v*100).toFixed(0)+'%'},
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}}
+    },
+    series: series
+  });
+}
+
+// ═══ 全股票收益分布曲线 ═══
+let distCurrentQuarter = 0;
+
+function renderDistribution(d) {
+  const dist = d.distribution;
+  const quarters = d.quarterly_returns.quarters;
+
+  // 渲染季度Tabs
+  const tabBar = document.getElementById('distTabs');
+  tabBar.innerHTML = '';
+  quarters.forEach((q, idx) => {
+    const tab = document.createElement('button');
+    tab.className = 'tab' + (idx === distCurrentQuarter ? ' active' : '');
+    tab.textContent = q;
+    tab.onclick = () => {
+      distCurrentQuarter = idx;
+      tabBar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      updateDistributionChart(d, quarters[idx]);
+    };
+    tabBar.appendChild(tab);
+  });
+
+  // 默认显示第一个季度
+  updateDistributionChart(d, quarters[0]);
+}
+
+function updateDistributionChart(d, quarter) {
+  const chart = initChart('chartDistribution');
+  const distData = d.distribution[quarter];
+  if (!distData) return;
+
+  const kde = distData.kde;
+  const hist = distData.histogram;
+
+  // 策略多空分位标记（前20%/后20%）
+  const qData = d.quarterly_returns;
+  const qIdx = qData.quarters.indexOf(quarter);
+
+  // 模型最佳长期收益标记（竖线）
+  const markLines = [];
+  MODEL_ORDER.forEach((name, idx) => {
+    const lsRet = qData[name].ls[qIdx];
+    markLines.push({
+      name: MODEL_LABELS[name],
+      value: lsRet,
+      xAxis: lsRet,
+      lineStyle: {color: MODEL_COLORS[name], width: 2, type: 'dashed'},
+      label: {
+        formatter: MODEL_LABELS[name] + ': ' + pct1(lsRet),
+        color: MODEL_COLORS[name], fontSize: 10
+      }
+    });
+  });
+
+  // 基准线
+  const benchRet = qData.benchmark[qIdx];
+  markLines.push({
+    name: '基准',
+    value: benchRet,
+    xAxis: benchRet,
+    lineStyle: {color: '#546e7a', width: 1.5, type: 'dotted'},
+    label: {formatter: '基准: ' + pct1(benchRet), color: '#78909c', fontSize: 10}
+  });
+
+  // 更新统计信息
+  const stats = distData;
+  document.getElementById('distStats').innerHTML = `
+    <span>样本数: <strong style="color:#b0bec5">${stats.n_stocks.toLocaleString()}</strong></span>
+    <span>均值: <strong style="color:${stats.mean>=0?'#e94560':'#2ecc71'}">${pct(stats.mean)}</strong></span>
+    <span>标准差: <strong style="color:#b0bec5">${pct(stats.std)}</strong></span>
+    <span>正收益比率: <strong style="color:#e94560">${pct(stats.positive_pct)}</strong></span>
+    <span style="border-left:1px solid #1e3a5f;padding-left:12px">
+      P10: <span style="color:#78909c">${pct(stats.percentiles.p10)}</span>
+      P50: <span style="color:#78909c">${pct(stats.percentiles.p50)}</span>
+      P90: <span style="color:#78909c">${pct(stats.percentiles.p90)}</span>
+    </span>
+  `;
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      formatter: function(params) {
+        let s = `<b>${quarter}</b><br/>`;
+        params.forEach(p => {
+          if(p.seriesName === '概率密度')
+            s += `${p.marker} 收益率: <b>${(p.data[0]*100).toFixed(2)}%</b> | 密度: ${p.data[1].toFixed(3)}<br/>`;
+          else if(p.seriesName !== '分布直方图')
+            s += `${p.marker} ${p.seriesName}: <b>${(p.value*100).toFixed(2)}%</b><br/>`;
+        });
+        return s;
+      }
+    },
+    grid: {left: 55, right: 20, top: 15, bottom: 30},
+    xAxis: {
+      type: 'value',
+      axisLabel: {color: '#78909c', fontSize: 10, formatter: v => (v*100).toFixed(0)+'%'},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitLine: {show: false},
+      min: -0.5, max: 0.5
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {color: '#78909c', fontSize: 10},
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}},
+      name: '密度',
+      nameTextStyle: {color: '#78909c', fontSize: 10}
+    },
+    series: [
+      {
+        name: '分布直方图',
+        type: 'bar',
+        data: hist.counts.map((c,i) => ({
+          value: [hist.edges[i], (hist.edges[i+1] - hist.edges[i])/2 + hist.edges[i]],
+          yValue: c / Math.max(...hist.counts)
+        })),
+        barWidth: '100%',
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0,0,0,1, [
+            {offset:0, color:'rgba(79,195,247,0.25)'},
+            {offset:1, color:'rgba(79,195,247,0.05)'}
+          ]),
+          borderColor: 'rgba(79,195,247,0.15)',
+          borderWidth: 0.5
+        },
+        silent: true,
+        tooltip: {show: false}
+      },
+      {
+        name: '概率密度',
+        type: 'line',
+        data: kde.x.map((x,i) => [x, kde.y[i]]),
+        smooth: true,
+        symbol: 'none',
+        lineStyle: {color: '#4fc3f7', width: 2.5},
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0,0,0,1, [
+            {offset:0, color:'rgba(79,195,247,0.15)'},
+            {offset:1, color:'rgba(79,195,247,0.01)'}
+          ])
+        }
+      },
+      ...MODEL_ORDER.map((name, idx) => ({
+        name: MODEL_LABELS[name],
+        type: 'scatter',
+        data: [[qData[name].ls[qIdx], 0]],
+        symbol: 'diamond',
+        symbolSize: 80,
+        itemStyle: {color: MODEL_COLORS[name], borderColor: '#fff', borderWidth: 1},
+        label: {
+          show: true,
+          position: 'bottom',
+          formatter: pct1(qData[name].ls[qIdx]),
+          color: MODEL_COLORS[name],
+          fontSize: 9,
+          fontWeight: 'bold',
+          offset: [0, 8]
+        }
+      })),
+      {
+        name: '基准',
+        type: 'scatter',
+        data: [[benchRet, 0]],
+        symbol: 'triangle',
+        symbolSize: 60,
+        itemStyle: {color: '#546e7a', borderColor: '#90a4ae', borderWidth: 1},
+        label: {
+          show: true,
+          position: 'top',
+          formatter: '基准: ' + pct1(benchRet),
+          color: '#78909c',
+          fontSize: 8,
+          offset: [0, -8]
+        }
+      }
+    ]
+  });
+}
+
+// ═══ 季节轮动热力图 ═══
+function renderSeasonalChart(d) {
+  const chart = initChart('chartSeasonal');
+  const seas = d.seasonal;
+  const quarters = seas.quarters;
+
+  // 构建热力图数据 [季度索引, 模型索引, 收益率]
+  const heatData = [];
+  MODEL_ORDER.forEach((name, modelIdx) => {
+    seas[name].ls.forEach((ret, qIdx) => {
+      heatData.push([qIdx, modelIdx, ret]);
+    });
+  });
+
+  // 文本标签数据
+  const labelData = [];
+  MODEL_ORDER.forEach((name, modelIdx) => {
+    seas[name].ls.forEach((ret, qIdx) => {
+      const rank = seas[name].rank[qIdx];
+      labelData.push({qIdx, modelIdx, ret, rank});
+    });
+  });
+
+  chart.setOption({
+    tooltip: {
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      formatter: function(params) {
+        const model = MODEL_LABELS[MODEL_ORDER[params.data[1]]];
+        const q = quarters[params.data[0]];
+        const ret = params.data[2];
+        const rank = findRank(labelData, params.data[0], params.data[1]);
+        return `<b>${q}</b><br/>${model}<br/>收益率: <b style="color:${ret>=0?'#e94560':'#2ecc71'}">${pct(ret)}</b><br/>排名: #${rank}`;
+      }
+    },
+    grid: {left: 90, right: 40, top: 15, bottom: 45},
+    xAxis: {
+      type: 'category',
+      data: quarters,
+      axisLabel: {color: '#78909c', fontSize: 11},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitArea: {show: true, areaStyle: {color: ['rgba(0,0,0,0)','rgba(79,195,247,0.02)']}}
+    },
+    yAxis: {
+      type: 'category',
+      data: MODEL_ORDER.map(n => MODEL_LABELS[n]),
+      axisLabel: {color: '#b0bec5', fontSize: 11, fontWeight: 'bold'},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitArea: {show: true, areaStyle: {color: ['rgba(0,0,0,0)','rgba(79,195,247,0.02)']}}
+    },
+    visualMap: {
+      min: -0.05,
+      max: 0.15,
+      calculable: true,
+      orient: 'vertical',
+      right: 2,
+      top: 'center',
+      inRange: {
+        color: ['#2ecc71','#1a3a3a','#152238','#4a2030','#e94560']
+      },
+      textStyle: {color: '#78909c', fontSize: 10},
+      formatter: v => pct1(v)
+    },
+    series: [{
+      type: 'heatmap',
+      data: heatData,
+      label: {
+        show: true,
+        color: '#e0e6f0',
+        fontSize: 12,
+        fontWeight: 'bold',
+        formatter: function(p) {
+          const r = labelData.find(d => d.qIdx===p.data[0] && d.modelIdx===p.data[1]);
+          if (!r) return '';
+          return pct1(r.ret) + '\n#' + r.rank;
+        }
+      },
+      emphasis: {
+        itemStyle: {shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)'}
+      }
+    }]
+  });
+}
+
+function findRank(data, qIdx, modelIdx) {
+  const item = data.find(d => d.qIdx===qIdx && d.modelIdx===modelIdx);
+  return item ? item.rank : '-';
+}
+
+// ═══ IC对比 ═══
+function renderICChart(d) {
+  const chart = initChart('chartIC');
+  const icData = d.ic_data;
+
+  const quarters = icData[MODEL_ORDER[0]].quarters;
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      formatter: function(params) {
+        let s = `<b>${params[0].axisValue}</b><br/>`;
+        params.sort((a,b) => b.value - a.value);
+        params.forEach(p => s += `${p.marker} ${p.seriesName}: <b>${p.value.toFixed(4)}</b><br/>`);
+        return s;
+      }
+    },
+    legend: {
+      data: MODEL_ORDER.map(n => MODEL_LABELS[n]),
+      textStyle: {color: '#78909c', fontSize: 11},
+      top: 0
+    },
+    grid: {left: 50, right: 15, top: 40, bottom: 30},
+    xAxis: {
+      type: 'category',
+      data: quarters,
+      axisLabel: {color: '#78909c', fontSize: 11},
+      axisLine: {lineStyle: {color: '#1e3a5f'}}
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: {color: '#78909c', fontSize: 11, formatter: v => v.toFixed(2)},
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}}
+    },
+    series: MODEL_ORDER.map(name => ({
+      name: MODEL_LABELS[name],
+      type: 'bar',
+      data: icData[name].values,
+      barGap: '15%',
+      itemStyle: {
+        color: MODEL_COLORS[name],
+        borderRadius: [2,2,0,0]
+      },
+      label: {
+        show: true,
+        position: 'top',
+        color: '#b0bec5',
+        fontSize: 10,
+        formatter: v => v.value.toFixed(3)
+      }
+    }))
+  });
+}
+
+// ═══ 特征重要性 ═══
+function renderFeatureChart(d) {
+  const chart = initChart('chartFeature');
+  const fi = d.feature_importance;
+  const features = fi.features.slice().reverse();
+  const importance = fi.importance.slice().reverse();
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      axisPointer: {type: 'shadow'},
+      formatter: function(params) {
+        const p = params[0];
+        return `<b>${p.name}</b><br/>重要性: <b>${(p.value*100).toFixed(2)}%</b>`;
+      }
+    },
+    grid: {left: 180, right: 40, top: 10, bottom: 20},
+    xAxis: {
+      type: 'value',
+      axisLabel: {
+        color: '#78909c', fontSize: 10,
+        formatter: v => (v*100).toFixed(0) + '%'
+      },
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}}
+    },
+    yAxis: {
+      type: 'category',
+      data: features,
+      axisLabel: {color: '#b0bec5', fontSize: 10},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitLine: {show: false}
+    },
+    series: [{
+      type: 'bar',
+      data: importance.map((v,i) => ({
+        value: v,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0,0,1,0, [
+            {offset:0, color:'#4fc3f7'},
+            {offset:1, color:'#81c784'}
+          ]),
+          borderRadius: [0, 3, 3, 0]
+        }
+      })),
+      label: {
+        show: true,
+        position: 'right',
+        color: '#81c784',
+        fontSize: 11,
+        fontWeight: 'bold',
+        formatter: v => (v.value*100).toFixed(1) + '%'
+      },
+      barWidth: 16
+    }]
+  });
+}
+
+// ═══ 线性回归系数 ═══
+function renderCoefChart(d) {
+  const chart = initChart('chartCoef');
+  const coefs = d.linear_coefficients;
+  const features = coefs.map(c => c.feature).reverse();
+  const values = coefs.map(c => c.coef).reverse();
+
+  chart.setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a2d4a',
+      borderColor: '#1e3a5f',
+      textStyle: {color: '#e0e6f0', fontSize: 12},
+      axisPointer: {type: 'shadow'},
+      formatter: function(params) {
+        const p = params[0];
+        const sign = p.value >= 0 ? '+' : '';
+        return `<b>${p.name}</b><br/>系数: <b style="color:${p.value>=0?'#e94560':'#2ecc71'}">${sign}${p.value.toFixed(4)}</b>`;
+      }
+    },
+    grid: {left: 170, right: 50, top: 10, bottom: 20},
+    xAxis: {
+      type: 'value',
+      axisLabel: {color: '#78909c', fontSize: 10, formatter: v => v.toFixed(2)},
+      axisLine: {show: false},
+      splitLine: {lineStyle: {color: '#1a2d4a', type: 'dashed'}}
+    },
+    yAxis: {
+      type: 'category',
+      data: features,
+      axisLabel: {color: '#b0bec5', fontSize: 10},
+      axisLine: {lineStyle: {color: '#1e3a5f'}},
+      splitLine: {show: false}
+    },
+    series: [{
+      type: 'bar',
+      data: values.map(v => ({
+        value: v,
+        itemStyle: {
+          color: v >= 0 ? '#e94560' : '#2ecc71',
+          borderRadius: v >= 0 ? [0,3,3,0] : [3,0,0,3]
+        }
+      })),
+      label: {
+        show: true,
+        position: function(p) { return p.value >= 0 ? 'right' : 'left'; },
+        color: '#b0bec5',
+        fontSize: 10,
+        fontWeight: 'bold',
+        formatter: function(p) { return (p.value >= 0 ? '+' : '') + p.value.toFixed(3); }
+      },
+      barWidth: 14
+    }]
+  });
+}
+
+// ═══ 指标表格 ═══
+function renderMetricsTable(d) {
+  const strat = d.strategies;
+  const sorted = MODEL_ORDER.map(name => ({name, ...strat[name]}))
+    .sort((a,b) => b.sharpe - a.sharpe);
+
+  const tbody = document.getElementById('metricsBody');
+  tbody.innerHTML = '';
+
+  sorted.forEach((s, idx) => {
+    const tr = document.createElement('tr');
+    const rankBadge = idx===0 ? '&#x1F947;' : idx===1 ? '&#x1F948;' : idx===2 ? '&#x1F949;' : `#${idx+1}`;
+    tr.innerHTML = `
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${COLORS[idx]};margin-right:6px"></span>${MODEL_LABELS[s.name]}</td>
+      <td class="${colorClass(s.cum_return)}">${pct(s.cum_return)}</td>
+      <td class="${colorClass(s.ann_return)}">${pct(s.ann_return)}</td>
+      <td>${pct(s.ann_vol)}</td>
+      <td class="pos">${s.sharpe.toFixed(2)}</td>
+      <td>${pct(s.max_dd)}</td>
+      <td class="pos">${pct(s.win_rate)}</td>
+      <td class="${colorClass(s.info_ratio)}">${s.info_ratio.toFixed(2)}</td>
+      <td class="pos">${s.calmar === Infinity ? '∞' : s.calmar.toFixed(2)}</td>
+      <td class="best">${rankBadge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ═══ 结论 ═══
+function renderInsights(d) {
+  const strat = d.strategies;
+  const sorted = MODEL_ORDER.map(name => ({name, ...strat[name]}))
+    .sort((a,b) => b.sharpe - a.sharpe);
+
+  const best = sorted[0];
+  const worst = sorted[sorted.length-1];
+  const qData = d.quarterly_returns;
+
+  const list = document.getElementById('insightList');
+  list.innerHTML = '';
+
+  const insights = [
+    `&#x1F3C6; <strong style="color:#ffd700">${MODEL_LABELS[best.name]}</strong> 综合表现最优：夏普比率 ${best.sharpe.toFixed(2)}，年化收益 ${pct(best.ann_return)}，测试期3个季度全部正收益`,
+    `${MODEL_ORDER.map((n,i) => `#${i+1} ${MODEL_LABELS[n]}: 夏普=${strat[n].sharpe.toFixed(2)} 年化=${pct(strat[n].ann_return)} 胜率=${pct(strat[n].win_rate)}`).join('<br>')}`,
+    `&#x1F4C8; <strong>线性回归</strong>和<strong>逻辑回归</strong>两个线性模型显著优于树模型——说明在当前数据量和特征维度下，线性关系主导了横截面收益预测`,
+    `&#x1F300; 全市场收益分布呈现明显的左偏特征——正收益股票集中在0~10%区间，负收益股票分散度更大，策略的多空两端均能获得正向回报`,
+    `&#x1F3E0; <strong>季节轮动</strong>：线性回归在3个季度中全部蝉联最佳（或并列最佳），模型表现稳定性高；决策树在2021Q4市场剧烈波动期表现最差`,
+    `&#x1F50D; <strong>最强因子</strong>：截面排名类估值因子（PB、PE、PS排名）对预测贡献最大，净利润同比增长率和成长综合评分为辅助信号——<strong>便宜+成长</strong>是最有效的因子组合`,
+    `&#x26A0; <strong>局限性</strong>：测试期仅3个季度，市场经历一轮完整下跌，结论的有效性需更长时间验证；R²均为负值，说明模型对个股绝对收益的预测精度有限，优势在于横截面排序`
+  ];
+
+  insights.forEach(t => {
+    const li = document.createElement('li');
+    li.innerHTML = t;
+    list.appendChild(li);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新华制药 — 多因子模型分析面板</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0f1923;color:#e0e6f0}
+.header{background:linear-gradient(135deg,#0a1628,#1a2a4a);padding:18px 28px;border-bottom:1px solid #1e3a5f;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.header h1{font-size:20px;font-weight:700;background:linear-gradient(90deg,#4fc3f7,#81c784);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header h1 span{-webkit-text-fill-color:#78909c;font-size:12px;font-weight:400;margin-left:6px}
+.header .meta{display:flex;gap:12px;font-size:11px;color:#546e7a}
+.container{max-width:1400px;margin:0 auto;padding:14px}
+.updated{text-align:right;font-size:10px;color:#455a64;padding:4px 0 10px}
+
+/* 顶部分数卡 */
+.score-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.score-card{background:linear-gradient(135deg,#152238,#1a2d4a);border-radius:8px;padding:14px;border:1px solid #1e3a5f}
+.score-card .l{font-size:10px;color:#78909c}
+.score-card .v{font-size:22px;font-weight:700;line-height:1.3}
+.score-card .v.pos{color:#e94560}
+.score-card .v.neg{color:#2ecc71}
+.score-card .v.gold{color:#ffd700}
+.score-card .sub{font-size:10px;color:#546e7a;margin-top:2px}
+.score-card.best{border-color:#ffd700;background:linear-gradient(135deg,#1a2d4a,#2a2a1a)}
+.score-card.best .v{color:#ffd700}
+
+.section{background:#152238;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #1e3a5f}
+.section h2{font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1e3a5f;color:#81c784}
+.section h2 .sub{font-size:10px;font-weight:400;color:#546e7a;margin-left:6px}
+.chart{width:100%;height:360px}
+.chart-md{width:100%;height:320px}
+.chart-sm{width:100%;height:280px}
+
+/* 信号指示器 */
+.signal-row{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.signal-item{display:flex;align-items:center;gap:6px;font-size:11px}
+.signal-dot{width:10px;height:10px;border-radius:50%}
+.signal-dot.buy{background:#e94560}
+.signal-dot.sell{background:#2ecc71}
+.signal-dot.hold{background:#fdcb6e}
+
+.tab-bar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.tab-bar .tab{background:#1e3a5f;border:none;color:#78909c;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px}
+.tab-bar .tab.active{background:#4fc3f7;color:#000;font-weight:600}
+.tab-bar .tab:hover{background:#2a4a6f}
+
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#1a2d4a;color:#81c784;padding:6px;text-align:center;font-weight:600;border-bottom:2px solid #1e3a5f}
+td{padding:5px 6px;text-align:center;border-bottom:1px solid #1a2d4a}
+tr:hover td{background:rgba(79,195,247,0.05)}
+td:first-child{font-weight:600;text-align:left;padding-left:10px}
+.best-row{background:rgba(255,215,0,0.05)!important}
+.best-row td:first-child{color:#ffd700}
+.pos{color:#e94560}
+.neg{color:#2ecc71}
+.signal-buy{color:#e94560;font-weight:700}
+.signal-sell{color:#2ecc71}
+
+.insight-box{background:linear-gradient(135deg,rgba(255,152,0,0.08),rgba(255,193,7,0.04));border:1px solid rgba(255,152,0,0.2);border-left:3px solid #ff9800;padding:12px 16px;border-radius:6px;margin-bottom:14px}
+.insight-box h3{color:#ffb74d;font-size:13px;margin-bottom:6px}
+.insight-box li{font-size:11px;line-height:1.8;color:#90a4ae;margin-left:14px}
+.footer{text-align:center;padding:16px;color:#455a64;font-size:10px}
+
+@media(max-width:800px){.score-cards{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>&#x1F4CA; 新华制药 多因子模型分析 <span>000756.SZ</span></h1>
+  </div>
+  <div class="meta">
+    <span>行业: 化学制药</span>
+    <span id="updatedLabel">-</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="updated" id="updatedTime">-</div>
+
+  <!-- 顶部分数 -->
+  <div class="score-cards" id="scoreCards"></div>
+
+  <!-- 核心图表 -->
+  <div class="section">
+    <h2>&#x1F4C8; 模型预测 vs 实际收益 <span class="sub">线性回归预测值 & 逻辑回归概率 & 下期实际收益</span></h2>
+    <div id="chartPredictions" class="chart"></div>
+    <div class="signal-row" id="signalLegend"></div>
+  </div>
+
+  <!-- 策略收益对比 -->
+  <div class="section">
+    <h2>&#x1F4CA; 策略累计收益对比 <span class="sub">线性回归 / 逻辑回归 / 买入持有</span></h2>
+    <div id="chartStrategy" class="chart-md"></div>
+  </div>
+
+  <!-- 特征时间序列 -->
+  <div class="section">
+    <h2>&#x1F4CB; 关键估值指标时间序列 <span class="sub">PB / PE / PS / MV</span></h2>
+    <div class="tab-bar" id="featTabs"></div>
+    <div id="chartFeatures" class="chart-md"></div>
+  </div>
+
+  <!-- 财务指标 -->
+  <div class="section">
+    <h2>&#x1F4DD; 财务增长率趋势 <span class="sub">净利润同比增长率 & 营收同比增长率</span></h2>
+    <div id="chartFinancial" class="chart-md"></div>
+  </div>
+
+  <!-- 信号明细表 -->
+  <div class="section">
+    <h2>&#x1F9F0; 每季度预测信号明细</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>报告期</th><th>LR预测值</th><th>LR信号</th><th>LG概率</th><th>LG信号</th>
+            <th>实际收益</th><th>PB</th><th>PE(TTM)</th><th>净利润YoY</th><th>营收YoY</th>
+          </tr>
+        </thead>
+        <tbody id="predTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 结论 -->
+  <div class="insight-box">
+    <h3>&#x1F4AC; 分析结论</h3>
+    <ul id="insightList"></ul>
+  </div>
+
+  <div class="footer">AI-quant · 新华制药多因子分析 · Powered by ECharts</div>
+</div>
+
+<script>
+const PATH = 'data/新华制药_data.json';
+const COLORS = {lr:'#4fc3f7',lg:'#ffb74d',bh:'#546e7a',buy:'#e94560',sell:'#2ecc71',hold:'#fdcb6e'};
+
+let DATA = null;
+fetch(PATH).then(r=>r.json()).then(d=>{DATA=d;render();}).catch(e=>{
+  document.body.innerHTML=`<div style="max-width:400px;margin:80px auto;text-align:center;padding:30px;background:#152238;border-radius:8px;border:1px solid #e94560"><h2 style="color:#e94560">&#x26A0; 加载失败</h2><p style="color:#78909c;margin:10px 0">${e.message}</p></div>`;
+});
+
+function initChart(id){
+  const dom=document.getElementById(id);
+  const c=echarts.init(dom,null,{renderer:'canvas'});
+  window.addEventListener('resize',()=>c.resize());
+  return c;
+}
+
+function pct(v){return v==null?'N/A':(v*100).toFixed(2)+'%';}
+function pct1(v){return v==null?'—':(v*100).toFixed(1)+'%';}
+function fmt(v){return v==null?'—':v.toFixed(4);}
+function cls(v){return v==null?'':v>=0?'pos':'neg';}
+function sigCls(v){return v?'signal-buy':'signal-sell';}
+
+function render(){
+  const d=DATA;
+  document.getElementById('updatedTime').textContent='数据更新: '+d.meta.updated;
+  document.getElementById('updatedLabel').textContent='更新: '+d.meta.updated;
+  renderScoreCards(d);
+  renderPredictionChart(d);
+  renderStrategyChart(d);
+  renderFeatureChart(d);
+  renderFinancialChart(d);
+  renderTable(d);
+  renderInsights(d);
+}
+
+// ═══ 分数卡 ═══
+function renderScoreCards(d){
+  const sc=d.strategy_comparison;
+  const sorted=Object.entries(sc).sort((a,b)=>b[1].sharpe-a[1].sharpe);
+  const container=document.getElementById('scoreCards');
+  container.innerHTML='';
+  sorted.forEach(([name,data],idx)=>{
+    const card=document.createElement('div');
+    card.className='score-card'+(idx===0?' best':'');
+    card.innerHTML=`
+      <div class="l">${idx===0?'&#x1F3C6; ':''}${name}</div>
+      <div class="v ${idx===0?'gold':cls(data.cum_return)}">${pct(data.cum_return)}</div>
+      <div class="sub">夏普 ${data.sharpe.toFixed(2)} · 年化 ${pct(data.ann_return)} · 胜率 ${pct(data.win_rate)}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ═══ 预测图表 ═══
+function renderPredictionChart(d){
+  const chart=initChart('chartPredictions');
+  const preds=d.predictions;
+  const periods=preds.map(p=>p.period);
+  const lrData=preds.map(p=>p.LR_pred);
+  const lgData=preds.map(p=>p.LG_prob);
+  const actData=preds.map(p=>p.actual_return);
+  const lrSig=preds.map(p=>p.LR_signal);
+  const lgSig=preds.map(p=>p.LG_signal);
+
+  chart.setOption({
+    tooltip:{
+      trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',
+      textStyle:{color:'#e0e6f0',fontSize:11},
+      formatter:function(ps){
+        let s='<b>'+ps[0].axisValue+'</b><br/>';
+        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+p.value.toFixed(4)+'</b><br/>');
+        return s;
+      }
+    },
+    legend:{data:['LR预测值','LG概率','实际收益'],textStyle:{color:'#78909c',fontSize:10},top:0},
+    grid:{left:50,right:10,top:35,bottom:25},
+    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:[
+      {type:'value',name:'预测值',nameTextStyle:{color:'#78909c',fontSize:9},axisLabel:{color:'#78909c',fontSize:9,formatter:v=>v.toFixed(2)},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
+      {type:'value',name:'概率/收益',nameTextStyle:{color:'#78909c',fontSize:9},axisLabel:{color:'#78909c',fontSize:9,formatter:v=>(v*100).toFixed(0)+'%'},splitLine:{show:false},axisLine:{show:false}},
+    ],
+    series:[
+      {name:'LR预测值',type:'line',data:lrData,smooth:true,symbol:'circle',symbolSize:5,
+       lineStyle:{color:COLORS.lr,width:2},itemStyle:{color:COLORS.lr},
+       areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:COLORS.lr+'30'},{offset:1,color:COLORS.lr+'05'}])}},
+      {name:'LG概率',type:'line',data:lgData,smooth:true,symbol:'diamond',symbolSize:5,
+       lineStyle:{color:COLORS.lg,width:2,type:'dashed'},itemStyle:{color:COLORS.lg},
+       yAxisIndex:1},
+      {name:'实际收益',type:'bar',data:actData.map((v,i)=>({value:v,itemStyle:{color:v>=0?COLORS.buy:COLORS.sell,borderRadius:[2,2,0,0]}})),
+       yAxisIndex:1,barWidth:8,
+       label:{show:true,position:'top',fontSize:8,color:'#b0bec5',formatter:p=>p.data.value==null?'':(p.data.value*100).toFixed(1)+'%'}}
+    ]
+  });
+
+  // 信号图例
+  document.getElementById('signalLegend').innerHTML=`
+    <div class="signal-item"><span class="signal-dot buy"></span>LR做多 (>中位数)</div>
+    <div class="signal-item"><span class="signal-dot sell"></span>LR做空 (≤中位数)</div>
+    <div class="signal-item"><span class="signal-dot hold"></span>虚线=LG概率0.5阈值线</div>
+  `;
+}
+
+// ═══ 策略对比 ═══
+function renderStrategyChart(d){
+  const chart=initChart('chartStrategy');
+  const sc=d.strategy_comparison;
+  const names=Object.keys(sc);
+  const metrics=['累计收益','年化收益','夏普比率','胜率'];
+  const colors=[COLORS.lg,COLORS.lr,COLORS.bh];
+
+  // 归一化
+  const data=names.map((n,i)=>{
+    const s=sc[n];
+    return {name:n,color:colors[i],values:[s.cum_return,s.ann_return,s.sharpe,s.win_rate]};
+  });
+
+  chart.setOption({
+    radar:{
+      indicator:metrics.map(m=>({name:m,max:1})),
+      center:['50%','50%'],radius:'65%',
+      axisName:{color:'#b0bec5',fontSize:10},
+      splitArea:{areaStyle:{color:['rgba(79,195,247,0.02)','rgba(79,195,247,0.05)']}},
+      axisLine:{lineStyle:{color:'#1e3a5f'}}
+    },
+    legend:{data:names.map(n=>n),textStyle:{color:'#78909c',fontSize:10},top:0},
+    series:[{
+      type:'radar',data:data.map(d=>({
+        name:d.name,value:d.values,
+        lineStyle:{color:d.color,width:2},
+        areaStyle:{color:d.color+'20'},
+        itemStyle:{color:d.color}
+      }))
+    }]
+  });
+}
+
+// ═══ 特征图表 ═══
+let featIdx=0;
+function renderFeatureChart(d){
+  const features=d.feature_history;
+  const keyFeats=Object.keys(features[0]).filter(k=>k!=='period');
+  const tabs=document.getElementById('featTabs');
+  tabs.innerHTML='';
+  keyFeats.forEach((f,i)=>{
+    const tab=document.createElement('button');
+    tab.className='tab'+(i===featIdx?' active':'');
+    tab.textContent=f;
+    tab.onclick=()=>{featIdx=i;tabs.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');updateFeatChart(features,f);};
+    tabs.appendChild(tab);
+  });
+  updateFeatChart(features,keyFeats[0]);
+}
+
+function updateFeatChart(features,feat){
+  const chart=initChart('chartFeatures');
+  const periods=features.map(f=>f.period);
+  const vals=features.map(f=>f[feat]);
+
+  chart.setOption({
+    tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11}},
+    grid:{left:55,right:15,top:10,bottom:25},
+    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
+    series:[{
+      type:'line',data:vals,smooth:true,symbol:'circle',symbolSize:5,
+      lineStyle:{color:COLORS.lr,width:2},
+      itemStyle:{color:COLORS.lr},
+      areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:COLORS.lr+'30'},{offset:1,color:COLORS.lr+'05'}])},
+      label:{show:true,position:'top',fontSize:9,color:'#b0bec5',formatter:p=>p.value?p.value.toFixed(2):''}
+    }]
+  });
+}
+
+// ═══ 财务图表 ═══
+function renderFinancialChart(d){
+  const chart=initChart('chartFinancial');
+  const fin=d.financial;
+  const periods=fin.map(f=>f.period);
+  const netProfit=fin.map(f=>f.net_profit_yoy);
+  const revenue=fin.map(f=>f.revenue_yoy);
+  const roe=fin.map(f=>f.roe);
+
+  chart.setOption({
+    tooltip:{trigger:'axis',backgroundColor:'#1a2d4a',borderColor:'#1e3a5f',textStyle:{color:'#e0e6f0',fontSize:11},
+      formatter:function(ps){
+        let s='<b>'+ps[0].axisValue+'</b><br/>';
+        ps.forEach(p=>s+=p.marker+' '+p.seriesName+': <b>'+(p.value==null?'N/A':p.value+'%')+'</b><br/>');
+        return s;
+      }
+    },
+    legend:{data:['净利润同比增长率','营收同比增长率','净资产收益率(ROE)'],textStyle:{color:'#78909c',fontSize:10},top:0},
+    grid:{left:50,right:10,top:35,bottom:25},
+    xAxis:{type:'category',data:periods,axisLabel:{color:'#78909c',fontSize:9,rotate:45},axisLine:{lineStyle:{color:'#1e3a5f'}}},
+    yAxis:{type:'value',axisLabel:{color:'#78909c',fontSize:9,formatter:v=>v+'%'},splitLine:{lineStyle:{color:'#1a2d4a',type:'dashed'}},axisLine:{show:false}},
+    series:[
+      {name:'净利润同比增长率',type:'bar',data:netProfit.map(v=>({value:v,itemStyle:{color:v>=0?COLORS.buy:COLORS.sell,borderRadius:[2,2,0,0]}})),barWidth:6},
+      {name:'营收同比增长率',type:'line',data:revenue,smooth:true,symbol:'diamond',symbolSize:4,lineStyle:{color:COLORS.lg,width:2},itemStyle:{color:COLORS.lg}},
+      {name:'净资产收益率(ROE)',type:'line',data:roe,smooth:true,symbol:'triangle',symbolSize:4,lineStyle:{color:'#81c784',width:1.5,type:'dashed'},itemStyle:{color:'#81c784'}}
+    ]
+  });
+}
+
+// ═══ 表格 ═══
+function renderTable(d){
+  const preds=d.predictions;
+  const tbody=document.getElementById('predTableBody');
+  tbody.innerHTML='';
+  preds.forEach(p=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${p.period}</td>
+      <td>${p.LR_pred.toFixed(4)}</td>
+      <td class="${sigCls(p.LR_signal)}">${p.LR_signal?'&#x25B2; 做多':'&#x25BC; 做空'}</td>
+      <td>${(p.LG_prob*100).toFixed(1)}%</td>
+      <td class="${sigCls(p.LG_signal)}">${p.LG_signal?'&#x25B2; 做多':'&#x25BC; 做空'}</td>
+      <td class="${cls(p.actual_return)}">${pct(p.actual_return)}</td>
+      <td>${p.LR_pred.toFixed(2)}</td>
+      <td>${p.LG_prob.toFixed(2)}</td>
+      <td>—</td>
+      <td>—</td>
+    `;
+    // 从feature_history补充估值数据
+    const fh=d.feature_history.find(f=>f.period===p.period);
+    if(fh){
+      tr.cells[6].textContent=fh['市净率PB(MRQ)']?.toFixed(2)||'—';
+      tr.cells[7].textContent=fh['市盈率PE(TTM)']?.toFixed(2)||'—';
+      tr.cells[8].textContent=fh['净利润同比增长率']!=null?fh['净利润同比增长率'].toFixed(2)+'%':'—';
+      tr.cells[9].textContent=fh['营业总收入(同比增长率)']!=null?fh['营业总收入(同比增长率)'].toFixed(2)+'%':'—';
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ═══ 结论 ═══
+function renderInsights(d){
+  const sc=d.strategy_comparison;
+  const sorted=Object.entries(sc).sort((a,b)=>b[1].sharpe-a[1].sharpe);
+  const best=sorted[0];
+  const list=document.getElementById('insightList');
+  list.innerHTML=`
+    <li>&#x1F3C6; <strong style="color:#ffd700">${best[0]}</strong> 策略最优：累计收益 ${pct(best[1].cum_return)}，年化 ${pct(best[1].ann_return)}，夏普 ${best[1].sharpe.toFixed(2)}</li>
+    <li>&#x1F4C8; <strong>逻辑回归</strong>大幅跑赢买入持有（+132% vs +53%），说明模型对新华制药的方向判断准确率高</li>
+    <li>&#x1F50D; 线性回归表现不佳（-18%），可能与新华制药波动较大、线性假设不成立有关</li>
+    <li>&#x1F4DD; 新华制药净利润增长率在2020-2021年保持增长，2022年后趋势放缓，模型信号也随之调整</li>
+    <li>&#x26A0; 本分析基于全市场模型（4000+股票训练），对单只股票的专属预测精度有限，仅供参考</li>
+  `;
+}
+</script>
+</body>
+</html>

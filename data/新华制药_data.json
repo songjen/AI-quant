@@ -1,0 +1,709 @@
+{
+  "meta": {
+    "name": "新华制药",
+    "code": "000756",
+    "market": "SZ",
+    "industry": "化学制药",
+    "updated": "2026-07-18 10:11",
+    "description": "新华制药（000756.SZ）是一家以化学原料药和制剂为主的制药企业"
+  },
+  "predictions": [
+    {
+      "period": "2018/03/31",
+      "LR_pred": 0.0959,
+      "LG_prob": 0.5663,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2018/06/30",
+      "LR_pred": 0.0907,
+      "LG_prob": 0.5501,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2018/09/30",
+      "LR_pred": 0.0891,
+      "LG_prob": 0.5393,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2018/12/31",
+      "LR_pred": 0.0931,
+      "LG_prob": 0.5449,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2019/03/31",
+      "LR_pred": 0.0897,
+      "LG_prob": 0.5417,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2019/06/30",
+      "LR_pred": 0.0927,
+      "LG_prob": 0.5442,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2019/09/30",
+      "LR_pred": 0.094,
+      "LG_prob": 0.558,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2019/12/31",
+      "LR_pred": 0.0913,
+      "LG_prob": 0.5652,
+      "actual_return": null,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2020/03/31",
+      "LR_pred": 0.1102,
+      "LG_prob": 0.5804,
+      "actual_return": -0.1562,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2020/06/30",
+      "LR_pred": 0.0974,
+      "LG_prob": 0.6087,
+      "actual_return": -0.0862,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2020/09/30",
+      "LR_pred": 0.0903,
+      "LG_prob": 0.5991,
+      "actual_return": 0.0075,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2020/12/31",
+      "LR_pred": 0.096,
+      "LG_prob": 0.6143,
+      "actual_return": -0.0917,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2021/03/31",
+      "LR_pred": 0.1005,
+      "LG_prob": 0.6275,
+      "actual_return": 0.0164,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2021/06/30",
+      "LR_pred": 0.1069,
+      "LG_prob": 0.6313,
+      "actual_return": -0.0762,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2021/09/30",
+      "LR_pred": 0.1083,
+      "LG_prob": 0.6418,
+      "actual_return": 0.4255,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2021/12/31",
+      "LR_pred": 0.0932,
+      "LG_prob": 0.5983,
+      "actual_return": -0.1206,
+      "LG_signal": 1,
+      "LR_signal": 1
+    },
+    {
+      "period": "2022/03/31",
+      "LR_pred": 0.0893,
+      "LG_prob": 0.6032,
+      "actual_return": 1.7978,
+      "LG_signal": 1,
+      "LR_signal": 0
+    },
+    {
+      "period": "2022/06/30",
+      "LR_pred": 0.045,
+      "LG_prob": 0.4911,
+      "actual_return": -0.3404,
+      "LG_signal": 0,
+      "LR_signal": 0
+    }
+  ],
+  "financial": [
+    {
+      "period": "2018/03/31",
+      "net_profit_yoy": 31.12,
+      "revenue_yoy": 9.42,
+      "eps": 0.11,
+      "bps": 5.26,
+      "roe": 2.71,
+      "net_profit_margin": 4.93,
+      "debt_ratio": 51.75
+    },
+    {
+      "period": "2018/06/30",
+      "net_profit_yoy": 15.54,
+      "revenue_yoy": 11.83,
+      "eps": 0.2,
+      "bps": 5.3,
+      "roe": 4.9,
+      "net_profit_margin": 4.98,
+      "debt_ratio": 52.8
+    },
+    {
+      "period": "2018/09/30",
+      "net_profit_yoy": 11.32,
+      "revenue_yoy": 14.68,
+      "eps": 0.31,
+      "bps": 4.22,
+      "roe": 7.57,
+      "net_profit_margin": 5.34,
+      "debt_ratio": 51.75
+    },
+    {
+      "period": "2018/12/31",
+      "net_profit_yoy": 21.82,
+      "revenue_yoy": 15.33,
+      "eps": 0.41,
+      "bps": 4.32,
+      "roe": 9.77,
+      "net_profit_margin": 5.27,
+      "debt_ratio": 52.73
+    },
+    {
+      "period": "2019/03/31",
+      "net_profit_yoy": 12.57,
+      "revenue_yoy": 14.14,
+      "eps": 0.12,
+      "bps": 4.49,
+      "roe": 2.76,
+      "net_profit_margin": 5.06,
+      "debt_ratio": 51.88
+    },
+    {
+      "period": "2019/06/30",
+      "net_profit_yoy": 20.87,
+      "revenue_yoy": 15.34,
+      "eps": 0.24,
+      "bps": 4.52,
+      "roe": 5.31,
+      "net_profit_margin": 5.19,
+      "debt_ratio": 51.86
+    },
+    {
+      "period": "2019/09/30",
+      "net_profit_yoy": 24.74,
+      "revenue_yoy": 11.1,
+      "eps": 0.39,
+      "bps": 4.65,
+      "roe": 8.53,
+      "net_profit_margin": 5.81,
+      "debt_ratio": 50.1
+    },
+    {
+      "period": "2019/12/31",
+      "net_profit_yoy": 17.49,
+      "revenue_yoy": 6.89,
+      "eps": 0.48,
+      "bps": 4.77,
+      "roe": 10.58,
+      "net_profit_margin": 5.76,
+      "debt_ratio": 51.67
+    },
+    {
+      "period": "2020/03/31",
+      "net_profit_yoy": 13.4,
+      "revenue_yoy": 4.67,
+      "eps": 0.14,
+      "bps": 4.85,
+      "roe": 2.88,
+      "net_profit_margin": 5.48,
+      "debt_ratio": 55.06
+    },
+    {
+      "period": "2020/06/30",
+      "net_profit_yoy": 15.56,
+      "revenue_yoy": 5.22,
+      "eps": 0.28,
+      "bps": 4.86,
+      "roe": 5.68,
+      "net_profit_margin": 5.72,
+      "debt_ratio": 53.61
+    },
+    {
+      "period": "2020/09/30",
+      "net_profit_yoy": 2.03,
+      "revenue_yoy": 4.69,
+      "eps": 0.4,
+      "bps": 5.0,
+      "roe": 8.06,
+      "net_profit_margin": 5.76,
+      "debt_ratio": 51.55
+    },
+    {
+      "period": "2020/12/31",
+      "net_profit_yoy": 8.3,
+      "revenue_yoy": 7.13,
+      "eps": 0.52,
+      "bps": 5.18,
+      "roe": 10.5,
+      "net_profit_margin": 5.78,
+      "debt_ratio": 52.19
+    },
+    {
+      "period": "2021/03/31",
+      "net_profit_yoy": 16.21,
+      "revenue_yoy": 3.64,
+      "eps": 0.16,
+      "bps": 5.35,
+      "roe": 3.04,
+      "net_profit_margin": 5.98,
+      "debt_ratio": 51.43
+    },
+    {
+      "period": "2021/06/30",
+      "net_profit_yoy": 16.12,
+      "revenue_yoy": 8.07,
+      "eps": 0.32,
+      "bps": 5.31,
+      "roe": 6.0,
+      "net_profit_margin": 5.89,
+      "debt_ratio": 51.53
+    },
+    {
+      "period": "2021/09/30",
+      "net_profit_yoy": 15.96,
+      "revenue_yoy": 6.5,
+      "eps": 0.46,
+      "bps": 5.43,
+      "roe": 8.54,
+      "net_profit_margin": 6.02,
+      "debt_ratio": 50.09
+    },
+    {
+      "period": "2021/12/31",
+      "net_profit_yoy": 7.29,
+      "revenue_yoy": 9.23,
+      "eps": 0.56,
+      "bps": 5.53,
+      "roe": 10.38,
+      "net_profit_margin": 5.52,
+      "debt_ratio": 50.2
+    },
+    {
+      "period": "2022/03/31",
+      "net_profit_yoy": 8.2,
+      "revenue_yoy": 3.57,
+      "eps": 0.17,
+      "bps": 6.08,
+      "roe": 3.07,
+      "net_profit_margin": 5.98,
+      "debt_ratio": 47.26
+    },
+    {
+      "period": "2022/06/30",
+      "net_profit_yoy": -2.85,
+      "revenue_yoy": 3.19,
+      "eps": 0.3,
+      "bps": 5.79,
+      "roe": 5.23,
+      "net_profit_margin": 5.42,
+      "debt_ratio": 48.76
+    },
+    {
+      "period": "2022/09/30",
+      "net_profit_yoy": 2.84,
+      "revenue_yoy": 10.39,
+      "eps": 0.45,
+      "bps": 5.93,
+      "roe": 7.77,
+      "net_profit_margin": 5.56,
+      "debt_ratio": 48.83
+    },
+    {
+      "period": "2022/12/31",
+      "net_profit_yoy": 17.94,
+      "revenue_yoy": 14.37,
+      "eps": 0.62,
+      "bps": 6.16,
+      "roe": 10.62,
+      "net_profit_margin": 5.68,
+      "debt_ratio": 47.37
+    },
+    {
+      "period": "2023/03/31",
+      "net_profit_yoy": 39.72,
+      "revenue_yoy": 44.15,
+      "eps": 0.23,
+      "bps": 6.42,
+      "roe": 3.59,
+      "net_profit_margin": 5.83,
+      "debt_ratio": 42.96
+    },
+    {
+      "period": "2023/06/30",
+      "net_profit_yoy": 38.8,
+      "revenue_yoy": 27.51,
+      "eps": 0.4,
+      "bps": 6.42,
+      "roe": 6.27,
+      "net_profit_margin": 5.9,
+      "debt_ratio": 43.66
+    },
+    {
+      "period": "2023/09/30",
+      "net_profit_yoy": 33.58,
+      "revenue_yoy": 19.15,
+      "eps": 0.58,
+      "bps": 6.64,
+      "roe": 9.05,
+      "net_profit_margin": 6.16,
+      "debt_ratio": 40.66
+    },
+    {
+      "period": "2023/12/31",
+      "net_profit_yoy": 20.79,
+      "revenue_yoy": 7.97,
+      "eps": 0.74,
+      "bps": 6.75,
+      "roe": 11.41,
+      "net_profit_margin": 6.25,
+      "debt_ratio": 42.36
+    },
+    {
+      "period": "2024/03/31",
+      "net_profit_yoy": -6.41,
+      "revenue_yoy": -6.25,
+      "eps": 0.21,
+      "bps": 6.98,
+      "roe": 3.04,
+      "net_profit_margin": 5.87,
+      "debt_ratio": 41.06
+    },
+    {
+      "period": "2024/06/30",
+      "net_profit_yoy": -1.63,
+      "revenue_yoy": 1.29,
+      "eps": 0.39,
+      "bps": 6.97,
+      "roe": 5.58,
+      "net_profit_margin": 5.76,
+      "debt_ratio": 43.04
+    },
+    {
+      "period": "2024/09/30",
+      "net_profit_yoy": -12.22,
+      "revenue_yoy": 3.64,
+      "eps": 0.5,
+      "bps": 7.14,
+      "roe": 7.21,
+      "net_profit_margin": 5.28,
+      "debt_ratio": 42.25
+    },
+    {
+      "period": "2024/12/31",
+      "net_profit_yoy": -5.33,
+      "revenue_yoy": 4.51,
+      "eps": 0.69,
+      "bps": 7.31,
+      "roe": 9.79,
+      "net_profit_margin": 5.75,
+      "debt_ratio": 42.15
+    },
+    {
+      "period": "2025/03/31",
+      "net_profit_yoy": -20.99,
+      "revenue_yoy": -1.81,
+      "eps": 0.15,
+      "bps": 7.47,
+      "roe": 2.21,
+      "net_profit_margin": 4.76,
+      "debt_ratio": 41.86
+    },
+    {
+      "period": "2025/06/30",
+      "net_profit_yoy": -15.69,
+      "revenue_yoy": -1.98,
+      "eps": 0.32,
+      "bps": 7.43,
+      "roe": 4.33,
+      "net_profit_margin": 4.98,
+      "debt_ratio": 41.92
+    },
+    {
+      "period": "2025/09/30",
+      "net_profit_yoy": -25.53,
+      "revenue_yoy": 0.42,
+      "eps": 0.37,
+      "bps": 7.46,
+      "roe": 5.01,
+      "net_profit_margin": 3.95,
+      "debt_ratio": 40.72
+    },
+    {
+      "period": "2025/12/31",
+      "net_profit_yoy": -38.32,
+      "revenue_yoy": 3.41,
+      "eps": 0.42,
+      "bps": 7.55,
+      "roe": 5.66,
+      "net_profit_margin": 3.5,
+      "debt_ratio": 40.61
+    },
+    {
+      "period": "2026/03/31",
+      "net_profit_yoy": -25.15,
+      "revenue_yoy": -0.28,
+      "eps": 0.12,
+      "bps": 7.68,
+      "roe": 1.59,
+      "net_profit_margin": 3.44,
+      "debt_ratio": 38.3
+    }
+  ],
+  "signals": {},
+  "feature_history": [
+    {
+      "period": "2018/03/31",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 31.12,
+      "营业总收入(同比增长率)": 9.42,
+      "value_score": 0.5,
+      "growth_score": 0.5288
+    },
+    {
+      "period": "2018/06/30",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 15.54,
+      "营业总收入(同比增长率)": 11.83,
+      "value_score": 0.5,
+      "growth_score": 0.5142
+    },
+    {
+      "period": "2018/09/30",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 11.32,
+      "营业总收入(同比增长率)": 14.68,
+      "value_score": 0.5,
+      "growth_score": 0.5156
+    },
+    {
+      "period": "2018/12/31",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 21.82,
+      "营业总收入(同比增长率)": 15.33,
+      "value_score": 0.5,
+      "growth_score": 0.5349
+    },
+    {
+      "period": "2019/03/31",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 12.57,
+      "营业总收入(同比增长率)": 14.14,
+      "value_score": 0.5,
+      "growth_score": 0.5165
+    },
+    {
+      "period": "2019/06/30",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 20.87,
+      "营业总收入(同比增长率)": 15.34,
+      "value_score": 0.5,
+      "growth_score": 0.5333
+    },
+    {
+      "period": "2019/09/30",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 24.74,
+      "营业总收入(同比增长率)": 11.1,
+      "value_score": 0.5,
+      "growth_score": 0.526
+    },
+    {
+      "period": "2019/12/31",
+      "市净率PB(MRQ)": 2.5299,
+      "市盈率PE(TTM)": 28.2251,
+      "市销率PS(TTM)": 2.9003,
+      "MV": 54.6,
+      "净利润同比增长率": 17.49,
+      "营业总收入(同比增长率)": 6.89,
+      "value_score": 0.5,
+      "growth_score": 0.5012
+    },
+    {
+      "period": "2020/03/31",
+      "市净率PB(MRQ)": 2.5616,
+      "市盈率PE(TTM)": 25.354,
+      "市销率PS(TTM)": 1.3566,
+      "MV": 59.9376,
+      "净利润同比增长率": 13.4,
+      "营业总收入(同比增长率)": 4.67,
+      "value_score": 0.544,
+      "growth_score": 0.5081
+    },
+    {
+      "period": "2020/06/30",
+      "市净率PB(MRQ)": 2.1275,
+      "市盈率PE(TTM)": 20.6481,
+      "市销率PS(TTM)": 1.127,
+      "MV": 51.533,
+      "净利润同比增长率": 15.56,
+      "营业总收入(同比增长率)": 5.22,
+      "value_score": 0.6187,
+      "growth_score": 0.5137
+    },
+    {
+      "period": "2020/09/30",
+      "市净率PB(MRQ)": 1.9148,
+      "市盈率PE(TTM)": 17.8246,
+      "市销率PS(TTM)": 0.9996,
+      "MV": 46.2177,
+      "净利润同比增长率": 2.03,
+      "营业总收入(同比增长率)": 4.69,
+      "value_score": 0.659,
+      "growth_score": 0.4453
+    },
+    {
+      "period": "2020/12/31",
+      "市净率PB(MRQ)": 1.8751,
+      "市盈率PE(TTM)": 18.9735,
+      "市销率PS(TTM)": 0.9979,
+      "MV": 45.8657,
+      "净利润同比增长率": 8.3,
+      "营业总收入(同比增长率)": 7.13,
+      "value_score": 0.6617,
+      "growth_score": 0.4834
+    },
+    {
+      "period": "2021/03/31",
+      "市净率PB(MRQ)": 1.658,
+      "市盈率PE(TTM)": 16.4538,
+      "市销率PS(TTM)": 0.89,
+      "MV": 44.1718,
+      "净利润同比增长率": 16.21,
+      "营业总收入(同比增长率)": 3.64,
+      "value_score": 0.6974,
+      "growth_score": 0.502
+    },
+    {
+      "period": "2021/06/30",
+      "市净率PB(MRQ)": 1.6172,
+      "市盈率PE(TTM)": 16.0337,
+      "市销率PS(TTM)": 0.8954,
+      "MV": 43.9008,
+      "净利润同比增长率": 16.12,
+      "营业总收入(同比增长率)": 8.07,
+      "value_score": 0.7001,
+      "growth_score": 0.5177
+    },
+    {
+      "period": "2021/09/30",
+      "市净率PB(MRQ)": 1.4788,
+      "市盈率PE(TTM)": 13.966,
+      "市销率PS(TTM)": 0.7854,
+      "MV": 40.195,
+      "净利润同比增长率": 15.96,
+      "营业总收入(同比增长率)": 6.5,
+      "value_score": 0.7281,
+      "growth_score": 0.4946
+    },
+    {
+      "period": "2021/12/31",
+      "市净率PB(MRQ)": 2.0609,
+      "市盈率PE(TTM)": 19.2795,
+      "市销率PS(TTM)": 1.113,
+      "MV": 55.7955,
+      "净利润同比增长率": 7.29,
+      "营业总收入(同比增长率)": 9.23,
+      "value_score": 0.6,
+      "growth_score": 0.4721
+    },
+    {
+      "period": "2022/03/31",
+      "市净率PB(MRQ)": 1.7948,
+      "市盈率PE(TTM)": 17.8573,
+      "市销率PS(TTM)": 0.9488,
+      "MV": 49.5059,
+      "净利润同比增长率": 8.2,
+      "营业总收入(同比增长率)": 3.57,
+      "value_score": 0.6358,
+      "growth_score": 0.4555
+    },
+    {
+      "period": "2022/06/30",
+      "市净率PB(MRQ)": 4.7902,
+      "市盈率PE(TTM)": 51.6707,
+      "市销率PS(TTM)": 2.7834,
+      "MV": 141.5544,
+      "净利润同比增长率": -2.85,
+      "营业总收入(同比增长率)": 3.19,
+      "value_score": 0.2624,
+      "growth_score": 0.3951
+    }
+  ],
+  "strategy_comparison": {
+    "线性回归": {
+      "cum_return": -0.1756,
+      "ann_return": -0.1045,
+      "sharpe": -0.31,
+      "win_rate": 0.29
+    },
+    "逻辑回归": {
+      "cum_return": 1.3237,
+      "ann_return": 0.4546,
+      "sharpe": 0.35,
+      "win_rate": 0.44
+    },
+    "买入持有": {
+      "cum_return": 0.5327,
+      "ann_return": 0.1863,
+      "sharpe": 0.14,
+      "win_rate": 0.4
+    }
+  }
+}
