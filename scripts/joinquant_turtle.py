@@ -1,17 +1,19 @@
 """
-海龟交易法则 — 聚宽 (JoinQuant) v2.0
+海龟交易法则 — 聚宽版 (JS版对齐) v3.0
 ========================================
-适用平台: https://www.joinquant.com
+完全对齐 https://songjen.github.io/AI-quant/turtle.html 的JS版本逻辑
 
-核心规则:
-  - 入场: 收盘价 > 过去 N 日最高点 (唐奇安通道突破)
-  - 加仓: 每上涨 0.5N 加仓一次, 最多 4 次
-  - 止损: 入场价向下 2N
-  - 出场: 收盘价 < 过去 M 日最低点
+核心差异(对比v2):
+  1. 入场: high[t] > 唐奇安上轨 (JS原版, 用最高价)
+  2. 入场价: max(突破价, 开盘价) × (1+滑点)
+  3. ATR: Wilder平滑 (alpha=1/period, 不是EMA)
+  4. 仓位: 现金 × 风险比例 / (止损倍数 × N)  (JS原版公式)
+  5. 加仓: high[t] > 上次入场价 + add_step × N (用最高价)
+  6. 止损: 按最新单元的止损价 (不是按均价)
 """
 
 # ============================================================
-# 策略参数 (回测前可在聚宽UI中修改)
+# 策略参数
 # ============================================================
 g.entry_period = 20          # 入场突破周期
 g.exit_period = 10           # 出场突破周期
@@ -20,32 +22,31 @@ g.risk_per_unit = 0.01       # 单 Unit 风险比例 (账户 1%)
 g.max_units = 4              # 最大加仓次数
 g.add_step = 0.5             # 加仓间隔 (0.5N)
 g.stop_loss_n = 2.0          # 止损倍数 (2N)
+g.slippage = 0.001           # 滑点 0.1%
+g.buy_cost = 0.0003          # 买入费率 万3
+g.sell_cost = 0.0008         # 卖出费率 (含印花税) 万8
 
 
 def initialize(context):
     """策略初始化"""
-    # ===== 选择回测标的 =====
-    g.stock = '000756.XSHE'   # 新华制药
-    # g.stock = '605507.XSHG' # 国邦医药
+    g.stock = '605507.XSHG'  # 国邦医药
+    # g.stock = '000756.XSHE' # 新华制药
     # g.stock = '600079.XSHG' # ST人福
 
-    # 手续费
     set_order_cost(OrderCost(open_tax=0, close_tax=0.001,
                              open_commission=0.0003,
                              close_commission=0.0003,
                              close_today_commission=0,
                              min_commission=5), type='stock')
 
-    # 运行主逻辑 (每天)
     run_daily(main_logic, time='every_bar')
 
-    # 状态变量
-    g.position = 0
-    g.entry_prices = []
+    # 状态变量 — 使用数组跟踪每一单元的详细信息
+    g.units = []        # [{shares, entry_price, stop_price, entry_n, entry_idx}, ...]
+    g.position = 0      # 持仓总股数
+    g.equity_peak = context.portfolio.total_value  # 用于记录峰值
 
-    log.info(f"[初始化] 标的={g.stock} 策略参数: "
-             f"入场={g.entry_period}日 出场={g.exit_period}日 "
-             f"ATR={g.atr_period}日 止损={g.stop_loss_n}N")
+    log.info(f"[初始化] 标的={g.stock} 对齐JS版海龟策略")
 
 
 def main_logic(context):
@@ -53,11 +54,11 @@ def main_logic(context):
     stock = g.stock
 
     # ================================================================
-    # STEP 1: 获取数据 (保证数据量足够)
+    # STEP 1: 获取数据
     # ================================================================
     need = max(g.entry_period, g.exit_period, g.atr_period) + 30
     df = attribute_history(stock, need, '1d',
-                           ['close', 'high', 'low'],
+                           ['close', 'high', 'low', 'open'],
                            skip_paused=True, fq='pre')
 
     if df is None or len(df) < need:
@@ -66,27 +67,27 @@ def main_logic(context):
     close = df['close'].values
     high = df['high'].values
     low = df['low'].values
+    open_p = df['open'].values
     dates = df.index
 
-    # 今天的值
+    today_open = open_p[-1]
     today_close = close[-1]
     today_high = high[-1]
     today_low = low[-1]
 
     # ================================================================
-    # STEP 2: 计算唐奇安通道 + ATR (全用昨天数据, 防未来函数)
+    # STEP 2: 计算指标 (对齐JS版)
     # ================================================================
+    # 唐奇安通道 — 取过去N日(不含今日)的最高/最低
     entry_high = 0.0
     exit_low = 0.0
-    n_value = 0.0
-
     if len(close) >= g.entry_period + 1:
-        # 昨日之前的 entry_period 日最高
         entry_high = max(high[-(g.entry_period+1):-1])
     if len(close) >= g.exit_period + 1:
         exit_low = min(low[-(g.exit_period+1):-1])
 
-    # ATR: 用昨天及之前的数据计算
+    # ATR — Wilder平滑 (JS版算法)
+    n_value = 0.0
     if len(close) >= g.atr_period + 2:
         tr_list = []
         for i in range(-g.atr_period-1, 0):
@@ -94,11 +95,10 @@ def main_logic(context):
                      abs(high[i] - close[i-1]),
                      abs(low[i] - close[i-1]))
             tr_list.append(tr)
-        # 简单EMA
-        alpha = 2.0 / (g.atr_period + 1)
-        n_value = tr_list[0]
-        for tr_val in tr_list[1:]:
-            n_value = tr_val * alpha + n_value * (1 - alpha)
+        # Wilder平滑: first = SMA, then = (prev*(p-1)+TR)/p
+        n_value = sum(tr_list[:g.atr_period]) / g.atr_period
+        for tr_val in tr_list[g.atr_period:]:
+            n_value = (n_value * (g.atr_period - 1) + tr_val) / g.atr_period
     else:
         return
 
@@ -106,98 +106,102 @@ def main_logic(context):
         return
 
     # ================================================================
-    # STEP 3: 获取当前持仓
+    # STEP 3: 获取持仓
     # ================================================================
     position = context.portfolio.positions.get(stock)
     current_shares = position.total_amount if position else 0
 
-    # ================================================================
-    # STEP 4: 调试日志 (所有关键信息每天打印)
-    # ================================================================
-    if len(close) >= g.entry_period + 1:
-        can_buy = today_close > entry_high
-        can_sell = g.position > 0 and today_close < exit_low
-        log.info(
-            f"[信号] {dates[-1].strftime('%Y-%m-%d')} "
-            f"close={today_close:.2f} "
-            f"entry_high={entry_high:.2f} "
-            f"exit_low={exit_low:.2f} "
-            f"N={n_value:.3f} "
-            f"持仓单位={g.position} "
-            f"持仓股数={current_shares} "
-            f"现金={context.portfolio.available_cash:.0f} "
-            f"可以买入?={can_buy} "
-            f"可以卖出?={can_sell}"
-        )
+    # 如果聚宽持仓为0但我们的状态还有，说明外部平仓了，重置
+    if current_shares == 0:
+        g.units = []
+        g.position = 0
 
     # ================================================================
-    # STEP 5: 止损检查
+    # STEP 4: 止损检查 (优先级最高) — 用最新单元的止损价
     # ================================================================
-    if g.position > 0 and len(g.entry_prices) > 0:
-        last_entry = g.entry_prices[-1]
-        stop_price = last_entry - g.stop_loss_n * n_value
-        if today_low <= stop_price:
+    if g.position > 0 and len(g.units) > 0:
+        last_unit = g.units[-1]
+        current_stop = last_unit['stop_price']
+        if today_low <= current_stop:
+            # 按止损价卖出 (滑点扣减)
+            sell_price = current_stop * (1 - g.slippage)
             order_target_value(stock, 0)
-            log.info(f"[执行 - 止损] {dates[-1].strftime('%Y-%m-%d')} "
-                     f"止损价={stop_price:.2f} 持仓={current_shares}")
+            log.info(f"[执行-止损] {dates[-1].strftime('%Y-%m-%d')} "
+                     f"止损价={current_stop:.2f} 成交价={sell_price:.2f} "
+                     f"持仓={current_shares} 单元数={len(g.units)}")
+            g.units = []
             g.position = 0
-            g.entry_prices = []
             return
 
     # ================================================================
-    # STEP 6: 出场检查
+    # STEP 5: 出场检查 — 收盘价跌破唐奇安下轨
     # ================================================================
     if g.position > 0 and current_shares > 0:
         if today_close < exit_low:
+            sell_price = today_close * (1 - g.slippage)
             order_target_value(stock, 0)
-            log.info(f"[执行 - 出场] {dates[-1].strftime('%Y-%m-%d')} "
+            log.info(f"[执行-出场] {dates[-1].strftime('%Y-%m-%d')} "
                      f"跌破{g.exit_period}日低点 {exit_low:.2f} "
-                     f"持仓={current_shares}")
+                     f"成交价={sell_price:.2f} 持仓={current_shares}")
+            g.units = []
             g.position = 0
-            g.entry_prices = []
             return
 
     # ================================================================
-    # STEP 7: 入场/加仓
+    # STEP 6: 入场/加仓 (用最高价判断 — 对齐JS版)
     # ================================================================
     should_buy = False
     buy_reason = ""
+    entry_price = 0.0
+    buy_shares = 0
 
-    if g.position == 0:
-        # 首次入场
-        if today_close > entry_high:
+    if g.position == 0 and len(g.units) == 0:
+        # 首次入场: 最高价突破唐奇安上轨
+        if today_high > entry_high:
             should_buy = True
             buy_reason = f"突破{g.entry_period}日高点{entry_high:.2f}"
-    elif g.position < g.max_units:
-        # 加仓: 价格比上次入场价上涨 0.5N
-        last_entry = g.entry_prices[-1]
-        target = last_entry + g.add_step * n_value
-        if today_close > target:
+            # 入场价 = max(突破价, 开盘价) × (1+滑点) — 对齐JS版
+            entry_price = max(entry_high, today_open) * (1 + g.slippage)
+    elif len(g.units) < g.max_units:
+        # 加仓: 最高价 > 上次入场价 + 0.5N (对齐JS版)
+        last_unit = g.units[-1]
+        addon_price = last_unit['entry_price'] + g.add_step * n_value
+        if today_high >= addon_price:
             should_buy = True
-            buy_reason = f"加仓第{g.position+1}次 目标{target:.2f}"
+            buy_reason = f"加仓第{len(g.units)+1}次 目标{addon_price:.2f}"
+            entry_price = addon_price * (1 + g.slippage)
 
     # ================================================================
-    # STEP 8: 执行买入
+    # STEP 7: 计算仓位并执行买入 (对齐JS版公式)
     # ================================================================
-    if should_buy:
-        # 计算 1 Unit = 账户 1% 风险对应的股数
-        unit_shares = int(context.portfolio.total_value * g.risk_per_unit / n_value)
-        unit_shares = max(100, (unit_shares // 100) * 100)
-        cost = today_close * unit_shares
+    if should_buy and entry_price > 0:
+        # JS版仓位公式: shares = cash × riskPct / (stopMult × N)
+        cash = context.portfolio.available_cash
+        risk_amount = cash * g.risk_per_unit
+        stop_distance = g.stop_loss_n * n_value
+        if stop_distance > 0:
+            buy_shares = int(risk_amount / stop_distance / 100) * 100
+            if buy_shares < 100:
+                buy_shares = 100
 
-        if context.portfolio.available_cash >= cost:
-            order_value(stock, cost)
-            g.position += 1
-            g.entry_prices.append(today_close)
-            log.info(
-                f"[执行 - 买入] {dates[-1].strftime('%Y-%m-%d')} "
-                f"价格={today_close:.2f} "
-                f"股数={unit_shares} "
-                f"金额={cost:.0f} "
-                f"Unit={g.position}/{g.max_units} "
-                f"买入原因={buy_reason}"
-            )
-        else:
-            log.info(
-                f"[跳过] 现金不足: 需要{cost:.0f} 可用{context.portfolio.available_cash:.0f}"
-            )
+            cost = buy_shares * entry_price
+            if cash >= cost and buy_shares > 0:
+                order_value(stock, cost)
+                g.position += buy_shares
+                # 记录本次单元
+                stop_price = entry_price - stop_distance
+                g.units.append({
+                    'shares': buy_shares,
+                    'entry_price': entry_price,
+                    'stop_price': stop_price,
+                    'entry_n': n_value,
+                })
+                log.info(
+                    f"[执行-买入] {dates[-1].strftime('%Y-%m-%d')} "
+                    f"价格={entry_price:.2f} 股数={buy_shares} "
+                    f"金额={cost:.0f} 单元={len(g.units)}/{g.max_units} "
+                    f"止损={stop_price:.2f} ({g.stop_loss_n}N) "
+                    f"原因={buy_reason}"
+                )
+            else:
+                log.info(f"[跳过] 现金不足: 需要{cost:.0f} 可用{cash:.0f}")
