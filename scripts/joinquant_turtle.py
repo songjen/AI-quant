@@ -98,7 +98,7 @@ def main_logic(context):
                      f"触发价={current_stop:.2f}")
             g.units = []
             g.position = 0
-            return
+            # 不 return! JS版在止损后同一根K线继续检查入场
 
     # === 出场检查 (收盘价<离场下轨) ===
     if g.position > 0 and current_shares > 0:
@@ -108,7 +108,7 @@ def main_logic(context):
                      f"跌破{g.exit_period}日低点{exit_low:.2f}")
             g.units = []
             g.position = 0
-            return
+            # 不 return! JS版在出场后同一根K线继续检查入场
 
     # === 入场/加仓 ===
     should_buy = False
