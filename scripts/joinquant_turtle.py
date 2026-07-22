@@ -100,9 +100,11 @@ def main_logic(context):
         return
 
     # === 持仓同步 ===
+    # 用 positions.keys() 判断持仓，避免空仓日访问 positions 触发聚宽兼容 WARNING
     positions = context.portfolio.positions
-    pos = positions.get(stock) if stock in positions else None
-    current_shares = pos.total_amount if pos else 0
+    held_keys = list(positions.keys())
+    pos = positions[stock] if stock in held_keys else None
+    current_shares = pos.total_amount if (pos and pos.total_amount > 0) else 0
     if current_shares == 0:
         g.units = []
         g.position = 0
