@@ -369,9 +369,9 @@ function calcATR(ohlcv, period) {
   if(n < period + 1) return atr;
   // TR = max(H-L, |H-PrevC|, |L-PrevC|)
   const tr = new Array(n).fill(0);
-  tr[0] = ohlcv[0][1] - ohlcv[0][2]; // H-L
+  tr[0] = ohlcv[0][3] - ohlcv[0][2]; // H-L  (数据格式: [open, close, low, high, volume])
   for(let i=1; i<n; i++) {
-    const h = ohlcv[i][1], l = ohlcv[i][2], pc = ohlcv[i-1][3];
+    const h = ohlcv[i][3], l = ohlcv[i][2], pc = ohlcv[i-1][1]; // high, low, prev close
     tr[i] = Math.max(h - l, Math.abs(h - pc), Math.abs(l - pc));
   }
   // First ATR = simple average of first `period` TRs
@@ -394,7 +394,7 @@ function calcDonchian(ohlcv, period, type) {
     let val;
     if(type === 'upper') {
       val = -Infinity;
-      for(let j=i-period; j<i; j++) val = Math.max(val, ohlcv[j][1]);
+      for(let j=i-period; j<i; j++) val = Math.max(val, ohlcv[j][3]); // high
     } else {
       val = Infinity;
       for(let j=i-period; j<i; j++) val = Math.min(val, ohlcv[j][2]);
@@ -436,8 +436,8 @@ function runTurtleBacktest(code, params) {
 
   for(let i=startIdx; i<n; i++) {
     const d = dates[i];
-    const o = ohlcv[i][0], h = ohlcv[i][1], l = ohlcv[i][2], c = ohlcv[i][3], v = ohlcv[i][4];
-    const prevC = ohlcv[i-1][3];
+    const o = ohlcv[i][0], c = ohlcv[i][1], l = ohlcv[i][2], h = ohlcv[i][3], v = ohlcv[i][4];
+    const prevC = ohlcv[i-1][1];
     const currentATR = atr[i];
     const entryUpper = dcEntryUpper[i];
     const exitLower = dcExitLower[i];
@@ -918,7 +918,7 @@ function renderATRChart() {
 
   for(let i=startIdx; i<totalLen; i++) {
     atrData.push(r.atr[i] !== null ? parseFloat(r.atr[i].toFixed(3)) : null);
-    priceData.push(parseFloat(data.ohlcv[i][3].toFixed(2)));
+    priceData.push(parseFloat(data.ohlcv[i][1].toFixed(2)));
   }
 
   charts.atr.setOption({
