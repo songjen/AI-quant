@@ -1,10 +1,10 @@
 """
-海龟交易法则 — 完全对齐JS版 v4.1
+海龟交易法则 — 完全对齐JS版 v4.2
 ===================================
 修复:
 - order_value + 佣金双重扣除问题，改用 order() 精确控制股数
 - 止损/出场后不 return，对齐 JS 同一根 K 线可再入场
-- ATR 计算改为从数据起点逐步 Wilder 平滑，与 JS 完全一致
+- ATR 计算改为从策略起始日逐步 Wilder 平滑，与 JS 全历史口径一致
 - 卖出费率对齐 JS 的 0.08%（印花税+佣金合计）
 - 标的改为 000756.XSHE 与当前调试日志一致
 """
@@ -36,26 +36,36 @@ def initialize(context):
     g.units = []
     g.position = 0
 
+    # 记录策略起始日，用于后续拉取全历史数据（对齐 JS 从数据起点算 ATR）
+    g.start_date = context.run_params.start_date
+
     log.info(f"[初始化] 标的={g.stock}")
 
 
 def main_logic(context):
     stock = g.stock
 
-    need = max(g.entry_period, g.exit_period, g.atr_period) + 30
-    df = attribute_history(stock, need, '1d',
-                           ['close', 'high', 'low', 'open'],
-                           skip_paused=True, fq='pre')
-    if df is None or len(df) < need:
+    # === 拉取从策略起始日到昨日的全历史 ===
+    # JS 版 turtle.html 从 2018-02-27 的数据起点开始算 Wilder ATR；
+    # 聚宽版原来只取最近 50 根，导致 ATR 每天被重置，全历史结果与 JS 严重偏离。
+    # 这里改为拉取策略开始至今的全部历史，确保 ATR 与唐奇安通道和 JS 同口径。
+    hist_end = context.previous_date
+    hist_start = g.start_date
+    df_hist = get_price(stock, start_date=hist_start, end_date=hist_end,
+                        frequency='1d', fields=['close', 'high', 'low', 'open'],
+                        skip_paused=True, fq='pre')
+    if df_hist is None or len(df_hist) < max(g.entry_period, g.exit_period, g.atr_period) + 2:
         return
 
-    close = df['close'].values
-    high = df['high'].values
-    low = df['low'].values
-    open_p = df['open'].values
-    dates = df.index
+    close = df_hist['close'].values
+    high = df_hist['high'].values
+    low = df_hist['low'].values
+    open_p = df_hist['open'].values
+    dates = df_hist.index
 
-    today_open = open_p[-1]
+    # 今天的开盘价用于计算理论入场价（聚宽 every_bar 在开盘执行，成交价接近 today_open）
+    today_open = get_current_data()[stock].day_open
+    # 昨日收盘价/最高/最低用于判断离场与突破（对齐 JS 用上一根 bar 收盘后决策）
     today_close = close[-1]
     today_high = high[-1]
     today_low = low[-1]
@@ -69,7 +79,7 @@ def main_logic(context):
         exit_low = min(low[-(g.exit_period+1):-1])
 
     # === ATR — Wilder平滑 (完全对齐JS) ===
-    # JS 版：从 i=1 开始计算 TR，ATR[period]=mean(TR[1..period])，之后 Wilder 平滑
+    # JS 版：从 i=1 开始计算 TR，ATR[period]=mean(TR[1..period])，之后 Wilder 平滑到当前
     n_value = 0.0
     if len(close) >= g.atr_period + 2:
         tr_list = []
