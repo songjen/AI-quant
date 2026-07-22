@@ -1,8 +1,12 @@
 """
-海龟交易法则 — 完全对齐JS版 v3.1
+海龟交易法则 — 完全对齐JS版 v4.1
 ===================================
-修复: order_value + 佣金双重扣除问题
-改用 order() 精确控制股数
+修复:
+- order_value + 佣金双重扣除问题，改用 order() 精确控制股数
+- 止损/出场后不 return，对齐 JS 同一根 K 线可再入场
+- ATR 计算改为从数据起点逐步 Wilder 平滑，与 JS 完全一致
+- 卖出费率对齐 JS 的 0.08%（印花税+佣金合计）
+- 标的改为 000756.XSHE 与当前调试日志一致
 """
 
 g.entry_period = 20
@@ -18,9 +22,10 @@ g.sell_cost = 0.0008
 
 
 def initialize(context):
-    g.stock = '605507.XSHG'
+    g.stock = '000756.XSHE'
 
-    set_order_cost(OrderCost(open_tax=0, close_tax=0.001,
+    # 对齐 JS 版 sellCost=0.0008：卖出总成本 = 印花税 + 佣金 = 0.0005 + 0.0003
+    set_order_cost(OrderCost(open_tax=0, close_tax=0.0005,
                              open_commission=0.0003,
                              close_commission=0.0003,
                              close_today_commission=0,
@@ -64,14 +69,17 @@ def main_logic(context):
         exit_low = min(low[-(g.exit_period+1):-1])
 
     # === ATR — Wilder平滑 (完全对齐JS) ===
+    # JS 版：从 i=1 开始计算 TR，ATR[period]=mean(TR[1..period])，之后 Wilder 平滑
     n_value = 0.0
     if len(close) >= g.atr_period + 2:
         tr_list = []
-        for i in range(-g.atr_period-1, 0):
+        for i in range(1, len(close)):
             tr = max(high[i] - low[i],
                      abs(high[i] - close[i-1]),
                      abs(low[i] - close[i-1]))
             tr_list.append(tr)
+        if len(tr_list) < g.atr_period + 1:
+            return
         n_value = sum(tr_list[:g.atr_period]) / g.atr_period
         for tr_val in tr_list[g.atr_period:]:
             n_value = (n_value * (g.atr_period - 1) + tr_val) / g.atr_period
@@ -82,7 +90,8 @@ def main_logic(context):
         return
 
     # === 持仓同步 ===
-    pos = context.portfolio.positions.get(stock)
+    positions = context.portfolio.positions
+    pos = positions.get(stock) if stock in positions else None
     current_shares = pos.total_amount if pos else 0
     if current_shares == 0:
         g.units = []
